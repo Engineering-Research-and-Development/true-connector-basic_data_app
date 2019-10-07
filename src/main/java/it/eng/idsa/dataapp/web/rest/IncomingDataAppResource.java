@@ -53,9 +53,21 @@ public class IncomingDataAppResource {
 	
 	
 	
-	@PostMapping("/dataAppIncomingMessage")
-	public ResponseEntity<?> postMessage(@RequestBody String data){
-		logger.info("Enter to the end-point: dataAppIncomingMessage");
+	@PostMapping("/dataAppIncomingMessageReceiver")
+	public ResponseEntity<?> postMessageReceiver(@RequestBody String data){
+		logger.info("Enter to the end-point: dataAppIncomingMessage Receiver side");
+
+		String header=multiPartMessageServiceImpl.getHeader(data);
+		String payload=multiPartMessageServiceImpl.getPayload(data);
+		messageServiceImpl.setMessage("", header.toString(), payload.toString());
+
+		logger.info("message="+data);
+		return ResponseEntity.ok().build();
+	}
+	
+	@PostMapping("/dataAppIncomingMessageSender")
+	public ResponseEntity<?> postMessageSender(@RequestBody String data){
+		logger.info("Enter to the end-point: dataAppIncomingMessage Sender side");
 
 		String header=multiPartMessageServiceImpl.getHeader(data);
 		String payload=multiPartMessageServiceImpl.getPayload(data);
