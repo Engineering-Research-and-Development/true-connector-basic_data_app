@@ -5,12 +5,16 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import it.eng.idsa.dataapp.domain.MessageIDS;
@@ -65,6 +69,34 @@ public class IncomingDataAppResource {
 		return ResponseEntity.ok().build();
 	}
 	
+	
+
+	@PostMapping(value="/postMultipartMessage", produces= /*MediaType.MULTIPART_FORM_DATA_VALUE*/ MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> postMessage(@RequestHeader("Content-Type") String contentType,
+			@RequestHeader("Forward-To") String forwardTo,  @RequestParam(value = "header",required = false)  Object header,             
+			@RequestParam(value = "payload", required = false) Object payload   ) {
+		logger.info("rout="+payload);
+		logger.info("header"+header);
+		logger.info("forwardTo="+forwardTo);
+
+		return new ResponseEntity<String>("POST_v1_scouting_activities1\n", HttpStatus.OK);
+
+	}
+	
+	/*
+	 * @PostMapping( value = "/router", produces= {MediaType.APPLICATION_JSON_VALUE}
+	 * )
+	 * 
+	 * @Async public ResponseEntity<String> router(@RequestPart(value =
+	 * "header",required = false) String header,
+	 * 
+	 * @RequestHeader(value = "Response-Type", required = false) String
+	 * responseType,
+	 * 
+	 * @RequestPart(value = "payload", required = false) String payload) {
+	 * logger.info("router="+payload); return new
+	 * ResponseEntity<String>("POST_v1_scouting_activities\n", HttpStatus.OK); }
+	 */
 	@PostMapping("/dataAppIncomingMessageSender")
 	public ResponseEntity<?> postMessageSender(@RequestBody String data){
 		logger.info("Enter to the end-point: dataAppIncomingMessage Sender side");

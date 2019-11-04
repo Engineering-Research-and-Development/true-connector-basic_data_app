@@ -13,10 +13,11 @@
 	<artifactId>market4.0-data-app</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>market4.0-data-app</name>
-	<description>The roject for market4.0-data-app</description>
+	<description>The project for market4.0-data-app</description>
 
 	<properties>
 		<java.version>1.8</java.version>
+		<tomcat.version>9.0.26</tomcat.version>
 		<start-class>it.eng.idsa.businesslogic.ApplicationDataApp</start-class>
 	</properties>
 
