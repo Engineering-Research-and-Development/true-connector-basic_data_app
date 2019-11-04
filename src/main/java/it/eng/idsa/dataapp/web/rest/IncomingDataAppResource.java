@@ -75,8 +75,8 @@ public class IncomingDataAppResource {
 	public ResponseEntity<?> postMessage(@RequestHeader("Content-Type") String contentType,
 			@RequestHeader("Forward-To") String forwardTo,  @RequestParam(value = "header",required = false)  Object header,             
 			@RequestParam(value = "payload", required = false) Object payload   ) {
-		logger.info("rout="+payload);
 		logger.info("header"+header);
+		logger.info("payload="+payload);
 		logger.info("forwardTo="+forwardTo);
 
 		return new ResponseEntity<String>("POST_v1_scouting_activities1\n", HttpStatus.OK);
