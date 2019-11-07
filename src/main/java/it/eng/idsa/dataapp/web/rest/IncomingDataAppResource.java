@@ -1,6 +1,7 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,15 +9,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.fraunhofer.iais.eis.Message;
 import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
@@ -35,15 +40,15 @@ import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 @RestController
 @RequestMapping({ "/incoming-data-app" })
 public class IncomingDataAppResource {
-	
+
 	private static final Logger logger = LogManager.getLogger(IncomingDataAppResource.class);
-	
+
 	@Autowired
 	private MultiPartMessageServiceImpl multiPartMessageServiceImpl;
-	
+
 	@Autowired
 	private MessageServiceImpl messageServiceImpl;
-	
+
 	/*
 	@PostMapping(value="/dataAppIncomingMessage", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed", MediaType.ALL_VALUE }, produces= MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> receiveMessage(@RequestHeader (value="Content-Type", required=false) String contentType,  @RequestParam("header")  Object header,             
@@ -52,24 +57,22 @@ public class IncomingDataAppResource {
 		messageServiceImpl.setMessage(contentType, header.toString(), payload.toString());
 		return ResponseEntity.ok().build();
 	}
-	*/
-	
-	
-	
-	
+	 */
+
+
+
+
 	@PostMapping("/dataAppIncomingMessageReceiver")
 	public ResponseEntity<?> postMessageReceiver(@RequestBody String data){
 		logger.info("Enter to the end-point: dataAppIncomingMessage Receiver side");
-
 		String header=multiPartMessageServiceImpl.getHeader(data);
 		String payload=multiPartMessageServiceImpl.getPayload(data);
 		messageServiceImpl.setMessage("", header.toString(), payload.toString());
-
 		logger.info("message="+data);
 		return ResponseEntity.ok().build();
 	}
-	
-	
+
+
 
 	@PostMapping(value="/postMultipartMessage", produces= /*MediaType.MULTIPART_FORM_DATA_VALUE*/ MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<?> postMessage(@RequestHeader("Content-Type") String contentType,
@@ -78,25 +81,29 @@ public class IncomingDataAppResource {
 		logger.info("header"+header);
 		logger.info("payload="+payload);
 		logger.info("forwardTo="+forwardTo);
-
-		return new ResponseEntity<String>("POST_v1_scouting_activities1\n", HttpStatus.OK);
-
+		return new ResponseEntity<String>("postMultipartMessage endpoint: success\n", HttpStatus.OK);
 	}
+
+
+	@RequestMapping(
+            value = "/router",
+            method = RequestMethod.POST,
+            produces = {MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed"}
+    )
+    @Async
+    public ResponseEntity<?> router(@RequestPart(value = "header") Message header,
+                                                    @RequestHeader(value = "Response-Type", required = false) String responseType,
+                                                    @RequestPart(value = "payload", required = false) String payload) {
+
 	
-	/*
-	 * @PostMapping( value = "/router", produces= {MediaType.APPLICATION_JSON_VALUE}
-	 * )
-	 * 
-	 * @Async public ResponseEntity<String> router(@RequestPart(value =
-	 * "header",required = false) String header,
-	 * 
-	 * @RequestHeader(value = "Response-Type", required = false) String
-	 * responseType,
-	 * 
-	 * @RequestPart(value = "payload", required = false) String payload) {
-	 * logger.info("router="+payload); return new
-	 * ResponseEntity<String>("POST_v1_scouting_activities\n", HttpStatus.OK); }
-	 */
+	
+		logger.info("header"+header);
+		logger.info("payload="+payload);
+		return new ResponseEntity<String>("router endpoint: success\n", HttpStatus.OK);
+
+		
+	}
+
 	@PostMapping("/dataAppIncomingMessageSender")
 	public ResponseEntity<?> postMessageSender(@RequestBody String data){
 		logger.info("Enter to the end-point: dataAppIncomingMessage Sender side");
@@ -108,11 +115,11 @@ public class IncomingDataAppResource {
 		logger.info("message="+data);
 		return ResponseEntity.ok().build();
 	}
-		
+
 	@GetMapping("/dataAppIncomingMessage")
 	public List<MessageIDS> testReceiveMessage() {
 		logger.debug("GET /dataAppIncomingMessage");
 		return messageServiceImpl.getMessages();
 	}
-	
+
 }
