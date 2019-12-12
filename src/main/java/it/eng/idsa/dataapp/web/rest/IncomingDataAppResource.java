@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import de.fraunhofer.iais.eis.Message;
 import it.eng.idsa.dataapp.domain.MessageIDS;
@@ -83,10 +84,12 @@ public class IncomingDataAppResource {
 		logger.info("forwardTo="+forwardTo);
 		return new ResponseEntity<String>("postMultipartMessage endpoint: success\n", HttpStatus.OK);
 	}
-
-
+	
+	//======================================================================
+	// Multipart: form-data: json
+	//======================================================================
 	@RequestMapping(
-            value = "/router",
+            value = "/routerBodyBinary",
             method = RequestMethod.POST,
             produces = {MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed"}
     )
@@ -95,12 +98,36 @@ public class IncomingDataAppResource {
                                                     @RequestHeader(value = "Response-Type", required = false) String responseType,
                                                     @RequestPart(value = "payload", required = false) String payload) {
 
-	
-	
 		logger.info("header"+header);
 		logger.info("payload="+payload);
+		
+		// HttpStatus.OK - code 200
 		return new ResponseEntity<String>("router endpoint: success\n", HttpStatus.OK);
+		// HttpStatus.BAD_REQUEST - code 400
+//		return new ResponseEntity<String>("router endpoint: bad-request\n", HttpStatus.BAD_REQUEST);
+		
+	}
+	
+	//======================================================================
+	// Multipart: binary: multipart-mix  
+	//======================================================================
+	@RequestMapping(
+            value = "/routerBodyFormData",
+            method = RequestMethod.POST,
+            produces = {MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed"}
+    )
+    @Async
+    public ResponseEntity<?> routerMix(@RequestParam(value = "header") String header,
+                                                    @RequestHeader(value = "Response-Type", required = false) String responseType,
+                                                    @RequestParam(value = "payload", required = false) String payload) {
 
+		logger.info("header"+header);
+		logger.info("payload="+payload);
+		
+		// HttpStatus.OK - code 200
+		return new ResponseEntity<String>("router endpoint: success\n", HttpStatus.OK);
+		// HttpStatus.BAD_REQUEST - code 400
+//		return new ResponseEntity<String>("router endpoint: bad-request\n", HttpStatus.BAD_REQUEST);
 		
 	}
 
