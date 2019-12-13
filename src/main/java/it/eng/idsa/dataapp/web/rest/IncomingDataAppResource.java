@@ -86,7 +86,7 @@ public class IncomingDataAppResource {
 	}
 	
 	//======================================================================
-	// Multipart: form-data: json
+	// body: binary
 	//======================================================================
 	@RequestMapping(
             value = "/routerBodyBinary",
@@ -109,7 +109,7 @@ public class IncomingDataAppResource {
 	}
 	
 	//======================================================================
-	// Multipart: binary: multipart-mix  
+	// body: form-data
 	//======================================================================
 	@RequestMapping(
             value = "/routerBodyFormData",
