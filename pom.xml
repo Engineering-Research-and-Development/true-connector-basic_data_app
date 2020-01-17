@@ -18,7 +18,7 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<tomcat.version>9.0.26</tomcat.version>
-		<start-class>it.eng.idsa.businesslogic.ApplicationDataApp</start-class>
+		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
 	</properties>
 
 	<dependencies>
