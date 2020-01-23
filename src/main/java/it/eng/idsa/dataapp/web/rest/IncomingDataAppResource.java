@@ -1,8 +1,11 @@
 package it.eng.idsa.dataapp.web.rest;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.ParseException;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import de.fraunhofer.iais.eis.Message;
 import it.eng.idsa.dataapp.domain.MessageIDS;
@@ -104,6 +105,7 @@ public class IncomingDataAppResource {
 		
 		// HttpStatus.OK - code 200
 		return new ResponseEntity<String>("router endpoint: success\n", HttpStatus.OK);
+		
 		// HttpStatus.BAD_REQUEST - code 400
 //		return new ResponseEntity<String>("router endpoint: bad-request\n", HttpStatus.BAD_REQUEST);
 		
@@ -120,15 +122,17 @@ public class IncomingDataAppResource {
     @Async
     public ResponseEntity<?> routerMix(@RequestParam(value = "header") String header,
                                                     @RequestHeader(value = "Response-Type", required = false) String responseType,
-                                                    @RequestParam(value = "payload", required = false) String payload) {
+                                                    @RequestParam(value = "payload", required = false) String payload) throws ParseException, IOException {
 
 		logger.info("header"+header);
 		logger.info("payload="+payload);
 		
-		// HttpStatus.OK - code 200
-		return new ResponseEntity<String>("router endpoint: success\n", HttpStatus.OK);
-		// HttpStatus.BAD_REQUEST - code 400
-//		return new ResponseEntity<String>("router endpoint: bad-request\n", HttpStatus.BAD_REQUEST);
+		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
+		String responseString = EntityUtils.toString(entity, "UTF-8");
+		
+		return ResponseEntity.ok()
+				.header("Content-Type", "multipart/mixed; boundary=CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6;charset=UTF-8")
+				.body(responseString);
 		
 	}
 
