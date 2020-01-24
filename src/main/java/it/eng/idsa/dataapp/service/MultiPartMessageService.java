@@ -1,6 +1,9 @@
 package it.eng.idsa.dataapp.service;
 
 import org.apache.http.HttpEntity;
+import org.json.simple.parser.ParseException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import de.fraunhofer.iais.eis.Message;
 
@@ -18,9 +21,10 @@ public interface MultiPartMessageService {
 	public String getPayload(String body);
 
 	public Message getMessage(String body);
+	public String convertMessageToString(Message message) throws JsonProcessingException, ParseException;
 	public Message getMessage(Object header);
 	public String addToken(Message message, String token);
 	public HttpEntity createMultipartMessage(String header, String payload/*, String boundary, String contentType*/);
 	public String getToken(String message);
-	String removeToken(Message message);
+	public String removeToken(Message message);
 }

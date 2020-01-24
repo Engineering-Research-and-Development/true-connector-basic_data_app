@@ -64,6 +64,15 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		MultiPartMessage deserializedMultipartMessage = MultiPart.parseString(body);
 		return deserializedMultipartMessage.getHeader();
 	}
+	
+	@Override
+	public String convertMessageToString(Message message) throws JsonProcessingException, ParseException {
+		String msgSerialized = new Serializer().serializePlainJson(message);
+		JSONParser parser = new JSONParser();
+		JSONObject jsonObject = (JSONObject) parser.parse(msgSerialized);
+		String messageString =new Serializer().serializePlainJson(jsonObject);
+		return messageString;
+	}
 
 	@Override
 	public String addToken(Message message, String token) {
