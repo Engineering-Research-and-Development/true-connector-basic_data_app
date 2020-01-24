@@ -8,6 +8,8 @@ import org.apache.http.ParseException;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,7 +26,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.Token;
+import de.fraunhofer.iais.eis.TokenBuilder;
+import de.fraunhofer.iais.eis.TokenFormat;
+import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
@@ -96,18 +104,31 @@ public class IncomingDataAppResource {
             produces = {MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed"}
     )
     @Async
-    public ResponseEntity<?> router(@RequestPart(value = "header") Message header,
+    public ResponseEntity<?> routerBinary(@RequestPart(value = "header") Message headerMessage,
                                                     @RequestHeader(value = "Response-Type", required = false) String responseType,
-                                                    @RequestPart(value = "payload", required = false) String payload) {
+                                                    @RequestPart(value = "payload", required = false) String payload) throws org.json.simple.parser.ParseException, ParseException, IOException {
 
+        // Convert de.fraunhofer.iais.eis.Message to the String		
+		String msgSerialized = new Serializer().serializePlainJson(headerMessage);
+		JSONParser parser = new JSONParser();
+		JSONObject jsonObject = (JSONObject) parser.parse(msgSerialized);
+		String header=new Serializer().serializePlainJson(jsonObject);
+		
 		logger.info("header="+header);
 		logger.info("payload="+payload);
 		
 		// HttpStatus.OK - code 200
-		return new ResponseEntity<String>("router endpoint: success\n", HttpStatus.OK);
+//		return new ResponseEntity<String>("router endpoint: success\n", HttpStatus.OK);
 		
 		// HttpStatus.BAD_REQUEST - code 400
 //		return new ResponseEntity<String>("router endpoint: bad-request\n", HttpStatus.BAD_REQUEST);
+		
+		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
+		String responseString = EntityUtils.toString(entity, "UTF-8");
+		
+		return ResponseEntity.ok()
+				.header("Content-Type", "multipart/mixed; boundary=CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6;charset=UTF-8")
+				.body(responseString);
 		
 	}
 	
