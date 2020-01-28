@@ -1,9 +1,7 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.ParseException;
@@ -36,8 +34,6 @@ import de.fraunhofer.iais.eis.TokenBuilder;
 import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.domain.MessageIDS;
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
-import it.eng.idsa.dataapp.service.impl.DapsServiceImpl;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 
@@ -63,9 +59,6 @@ public class IncomingDataAppResource {
 
 	@Autowired
 	private MessageServiceImpl messageServiceImpl;
-	
-	@Autowired
-	private DapsServiceImpl dapsServiceImpl;
 
 	/*
 	@PostMapping(value="/dataAppIncomingMessage", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed", MediaType.ALL_VALUE }, produces= MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -115,25 +108,17 @@ public class IncomingDataAppResource {
                                                     @RequestHeader(value = "Response-Type", required = false) String responseType,
                                                     @RequestPart(value = "payload", required = false) String payload) throws org.json.simple.parser.ParseException, ParseException, IOException {
 		
-		String header = multiPartMessageServiceImpl.convertMessageToString(headerMessage);
+		// Convert de.fraunhofer.iais.eis.Message to the String		
+		String msgSerialized = new Serializer().serializePlainJson(headerMessage);
+		JSONParser parser = new JSONParser();
+		JSONObject jsonObject = (JSONObject) parser.parse(msgSerialized);
+		String header=new Serializer().serializePlainJson(jsonObject);
 		
 		logger.info("header="+header);
 		logger.info("payload="+payload);
 		
-		String token = null;
-		Map<String, Object> multipartMessageParts = new HashMap();
-		String headerWithToken = null;
-		
-		// Get new token
-		token = dapsServiceImpl.getJwtToken();
-		
-		// Add Token in the header
-		multipartMessageParts.put("header", header);
-		headerMessage = multiPartMessageServiceImpl.getMessage(multipartMessageParts.get("header"));
-		headerWithToken = multiPartMessageServiceImpl.addToken(headerMessage, token);
-		
 		// prepare multipart message.
-		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(headerWithToken, payload);
+		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
 		String responseString = EntityUtils.toString(entity, "UTF-8");
 		
 		return ResponseEntity.ok()
@@ -158,21 +143,7 @@ public class IncomingDataAppResource {
 		logger.info("header"+header);
 		logger.info("payload="+payload);
 		
-		String token = null;
-		Message headerMessage = null;
-		Map<String, Object> multipartMessageParts = new HashMap();
-		String headerWithToken = null;
-		
-		// Get new token
-		token = dapsServiceImpl.getJwtToken();
-		
-		// Add Token in the header
-		multipartMessageParts.put("header", header);
-		headerMessage = multiPartMessageServiceImpl.getMessage(multipartMessageParts.get("header"));
-		headerWithToken = multiPartMessageServiceImpl.addToken(headerMessage, token);
-		
-		// prepare multipart message.
-		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(headerWithToken, payload);
+		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
 		String responseString = EntityUtils.toString(entity, "UTF-8");
 		
 		return ResponseEntity.ok()
