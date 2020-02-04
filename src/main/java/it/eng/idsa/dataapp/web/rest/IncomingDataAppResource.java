@@ -117,6 +117,9 @@ public class IncomingDataAppResource {
 		logger.info("header="+header);
 		logger.info("payload="+payload);
 		
+		// Put check sum in the payload
+		payload="{\"checksum\":\"ABC123\"}";
+		
 		// prepare multipart message.
 		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
 		String responseString = EntityUtils.toString(entity, "UTF-8");
@@ -142,6 +145,9 @@ public class IncomingDataAppResource {
         // Received "header" and "payload"
 		logger.info("header"+header);
 		logger.info("payload="+payload);
+		
+		// Put check sum in the payload
+		payload="{\"checksum\":\"ABC123\"}";
 		
 		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
 		String responseString = EntityUtils.toString(entity, "UTF-8");
