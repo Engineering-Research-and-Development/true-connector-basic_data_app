@@ -1,9 +1,12 @@
 package it.eng.idsa.dataapp.service.impl;
 
 
+import static de.fraunhofer.iais.eis.util.Util.asList;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.http.HttpEntity;
@@ -24,6 +27,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.RejectionMessageBuilder;
+import de.fraunhofer.iais.eis.RejectionReason;
+import de.fraunhofer.iais.eis.ResultMessageBuilder;
 import de.fraunhofer.iais.eis.Token;
 import de.fraunhofer.iais.eis.TokenBuilder;
 import de.fraunhofer.iais.eis.TokenFormat;
@@ -31,6 +37,7 @@ import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import nl.tno.ids.common.multipart.MultiPart;
 import nl.tno.ids.common.multipart.MultiPartMessage;
+import nl.tno.ids.common.serialization.DateUtil;
 import nl.tno.ids.common.serialization.SerializationHelper;
 
 /**
@@ -115,10 +122,34 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	}
 
+	
+
+	public Message getIDSMessage(String header) {
+		Message message = null;
+		try {
+			message = SerializationHelper.getInstance().fromJsonLD(header, Message.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return message;
+	}  
+	
 	@Override
 	public HttpEntity createMultipartMessage(String header, String payload/*, String boundary, String contentType*/) {
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
-		multipartEntityBuilder.addTextBody("header", header);
+		try {
+			multipartEntityBuilder.addTextBody("header", new Serializer().serializePlainJson(createResultMessage(getIDSMessage(header))));
+		} catch (JsonProcessingException e1) {
+			// TODO Auto-generated catch block
+			try {
+				multipartEntityBuilder.addTextBody("header", new Serializer().serializePlainJson(createRejectionMessageLocalIssues(getMessage(header))));
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				multipartEntityBuilder.addTextBody("header", "INTERNAL ERROR");
+				e.printStackTrace();
+			}
+			e1.printStackTrace();
+		} 
 		multipartEntityBuilder.addTextBody("payload", payload);
 
 		// multipartEntityBuilder.setBoundary(boundary)
@@ -140,7 +171,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			 * ""+header.length()) .setName("header") .setBody(new StringBody(header))
 			 * .build();
 			 */
-			bodyHeaderPart = new FormBodyPart("header", new StringBody(header, ContentType.DEFAULT_TEXT)) {
+			bodyHeaderPart = new FormBodyPart("header", new StringBody( new Serializer().serializePlainJson(createResultMessage(getIDSMessage(header))), ContentType.DEFAULT_TEXT)) {
 				@Override
 				protected void generateContentType(ContentBody body) {
 				}
@@ -185,6 +216,77 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return token;
 	}
 
+	public Message createResultMessage(Message header) {
+		return new ResultMessageBuilder()
+				._issuerConnector_(whoIAm())
+				._issued_(DateUtil.now())
+				._modelVersion_("1.0.3")
+				._recipientConnector_(asList(header.getIssuerConnector()))
+				._correlationMessage_(header.getId())
+				.build();
+	}
+
+	public Message createRejectionMessage(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAm())
+				._issued_(DateUtil.now())
+				._modelVersion_("1.0.3")
+				._recipientConnector_(header!=null?asList(header.getIssuerConnector()):asList(URI.create("auto-generated")))
+				._correlationMessage_(header!=null?header.getId():URI.create(""))
+				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
+				.build();
+	}
+	
+	public Message createRejectionToken(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAm())
+				._issued_(DateUtil.now())
+				._modelVersion_("1.0.3")
+				._recipientConnector_(asList(header.getIssuerConnector()))
+				._correlationMessage_(header.getId())
+				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
+				.build();
+	}
+
+
+	private URI whoIAm() {
+		//TODO 
+		return URI.create("auto-generated");
+	}
+
+	public Message createRejectionMessageLocalIssues(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(URI.create("auto-generated"))
+				._issued_(DateUtil.now())
+				._modelVersion_("1.0.3")
+				//._recipientConnectors_(header!=null?asList(header.getIssuerConnector()):asList(URI.create("auto-generated")))
+				._correlationMessage_(URI.create("auto-generated"))
+				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
+				.build();
+	}
+	
+	public Message createRejectionTokenLocalIssues(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(header.getIssuerConnector())
+				._issued_(DateUtil.now())
+				._modelVersion_("1.0.3")
+				._recipientConnector_(asList(header.getIssuerConnector()))
+				._correlationMessage_(header.getId())
+				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
+				.build();
+	}
+	
+	
+	public Message createRejectionCommunicationLocalIssues(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(header.getIssuerConnector())
+				._issued_(DateUtil.now())
+				._modelVersion_("1.0.3")
+				._recipientConnector_(asList(header.getIssuerConnector()))
+				._correlationMessage_(header.getId())
+				._rejectionReason_(RejectionReason.NOT_FOUND)
+				.build();
+	}
 
 
 
