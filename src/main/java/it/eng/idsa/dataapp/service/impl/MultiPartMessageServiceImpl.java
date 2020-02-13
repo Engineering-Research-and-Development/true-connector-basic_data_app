@@ -4,11 +4,12 @@ package it.eng.idsa.dataapp.service.impl;
 import static de.fraunhofer.iais.eis.util.Util.asList;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-
+import org.apache.maven.model.Model;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.FormBodyPart;
@@ -16,6 +17,7 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -53,6 +55,7 @@ import nl.tno.ids.common.serialization.SerializationHelper;
 @Service
 @Transactional
 public class MultiPartMessageServiceImpl implements MultiPartMessageService {
+	private String informationModelVersion;
 
 	@Override
 	public String getHeader(String body) {
@@ -122,7 +125,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	}
 
-	
+
 
 	public Message getIDSMessage(String header) {
 		Message message = null;
@@ -133,9 +136,25 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		}
 		return message;
 	}  
-	
+
 	@Override
 	public HttpEntity createMultipartMessage(String header, String payload/*, String boundary, String contentType*/) {
+		try {
+			MavenXpp3Reader reader = new MavenXpp3Reader();
+			Model model = reader.read(new FileReader("pom.xml"));
+
+			for (int i = 0; i < model.getDependencies().size(); i++) {
+				if (model.getDependencies().get(i).getGroupId().equalsIgnoreCase("de.fraunhofer.iais.eis.ids.infomodel")){
+					String version=model.getDependencies().get(i).getVersion();
+					if (version.contains("-SNAPSHOT")) {
+						version=version.substring(0,version.indexOf("-SNAPSHOT"));
+					}
+					informationModelVersion=version;
+				}
+			}
+			}catch(Exception e) {
+			e.printStackTrace();
+		}
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
 		try {
 			multipartEntityBuilder.addTextBody("header", new Serializer().serializePlainJson(createResultMessage(getIDSMessage(header))));
@@ -220,28 +239,29 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return new ResultMessageBuilder()
 				._issuerConnector_(whoIAm())
 				._issued_(DateUtil.now())
-				._modelVersion_("1.0.3")
+				._modelVersion_(informationModelVersion)
 				._recipientConnector_(asList(header.getIssuerConnector()))
 				._correlationMessage_(header.getId())
 				.build();
 	}
 
+
 	public Message createRejectionMessage(Message header) {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(whoIAm())
 				._issued_(DateUtil.now())
-				._modelVersion_("1.0.3")
+				._modelVersion_(informationModelVersion)
 				._recipientConnector_(header!=null?asList(header.getIssuerConnector()):asList(URI.create("auto-generated")))
 				._correlationMessage_(header!=null?header.getId():URI.create(""))
 				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
 				.build();
 	}
-	
+
 	public Message createRejectionToken(Message header) {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(whoIAm())
 				._issued_(DateUtil.now())
-				._modelVersion_("1.0.3")
+				._modelVersion_(informationModelVersion)
 				._recipientConnector_(asList(header.getIssuerConnector()))
 				._correlationMessage_(header.getId())
 				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
@@ -258,34 +278,42 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(URI.create("auto-generated"))
 				._issued_(DateUtil.now())
-				._modelVersion_("1.0.3")
+				._modelVersion_(informationModelVersion)
 				//._recipientConnectors_(header!=null?asList(header.getIssuerConnector()):asList(URI.create("auto-generated")))
 				._correlationMessage_(URI.create("auto-generated"))
 				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
 				.build();
 	}
-	
+
 	public Message createRejectionTokenLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(header.getIssuerConnector())
 				._issued_(DateUtil.now())
-				._modelVersion_("1.0.3")
+				._modelVersion_(informationModelVersion)
 				._recipientConnector_(asList(header.getIssuerConnector()))
 				._correlationMessage_(header.getId())
 				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
 				.build();
 	}
-	
-	
+
+
 	public Message createRejectionCommunicationLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(header.getIssuerConnector())
 				._issued_(DateUtil.now())
-				._modelVersion_("1.0.3")
+				._modelVersion_(informationModelVersion)
 				._recipientConnector_(asList(header.getIssuerConnector()))
 				._correlationMessage_(header.getId())
 				._rejectionReason_(RejectionReason.NOT_FOUND)
 				.build();
+	}
+
+	public String getInformationModelVersion() {
+		return informationModelVersion;
+	}
+
+	public void setInformationModelVersion(String informationModelVersion) {
+		this.informationModelVersion = informationModelVersion;
 	}
 
 
