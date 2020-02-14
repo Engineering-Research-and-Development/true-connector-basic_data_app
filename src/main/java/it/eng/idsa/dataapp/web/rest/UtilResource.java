@@ -19,10 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping({ "/about" })
 public class UtilResource {
 	
+	@Autowired
+	BuildProperties buildProperties;
+	
 	@GetMapping("/version")
     @ResponseBody
     public String getVersion() {
-		return "incoming-data-app v1.0";
+		return buildProperties.getVersion();
     }
 	
 }

@@ -20,7 +20,8 @@
 		<tomcat.version>9.0.27</tomcat.version>
 		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
 	</properties>
-	<repositories> 
+	
+ 	<repositories> 
 		<repository> 
 				<id>nl.tno.ids</id> 
 				<url>https://ci.ids.smart-connected.nl/nexus/repository/tno-ids/</url> 
@@ -30,7 +31,8 @@
 				<name>maven-snapshots</name> 
 				<url>http://maven.iais.fraunhofer.de/artifactory/eis-ids-public</url> 
 			</repository> 
-	</repositories>		
+	</repositories>
+	
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.apache.maven/maven-model -->
 		<dependency>
@@ -175,6 +177,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>build-info</id>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
