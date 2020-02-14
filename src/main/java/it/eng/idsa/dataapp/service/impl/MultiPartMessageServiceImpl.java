@@ -55,7 +55,8 @@ import nl.tno.ids.common.serialization.SerializationHelper;
 @Service
 @Transactional
 public class MultiPartMessageServiceImpl implements MultiPartMessageService {
-	private String informationModelVersion;
+	
+	private final static String informationModelVersion = getInformationModelVersion();
 
 	@Override
 	public String getHeader(String body) {
@@ -139,22 +140,6 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	@Override
 	public HttpEntity createMultipartMessage(String header, String payload/*, String boundary, String contentType*/) {
-		try {
-			MavenXpp3Reader reader = new MavenXpp3Reader();
-			Model model = reader.read(new FileReader("pom.xml"));
-
-			for (int i = 0; i < model.getDependencies().size(); i++) {
-				if (model.getDependencies().get(i).getGroupId().equalsIgnoreCase("de.fraunhofer.iais.eis.ids.infomodel")){
-					String version=model.getDependencies().get(i).getVersion();
-					if (version.contains("-SNAPSHOT")) {
-						version=version.substring(0,version.indexOf("-SNAPSHOT"));
-					}
-					informationModelVersion=version;
-				}
-			}
-			}catch(Exception e) {
-			e.printStackTrace();
-		}
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
 		try {
 			multipartEntityBuilder.addTextBody("header", new Serializer().serializePlainJson(createResultMessage(getIDSMessage(header))));
@@ -225,6 +210,28 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			e.printStackTrace();
 		}
 		return multipartEntityBuilder.build();
+	}
+	
+	private static String getInformationModelVersion() {
+		String currnetInformationModelVersion = null;
+		try {
+			MavenXpp3Reader reader = new MavenXpp3Reader();
+			Model model = reader.read(new FileReader("pom.xml"));
+	
+			for (int i = 0; i < model.getDependencies().size(); i++) {
+				if (model.getDependencies().get(i).getGroupId().equalsIgnoreCase("de.fraunhofer.iais.eis.ids.infomodel")){
+					String version=model.getDependencies().get(i).getVersion();
+					// If we want, we can delete "-SNAPSHOT" from the version
+//					if (version.contains("-SNAPSHOT")) {
+//						version=version.substring(0,version.indexOf("-SNAPSHOT"));
+//					}
+					currnetInformationModelVersion=version;
+				}
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return currnetInformationModelVersion;
 	}
 
 	@Override
@@ -307,15 +314,5 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._rejectionReason_(RejectionReason.NOT_FOUND)
 				.build();
 	}
-
-	public String getInformationModelVersion() {
-		return informationModelVersion;
-	}
-
-	public void setInformationModelVersion(String informationModelVersion) {
-		this.informationModelVersion = informationModelVersion;
-	}
-
-
-
+	
 }
