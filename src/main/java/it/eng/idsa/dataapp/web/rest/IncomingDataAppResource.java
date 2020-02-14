@@ -120,6 +120,9 @@ public class IncomingDataAppResource {
 		// Put check sum in the payload
 		payload="{\"checksum\":\"ABC123\"}";
 		
+		// payload will be empty in the multipart message
+//		payload = null;
+		
 		// prepare multipart message.
 		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
 		String responseString = EntityUtils.toString(entity, "UTF-8");
@@ -148,6 +151,9 @@ public class IncomingDataAppResource {
 		
 		// Put check sum in the payload
 		payload="{\"checksum\":\"ABC123\"}";
+		
+		// payload will be empty in the multipart message
+//		payload = null;
 		
 		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
 		String responseString = EntityUtils.toString(entity, "UTF-8");

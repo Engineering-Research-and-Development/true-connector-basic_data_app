@@ -154,17 +154,19 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			}
 			e1.printStackTrace();
 		} 
-		multipartEntityBuilder.addTextBody("payload", payload);
+		if(payload!=null) {
+			multipartEntityBuilder.addTextBody("payload", payload);
+		}
 
 		// multipartEntityBuilder.setBoundary(boundary)
 		HttpEntity multipart = multipartEntityBuilder.build();
 
 		//return multipart;
 		InputStream streamHeader = new ByteArrayInputStream(header.getBytes(StandardCharsets.UTF_8));
-		InputStream streamPayload = new ByteArrayInputStream(payload.getBytes(StandardCharsets.UTF_8));
-
-
-
+		InputStream streamPayload = null;
+		if(payload!=null) {
+			streamPayload = new ByteArrayInputStream(payload.getBytes(StandardCharsets.UTF_8));
+		}
 
 		multipartEntityBuilder = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
 		try {
@@ -185,16 +187,18 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			};
 			bodyHeaderPart.addField("Content-Lenght", ""+header.length());
 
-			FormBodyPart bodyPayloadPart;
-			bodyPayloadPart=new FormBodyPart("payload", new StringBody(payload, ContentType.DEFAULT_TEXT)) {
-				@Override
-				protected void generateContentType(ContentBody body) {
-				}
-				@Override
-				protected void generateTransferEncoding(ContentBody body){
-				}
-			};
-			bodyPayloadPart.addField("Content-Lenght", ""+payload.length());
+			FormBodyPart bodyPayloadPart=null;
+			if(payload!=null) {
+				bodyPayloadPart=new FormBodyPart("payload", new StringBody(payload, ContentType.DEFAULT_TEXT)) {
+					@Override
+					protected void generateContentType(ContentBody body) {
+					}
+					@Override
+					protected void generateTransferEncoding(ContentBody body){
+					}
+				};
+				bodyPayloadPart.addField("Content-Lenght", ""+payload.length());
+			}
 
 			/*
 			 * = FormBodyPartBuilder.create() .addField("Content-Lenght",
@@ -204,7 +208,9 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 
 			multipartEntityBuilder.addPart (bodyHeaderPart);
-			multipartEntityBuilder.addPart(bodyPayloadPart);
+			if(bodyPayloadPart!=null) {
+				multipartEntityBuilder.addPart(bodyPayloadPart);
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
