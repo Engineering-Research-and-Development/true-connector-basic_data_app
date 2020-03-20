@@ -26,12 +26,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import de.fraunhofer.iais.eis.Message;
-import de.fraunhofer.iais.eis.Token;
-import de.fraunhofer.iais.eis.TokenBuilder;
-import de.fraunhofer.iais.eis.TokenFormat;
+
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
@@ -115,7 +112,7 @@ public class IncomingDataAppResource {
 		String header=new Serializer().serializePlainJson(jsonObject);
 		
 		logger.info("header="+header);
-		logger.info("payload="+payload);
+		logger.info("payload lenght="+payload.length());
 		
 		// Put check sum in the payload
 		payload="{\"checksum\":\"ABC123\"}";
@@ -147,7 +144,7 @@ public class IncomingDataAppResource {
                                                     @RequestParam(value = "payload", required = false) String payload) throws ParseException, IOException {
         // Received "header" and "payload"
 		logger.info("header"+header);
-		logger.info("payload="+payload);
+		logger.info("payload lenght="+payload.length());
 		
 		// Put check sum in the payload
 		payload="{\"checksum\":\"ABC123\"}";

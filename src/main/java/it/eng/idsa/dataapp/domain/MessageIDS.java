@@ -1,6 +1,6 @@
 package it.eng.idsa.dataapp.domain;
 
-import org.springframework.stereotype.Repository;
+
 
 /**
  * 
