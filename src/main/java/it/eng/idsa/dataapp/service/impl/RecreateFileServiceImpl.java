@@ -29,7 +29,6 @@ public class RecreateFileServiceImpl implements RecreateFileService {
 	
 	@Override
 	public void recreateTheFile(String payload) throws IOException {
-		System.out.println(payload);
 		String payloadCleaned = payload.replaceAll("[\\n\\t ]", "");
 		File targetFile = new File(FILE_PATH + FILE_NAME);
 		FileOutputStream fos = new FileOutputStream(targetFile);
