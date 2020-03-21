@@ -1,6 +1,7 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
@@ -33,6 +34,7 @@ import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
+import it.eng.idsa.dataapp.service.impl.RecreateFileServiceImpl;
 
 
 /**
@@ -56,6 +58,9 @@ public class IncomingDataAppResource {
 
 	@Autowired
 	private MessageServiceImpl messageServiceImpl;
+	
+	@Autowired
+	private RecreateFileServiceImpl recreateFileServiceImpl;
 
 	/*
 	@PostMapping(value="/dataAppIncomingMessage", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed", MediaType.ALL_VALUE }, produces= MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -114,6 +119,9 @@ public class IncomingDataAppResource {
 		logger.info("header="+header);
 		logger.info("payload lenght="+payload.length());
 		
+		// Recreate the file
+		recreateFileServiceImpl.recreateTheFile(payload);
+		
 		// Put check sum in the payload
 		payload="{\"checksum\":\"ABC123\"}";
 		
@@ -145,6 +153,9 @@ public class IncomingDataAppResource {
         // Received "header" and "payload"
 		logger.info("header"+header);
 		logger.info("payload lenght="+payload.length());
+		
+		// Recreate the file
+		recreateFileServiceImpl.recreateTheFile(payload);
 		
 		// Put check sum in the payload
 		payload="{\"checksum\":\"ABC123\"}";
