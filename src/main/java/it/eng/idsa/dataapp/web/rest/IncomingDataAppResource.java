@@ -157,6 +157,7 @@ public class IncomingDataAppResource {
 		
 		// Recreate the file
 		recreateFileServiceImpl.recreateTheFile(payload);
+		logger.info("The file is recreated from the MultipartMessage");
 		
 		// Put check sum in the payload
 		payload="{\"checksum\":\"ABC123\"}";
