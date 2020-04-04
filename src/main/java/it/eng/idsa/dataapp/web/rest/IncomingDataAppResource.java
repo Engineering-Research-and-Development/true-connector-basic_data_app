@@ -38,6 +38,7 @@ import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.RecreateFileServiceImpl;
+import nl.tno.ids.common.multipart.MultiPartMessage;
 
 
 /**
@@ -134,9 +135,12 @@ public class IncomingDataAppResource {
 		// payload will be empty in the multipart message
 //		payload = null;
 		
-		// prepare multipart message.
-		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
-		String responseString = EntityUtils.toString(entity, "UTF-8");
+		// prepare body response - multipart message.
+		String responseString = new MultiPartMessage.Builder()
+                										.setHeader(header)
+                										.setPayload(payload)
+                										.build()
+                										.toString();
 		
 		return ResponseEntity.ok()
 				.header("Content-Type", "multipart/mixed; boundary=CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6;charset=UTF-8")
@@ -172,8 +176,12 @@ public class IncomingDataAppResource {
 		// payload will be empty in the multipart message
 //		payload = null;
 		
-		HttpEntity entity = multiPartMessageServiceImpl.createMultipartMessage(header, payload);
-		String responseString = EntityUtils.toString(entity, "UTF-8");
+		// prepare body response - multipart message.
+		String responseString = new MultiPartMessage.Builder()
+														.setHeader(header)
+														.setPayload(payload)
+														.build()
+														.toString();
 		
 		return ResponseEntity.ok()
 				.header("Content-Type", "multipart/mixed; boundary=CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6;charset=UTF-8")
