@@ -2,6 +2,9 @@ package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.http.HttpEntity;
@@ -124,7 +127,9 @@ public class IncomingDataAppResource {
 		logger.info("The file is recreated from the MultipartMessage");
 		
 		// Put check sum in the payload
-		payload="{\"checksum\":\"ABC123\"}";
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		payload="{\"checksum\":\"ABC123 " + dateFormat.format(date) + "\"}";
 		
 		// payload will be empty in the multipart message
 //		payload = null;
@@ -160,7 +165,9 @@ public class IncomingDataAppResource {
 		logger.info("The file is recreated from the MultipartMessage");
 		
 		// Put check sum in the payload
-		payload="{\"checksum\":\"ABC123\"}";
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		payload="{\"checksum\":\"ABC123 " + dateFormat.format(date) + "\"}";
 		
 		// payload will be empty in the multipart message
 //		payload = null;
