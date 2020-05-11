@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,10 @@ import nl.tno.ids.common.multipart.MultiPartMessage;
  */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
+@ConditionalOnProperty(
+		value="application.websocket.isEnabled",
+		havingValue = "false",
+		matchIfMissing = true)
 @RequestMapping({ "/incoming-data-app" })
 public class IncomingDataAppResource {
 
