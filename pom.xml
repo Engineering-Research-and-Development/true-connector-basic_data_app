@@ -169,7 +169,7 @@
 			<artifactId>gson</artifactId>
 		</dependency>
 
-
+		<!-- it.eng.idsa -->
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
 			<artifactId>websocket-message-streamer</artifactId>

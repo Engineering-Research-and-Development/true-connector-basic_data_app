@@ -101,7 +101,7 @@ public class IncomingDataAppResource {
 			@RequestHeader("Forward-To") String forwardTo,  @RequestParam(value = "header",required = false)  Object header,             
 			@RequestParam(value = "payload", required = false) Object payload   ) {
 		logger.info("header"+header);
-		logger.info("payload="+payload);
+//		logger.info("payload="+payload);
 		logger.info("forwardTo="+forwardTo);
 		return new ResponseEntity<String>("postMultipartMessage endpoint: success\n", HttpStatus.OK);
 	}
@@ -126,7 +126,7 @@ public class IncomingDataAppResource {
 		String header=new Serializer().serializePlainJson(jsonObject);
 		
 		logger.info("header="+header);
-		logger.info("payload lenght="+payload.length());
+//		logger.info("payload lenght="+payload.length());
 		
 		// Recreate the file
 		recreateFileServiceImpl.recreateTheFile(payload);
@@ -167,7 +167,7 @@ public class IncomingDataAppResource {
                                                     @RequestParam(value = "payload", required = false) String payload) throws ParseException, IOException {
         // Received "header" and "payload"
 		logger.info("header"+header);
-		logger.info("payload lenght="+payload.length());
+//		logger.info("payload lenght="+payload.length());
 		
 		// Recreate the file
 		recreateFileServiceImpl.recreateTheFile(payload);
