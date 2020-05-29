@@ -37,10 +37,9 @@ import de.fraunhofer.iais.eis.TokenBuilder;
 import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
-import nl.tno.ids.common.multipart.MultiPart;
-import nl.tno.ids.common.multipart.MultiPartMessage;
-import nl.tno.ids.common.serialization.DateUtil;
-import nl.tno.ids.common.serialization.SerializationHelper;
+import it.eng.idsa.multipart.domain.MultipartMessage;
+import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
+import it.eng.idsa.multipart.util.DateUtil;
 
 /**
  * 
@@ -60,20 +59,20 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	@Override
 	public String getHeader(String body) {
-		MultiPartMessage deserializedMultipartMessage = MultiPart.parseString(body);
-		return deserializedMultipartMessage.getHeaderString();
+		MultipartMessage deserializedMultipartMessage = MultipartMessageProcessor.parseMultipartMessage(body);
+		return deserializedMultipartMessage.getHeaderContentString();
 	}
 
 	@Override
 	public String getPayload(String body) {
-		MultiPartMessage deserializedMultipartMessage = MultiPart.parseString(body);
-		return deserializedMultipartMessage.getPayload();
+		MultipartMessage deserializedMultipartMessage = MultipartMessageProcessor.parseMultipartMessage(body);
+		return deserializedMultipartMessage.getPayloadContent();
 	}
 
 	@Override
 	public Message getMessage(String body) {
-		MultiPartMessage deserializedMultipartMessage = MultiPart.parseString(body);
-		return deserializedMultipartMessage.getHeader();
+		MultipartMessage deserializedMultipartMessage = MultipartMessageProcessor.parseMultipartMessage(body);
+		return deserializedMultipartMessage.getHeaderContent();
 	}
 
 	@Override
@@ -118,7 +117,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	public Message getMessage(Object header) {
 		Message message = null;
 		try {
-			message = SerializationHelper.getInstance().fromJsonLD(String.valueOf(header), Message.class);
+			message = new Serializer().deserialize(String.valueOf(header), Message.class);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -131,7 +130,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	public Message getIDSMessage(String header) {
 		Message message = null;
 		try {
-			message = SerializationHelper.getInstance().fromJsonLD(header, Message.class);
+			message = new Serializer().deserialize(String.valueOf(header), Message.class);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
