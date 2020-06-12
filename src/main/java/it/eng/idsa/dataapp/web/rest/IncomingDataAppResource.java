@@ -1,20 +1,18 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.http.HttpEntity;
 import org.apache.http.ParseException;
-import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,15 +28,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
-
 import de.fraunhofer.iais.eis.Message;
-
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.RecreateFileServiceImpl;
-import nl.tno.ids.common.multipart.MultiPartMessage;
+import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
+import it.eng.idsa.multipart.domain.MultipartMessage;
+import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
 
 /**
@@ -52,6 +50,10 @@ import nl.tno.ids.common.multipart.MultiPartMessage;
  */
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
+@ConditionalOnProperty(
+		value="application.websocket.isEnabled",
+		havingValue = "false",
+		matchIfMissing = true)
 @RequestMapping({ "/incoming-data-app" })
 public class IncomingDataAppResource {
 
@@ -96,7 +98,7 @@ public class IncomingDataAppResource {
 			@RequestHeader("Forward-To") String forwardTo,  @RequestParam(value = "header",required = false)  Object header,             
 			@RequestParam(value = "payload", required = false) Object payload   ) {
 		logger.info("header"+header);
-		logger.info("payload="+payload);
+//		logger.info("payload="+payload);
 		logger.info("forwardTo="+forwardTo);
 		return new ResponseEntity<String>("postMultipartMessage endpoint: success\n", HttpStatus.OK);
 	}
@@ -121,11 +123,11 @@ public class IncomingDataAppResource {
 		String header=new Serializer().serializePlainJson(jsonObject);
 		
 		logger.info("header="+header);
-		logger.info("payload lenght="+payload.length());
+		logger.info("payload lenght = "+payload.length());
 		
 		// Recreate the file
-		recreateFileServiceImpl.recreateTheFile(payload);
-		logger.info("The file is recreated from the MultipartMessage");
+//		recreateFileServiceImpl.recreateTheFile(payload);
+//		logger.info("The file is recreated from the MultipartMessage");
 		
 		// Put check sum in the payload
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -136,15 +138,16 @@ public class IncomingDataAppResource {
 //		payload = null;
 		
 		// prepare body response - multipart message.
-		String responseString = new MultiPartMessage.Builder()
-                										.setHeader(header)
-                										.setPayload(payload)
-                										.build()
-                										.toString();
+		MultipartMessage responseMessage = new MultipartMessageBuilder()
+                										.withHeaderContent(header)
+                										.withPayloadContent(payload)
+                										.build();
+        String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
+                										
 		
 		return ResponseEntity.ok()
 				.header("Content-Type", "multipart/mixed; boundary=CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6;charset=UTF-8")
-				.body(responseString);
+				.body(responseMessageString);
 		
 	}
 	
@@ -162,11 +165,11 @@ public class IncomingDataAppResource {
                                                     @RequestParam(value = "payload", required = false) String payload) throws ParseException, IOException {
         // Received "header" and "payload"
 		logger.info("header"+header);
-		logger.info("payload lenght="+payload.length());
+		logger.info("payload lenght = "+payload.length());
 		
 		// Recreate the file
-		recreateFileServiceImpl.recreateTheFile(payload);
-		logger.info("The file is recreated from the MultipartMessage");
+//		recreateFileServiceImpl.recreateTheFile(payload);
+//		logger.info("The file is recreated from the MultipartMessage");
 		
 		// Put check sum in the payload
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -177,15 +180,15 @@ public class IncomingDataAppResource {
 //		payload = null;
 		
 		// prepare body response - multipart message.
-		String responseString = new MultiPartMessage.Builder()
-														.setHeader(header)
-														.setPayload(payload)
-														.build()
-														.toString();
+		MultipartMessage responseMessage = new MultipartMessageBuilder()
+				.withHeaderContent(header)
+				.withPayloadContent(payload)
+				.build();
+		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
 		
 		return ResponseEntity.ok()
 				.header("Content-Type", "multipart/mixed; boundary=CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6;charset=UTF-8")
-				.body(responseString);
+				.body(responseMessageString);
 		
 	}
 
