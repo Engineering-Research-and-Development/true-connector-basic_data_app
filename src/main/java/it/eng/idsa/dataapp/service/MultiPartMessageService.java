@@ -23,4 +23,7 @@ public interface MultiPartMessageService {
 	public HttpEntity createMultipartMessage(String header, String payload/*, String boundary, String contentType*/);
 	public String getToken(String message);
 	public String removeToken(Message message);
+	public String getResponseHeader(Message header);
+	public String getResponseHeader(String header);
+
 }

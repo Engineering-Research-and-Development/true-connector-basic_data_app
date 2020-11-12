@@ -31,8 +31,15 @@ public class RecreateFileServiceImpl implements RecreateFileService {
 	public void recreateTheFile(String payload) throws IOException {
 		String payloadCleaned = payload.replaceAll(System.lineSeparator(), "");
 		File targetFile = new File(FILE_PATH + FILE_NAME);
-		FileOutputStream fos = new FileOutputStream(targetFile);
-		byte[] decoder = Base64.getDecoder().decode(payloadCleaned);
-		fos.write(decoder);
+		FileOutputStream fos = null;
+		try {
+			fos = new FileOutputStream(targetFile);
+			byte[] decoder = Base64.getDecoder().decode(payloadCleaned);
+			fos.write(decoder);
+		} finally {
+			if(fos != null) {
+				fos.close();
+			}
+		}
 	}
 }
