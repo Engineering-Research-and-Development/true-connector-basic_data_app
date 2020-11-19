@@ -97,7 +97,13 @@
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
 			<artifactId>websocket-message-streamer</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>1.0.2-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<groupId>it.eng.idsa</groupId>
+					<artifactId>multipart-message-processor</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
