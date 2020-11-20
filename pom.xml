@@ -20,6 +20,8 @@
 		<tomcat.version>9.0.27</tomcat.version>
 		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
 		<information.model.version>4.0.0</information.model.version>
+		<websocket.message.streamer.version>1.0.3-SNAPSHOT</websocket.message.streamer.version>
+      	<multipart.message.processor.version>1.0.3-SNAPSHOT</multipart.message.processor.version>
 	</properties>
 	
  	<repositories> 
@@ -97,7 +99,7 @@
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
 			<artifactId>websocket-message-streamer</artifactId>
-			<version>1.0.2-SNAPSHOT</version>
+			<version>${websocket.message.streamer.version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>it.eng.idsa</groupId>
@@ -108,7 +110,7 @@
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
 			<artifactId>multipart-message-processor</artifactId>
-			<version>1.0.2-SNAPSHOT</version>
+			<version>${multipart.message.processor.version}</version>
 		</dependency>
 
 		<!-- log4j2 -->
