@@ -29,12 +29,35 @@ public class RecreateFileServiceImpl implements RecreateFileService {
 	
 	@Override
 	public void recreateTheFile(String payload) throws IOException {
-		String payloadCleaned = payload.replaceAll(System.lineSeparator(), "");
 		File targetFile = new File(FILE_PATH + FILE_NAME);
+		saveToFile(payload, targetFile);
+	}
+
+	@Override
+	public void recreateTheFile(String payload, File targetFile) throws IOException {
+		saveToFileNoSpaceHandling(payload, targetFile);
+	}
+	
+	private void saveToFile(String payload, File targetFile) throws IOException {
+		String payloadCleaned = payload.replaceAll(System.lineSeparator(), "");
 		FileOutputStream fos = null;
 		try {
 			fos = new FileOutputStream(targetFile);
 			byte[] decoder = Base64.getDecoder().decode(payloadCleaned);
+			fos.write(decoder);
+		} finally {
+			if(fos != null) {
+				fos.close();
+			}
+		}
+	}
+	
+	private void saveToFileNoSpaceHandling(String payload, File targetFile) throws IOException {
+//		String payloadCleaned = payload.replaceAll(System.lineSeparator(), "");
+		FileOutputStream fos = null;
+		try {
+			fos = new FileOutputStream(targetFile);
+			byte[] decoder = Base64.getDecoder().decode(payload);
 			fos.write(decoder);
 		} finally {
 			if(fos != null) {

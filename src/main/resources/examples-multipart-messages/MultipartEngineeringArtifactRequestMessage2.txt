@@ -8,6 +8,6 @@ Content-Length: 606
   "issuerConnector" : "http://true.engineering.it/ids/mdm-connector",
   "modelVersion" : "4.0.0",
   "@id" : "https://w3id.org/idsa/autogen/artifactResponseMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f",
-  "requestedArtifact" : "http://mdm-connector.ids.isst.fraunhofer.de/artifact/some_file_name.csv"
+  "requestedArtifact" : "http://mdm-connector.ids.isst.fraunhofer.de/artifact/some_file_name2.csv"
 }
 --CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6--

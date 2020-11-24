@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.FormBodyPartBuilder;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ContentBody;
@@ -109,7 +110,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			String msgSerialized = serializeMessage(message);
 			JSONParser parser = new JSONParser();
 			JSONObject jsonObject = (JSONObject) parser.parse(msgSerialized);
-			jsonObject.remove("authorizationToken");
+			jsonObject.remove("securityToken");
 			output=serializeMessage(jsonObject);
 		} catch (ParseException | IOException e) {
 			logger.error("Error while parsing token - remove", e);
@@ -212,27 +213,15 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			 * ""+header.length()) .setName("header") .setBody(new StringBody(header))
 			 * .build();
 			 */
-			bodyHeaderPart = new FormBodyPart("header", new StringBody( serializeMessage(createResultMessage(getIDSMessage(header))), ContentType.DEFAULT_TEXT)) {
-				@Override
-				protected void generateContentType(ContentBody body) {
-				}
-				@Override
-				protected void generateTransferEncoding(ContentBody body){
-				}
-			};
+			ContentBody headerBody = new StringBody(header, ContentType.APPLICATION_JSON);
+			bodyHeaderPart = FormBodyPartBuilder.create("header", headerBody).build();
 			bodyHeaderPart.addField("Content-Lenght", ""+header.length());
 
 			FormBodyPart bodyPayloadPart=null;
 			if(payload!=null) {
-				bodyPayloadPart=new FormBodyPart("payload", new StringBody(payload, ContentType.DEFAULT_TEXT)) {
-					@Override
-					protected void generateContentType(ContentBody body) {
-					}
-					@Override
-					protected void generateTransferEncoding(ContentBody body){
-					}
-				};
-				bodyPayloadPart.addField("Content-Lenght", ""+payload.length());
+				ContentBody payloadBody = new StringBody(payload, ContentType.DEFAULT_TEXT);
+				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
+				bodyPayloadPart.addField("Content-Lenght", "" + payload.length());
 			}
 
 			/*
@@ -255,7 +244,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	@Override
 	public String getToken(String message) {
 		JsonObject messageObject = new JsonParser().parse(message).getAsJsonObject();
-		JsonObject authorizationTokenObject = messageObject.get("authorizationToken").getAsJsonObject();
+		JsonObject authorizationTokenObject = messageObject.get("securityToken").getAsJsonObject();
 		String token = authorizationTokenObject.get("tokenValue").getAsString();
 		return token;
 	}

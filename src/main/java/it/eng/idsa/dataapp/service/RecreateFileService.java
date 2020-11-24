@@ -1,5 +1,6 @@
 package it.eng.idsa.dataapp.service;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -13,6 +14,19 @@ import java.io.IOException;
  */
 public interface RecreateFileService {
 	
-	public void recreateTheFile(String payload) throws IOException;
+	/**
+	 * Save file using default fileName and path
+	 * @param payload
+	 * @throws IOException
+	 */
+	void recreateTheFile(String payload) throws IOException;
+	
+	/**
+	 * Save file with provided fileName and path
+	 * @param payload
+	 * @param targetFile
+	 * @throws IOException
+	 */
+	void recreateTheFile(String payload, File targetFile) throws IOException;
 
 }

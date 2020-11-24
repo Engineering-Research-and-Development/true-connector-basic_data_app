@@ -14,16 +14,17 @@ import de.fraunhofer.iais.eis.Message;
  * Service Interface for managing MultiPartMessage.
  */
 public interface MultiPartMessageService {
-	public String getHeader(String body);
-	public String getPayload(String body);
+	String getHeader(String body);
+	String getPayload(String body);
 
-	public Message getMessage(String body);
-	public Message getMessage(Object header);
-	public String addToken(Message message, String token);
-	public HttpEntity createMultipartMessage(String header, String payload/*, String boundary, String contentType*/);
-	public String getToken(String message);
-	public String removeToken(Message message);
-	public String getResponseHeader(Message header);
-	public String getResponseHeader(String header);
+	Message getMessage(String body);
+	Message getMessage(Object header);
+	String addToken(Message message, String token);
+	HttpEntity createMultipartMessage(String header, String payload/*, String boundary, String contentType*/);
+	String getToken(String message);
+	String removeToken(Message message);
+	String getResponseHeader(Message header);
+	String getResponseHeader(String header);
+	Message createRejectionMessageLocalIssues(Message header);
 
 }

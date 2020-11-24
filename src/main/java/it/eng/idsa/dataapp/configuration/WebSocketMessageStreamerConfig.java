@@ -28,7 +28,7 @@ public class WebSocketMessageStreamerConfig {
         //fileRecreatorBeanExecutor.setKeystorePassword("ssl-server.jks"); //optional default classpath: ssl-server.jks
         //fileRecreatorBeanExecutor.setKeystorePassword("password");
         fileRecreatorBeanExecutor.setPath("/incoming-data-app/routerBodyBinary");
-       // fileRecreatorBeanExecutor.trigger(500); //default 1000 1ms
+        fileRecreatorBeanExecutor.trigger(1000); //default 1000 1ms
         return fileRecreatorBeanExecutor;
     }
 

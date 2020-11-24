@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
@@ -29,12 +30,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
-import it.eng.idsa.dataapp.service.impl.RecreateFileServiceImpl;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
@@ -66,9 +69,6 @@ public class IncomingDataAppResource {
 	@Autowired
 	private MessageServiceImpl messageServiceImpl;
 	
-	@Autowired
-	private RecreateFileServiceImpl recreateFileServiceImpl;
-
 	/*
 	@PostMapping(value="/dataAppIncomingMessage", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed", MediaType.ALL_VALUE }, produces= MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<?> receiveMessage(@RequestHeader (value="Content-Type", required=false) String contentType,  @RequestParam("header")  Object header,             
@@ -113,6 +113,8 @@ public class IncomingDataAppResource {
                                             @RequestHeader(value = "Response-Type", required = false) String responseType,
                                             @RequestPart(value = "payload", required = false) String payload) throws org.json.simple.parser.ParseException, ParseException, IOException {
 
+		logger.info("Multipart/mixed request");
+
 		// Convert de.fraunhofer.iais.eis.Message to the String
 		String headerSerialized = new Serializer().serializePlainJson(headerMessage);
 		logger.info("header=" + headerSerialized);
@@ -151,7 +153,10 @@ public class IncomingDataAppResource {
     										@RequestParam(value = "header") String header,
                                             @RequestHeader(value = "Response-Type", required = false) String responseType,
                                             @RequestParam(value = "payload", required = false) String payload) throws ParseException, IOException {
-        // Received "header" and "payload"
+		
+		logger.info("Multipart/form request");
+
+		// Received "header" and "payload"
 		logger.info("header"+header);
 		logger.info("headers=" + httpHeaders);
 		if (payload != null) {
@@ -189,6 +194,7 @@ public class IncomingDataAppResource {
 	    public ResponseEntity<?> routerHttpHeader(@RequestHeader HttpHeaders httpHeaders,
 	                                                    @RequestBody(required = false) String payload) throws org.json.simple.parser.ParseException, ParseException, IOException {
 
+			logger.info("Http Header request");
 //			Map<String, String> headerAsMap = new HashMap<String, String>();
 //			headerAsMap.put("@type", httpHeaders.get("IDS-Messagetype").get(0));
 //			headerAsMap.put("@id", httpHeaders.get("IDS-Id").get(0));
@@ -231,8 +237,8 @@ public class IncomingDataAppResource {
 			headers.add("IDS-Issued", formattedDate);
 			headers.add("IDS-ModelVersion", "4.0.0");
 			headers.add("IDS-IssuerConnector", "http://iais.fraunhofer.de/ids/mdm-connector");
-			headers.add("IDS-TransferContract", "https://mdm-connector.ids.isst.fraunhofer.de/examplecontract/bab-bayern-sample/");
-			headers.add("IDS-CorrelationMessage", "http://industrialdataspace.org/connectorUnavailableMessage/1a421b8c-3407-44a8-aeb9-253f145c869a");
+//			headers.add("IDS-TransferContract", "https://mdm-connector.ids.isst.fraunhofer.de/examplecontract/bab-bayern-sample/");
+//			headers.add("IDS-CorrelationMessage", "http://industrialdataspace.org/connectorUnavailableMessage/1a421b8c-3407-44a8-aeb9-253f145c869a");
 			
 			return headers;
 		}
@@ -242,14 +248,15 @@ public class IncomingDataAppResource {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
 		String formattedDate = dateFormat.format(date);
-		JSONObject responseJsonObject = new JSONObject();
-		responseJsonObject.put("firstName", "John");
-		responseJsonObject.put("lastName", "Doe");
-		responseJsonObject.put("dateOfBirth", formattedDate);
-		responseJsonObject.put("address", "591  Franklin Street, Pennsylvania");
-		responseJsonObject.put("checksum", "ABC123 " + formattedDate);
-		String responsePayload = responseJsonObject.toString();
-		return responsePayload;
+		
+		 Map<String, String> jsonObject = new HashMap<>();
+         jsonObject.put("firstName", "John");
+         jsonObject.put("lastName", "Doe");
+         jsonObject.put("dateOfBirth", formattedDate);
+         jsonObject.put("address", "591  Franklin Street, Pennsylvania");
+         jsonObject.put("checksum", "ABC123 " + formattedDate);
+         Gson gson = new GsonBuilder().create();
+         return gson.toJson(jsonObject);
 	}
 
 	@PostMapping("/dataAppIncomingMessageSender")
