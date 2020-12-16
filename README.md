@@ -41,7 +41,7 @@ public String requestArtifact(@RequestHeader("Forward-To-Internal") String forwa
 That handles incomming requests, creates ArtifactRequestMessage, with requestedArtifact property set to requested artifact query param in following pattern
 
 ```
-"http://mdm-connector.ids.isst.fraunhofer.de/artifact/" + requestedArtifact
+"http://w3id.org/engrd/connector/artifact/" + requestedArtifact
 ```
 
 This URL will be used on Provider data app, to read resource from file system (file name), create ArifactResponseMessage with payload base64 encoded file content, and send response over wss back to Data Consumer.
