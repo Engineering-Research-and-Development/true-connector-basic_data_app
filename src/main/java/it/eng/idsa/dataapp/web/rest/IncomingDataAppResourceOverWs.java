@@ -47,14 +47,16 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		String requestMessageMultipart = (String) evt.getNewValue();
-		Message message = multiPartMessageService.getMessage(requestMessageMultipart);
+		Message requestMessage = multiPartMessageService.getMessage(requestMessageMultipart);
 		String requestHeader = multiPartMessageService.getHeader(requestMessageMultipart);
 		String requestedArtifact = null;
 		String response = null;
-		if (message instanceof ArtifactRequestMessage) {
-			requestedArtifact = ((ArtifactRequestMessage) message).getRequestedArtifact().getPath().split("/")[2];
+		if (requestMessage instanceof ArtifactRequestMessage) {
+			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
+			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
+			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);			
 			logger.info("About to get file from " + requestedArtifact);
-			response = readRequestedArtifact(message, requestedArtifact);
+			response = readRequestedArtifact(requestMessage, requestedArtifact);
 		} else {
 			response = createDummyResponse(requestHeader);
 		}

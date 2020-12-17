@@ -102,17 +102,18 @@ public class FileSenderResource {
 			@RequestHeader("Forward-To") String forwardTo, @RequestParam String requestedArtifact,
 			@Nullable @RequestBody String payload) throws Exception {
 		URI requestedArtifactURI = URI
-				.create("http://mdm-connector.ids.isst.fraunhofer.de/artifact/" + requestedArtifact);
+				.create("http://w3id.org/engrd/connector/artifact/" + requestedArtifact);
 		Message artifactRequestMessage = new ArtifactRequestMessageBuilder()
 				._issued_(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()))
-				._issuerConnector_(URI.create("http://true.engineering.it/ids/mdm-connector"))._modelVersion_("4.0.0")
-				._requestedArtifact_(requestedArtifactURI).build();
+				._issuerConnector_(URI.create("http://w3id.org/engrd/connector"))
+				._modelVersion_("4.0.0")
+				._requestedArtifact_(requestedArtifactURI)
+				.build();
 		Serializer serializer = new Serializer();
 		String requestMessage = serializer.serialize(artifactRequestMessage);
 		FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
 		String responseMessage = WebSocketClientManager.getMessageWebSocketSender()
 				.sendMultipartMessageWebSocketOverHttps(requestMessage, payload, forwardToInternal);
-
 
 		String fileNameSaved = saveFileToDisk(responseMessage, artifactRequestMessage);
 
@@ -157,7 +158,9 @@ public class FileSenderResource {
 		String requestedArtifact = null;
 		if (requestMessage instanceof ArtifactRequestMessage && responseMsg instanceof ArtifactResponseMessage) {
 			String payload = MultiPartMessageServiceUtil.getPayload(responseMessage);
-			requestedArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath().split("/")[2];
+			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
+			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
+			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
 			logger.info("About to save file " + requestedArtifact);
 			recreateFileService.recreateTheFile(payload, new File(requestedArtifact));
 			logger.info("File saved");
