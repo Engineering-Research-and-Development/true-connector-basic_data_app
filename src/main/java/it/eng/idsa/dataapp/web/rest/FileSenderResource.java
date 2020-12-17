@@ -136,8 +136,9 @@ public class FileSenderResource {
 	private String saveFileToDisk(String responseMessage, String requestMessage) throws IOException {
 		Message requestMsg = multiPartMessageService.getMessage(requestMessage);
 		Message responseMsg = multiPartMessageService.getMessage(responseMessage);
-		
+		logger.info("Response message: {} ", MultipartMessageProcessor.serializeToJsonLD(responseMsg));
 		String payload = MultiPartMessageServiceUtil.getPayload(responseMessage);
+		logger.debug("Response payload: {} ", payload);
 
 		String requestedArtifact = null;
 		if (requestMsg instanceof ArtifactRequestMessage && responseMsg instanceof ResponseMessage) {
