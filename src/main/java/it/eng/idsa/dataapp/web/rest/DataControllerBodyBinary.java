@@ -1,11 +1,6 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.http.ParseException;
 import org.apache.logging.log4j.LogManager;
@@ -21,12 +16,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
-import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
+import it.eng.idsa.dataapp.service.MultiPartMessageService;
+import it.eng.idsa.dataapp.util.PayloadUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
@@ -39,7 +32,7 @@ public class DataControllerBodyBinary {
 	private static final Logger logger = LogManager.getLogger(DataControllerBodyBinary.class);
 
 	@Autowired
-	private MultiPartMessageServiceImpl multiPartMessageServiceImpl;
+	private MultiPartMessageService multiPartMessageService;
 
 	@PostMapping
 	@Async
@@ -61,8 +54,8 @@ public class DataControllerBodyBinary {
 			logger.info("Payload is empty");
 		}
 
-		String headerResponse = multiPartMessageServiceImpl.getResponseHeader(headerMessage);
-		String responsePayload = createResponsePayload();
+		String headerResponse = multiPartMessageService.getResponseHeader(headerMessage);
+		String responsePayload = PayloadUtil.createResponsePayload();
 		MultipartMessage responseMessage = new MultipartMessageBuilder().withHeaderContent(headerResponse)
 				.withPayloadContent(responsePayload).build();
 		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
@@ -72,22 +65,4 @@ public class DataControllerBodyBinary {
 				.body(responseMessageString);
 
 	}
-
-	private String createResponsePayload() {
-		// Put check sum in the payload
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		String formattedDate = dateFormat.format(date);
-
-		Map<String, String> jsonObject = new HashMap<>();
-		jsonObject.put("firstName", "John");
-		jsonObject.put("lastName", "Doe");
-		jsonObject.put("dateOfBirth", formattedDate);
-		jsonObject.put("address", "591  Franklin Street, Pennsylvania");
-		jsonObject.put("checksum", "ABC123 " + formattedDate);
-		Gson gson = new GsonBuilder().create();
-		return gson.toJson(jsonObject);
-
-	}
-
 }

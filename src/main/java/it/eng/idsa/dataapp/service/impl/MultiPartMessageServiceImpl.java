@@ -17,6 +17,7 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.protocol.HTTP;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
@@ -209,23 +210,23 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			FormBodyPart bodyHeaderPart;
 
 			/*
-			 * bodyHeaderPart = FormBodyPartBuilder.create() .addField("Content-Lenght",
+			 * bodyHeaderPart = FormBodyPartBuilder.create() .addField(HTTP.CONTENT_LEN,
 			 * ""+header.length()) .setName("header") .setBody(new StringBody(header))
 			 * .build();
 			 */
 			ContentBody headerBody = new StringBody(header, ContentType.APPLICATION_JSON);
 			bodyHeaderPart = FormBodyPartBuilder.create("header", headerBody).build();
-			bodyHeaderPart.addField("Content-Lenght", ""+header.length());
+			bodyHeaderPart.addField(HTTP.CONTENT_LEN, ""+header.length());
 
 			FormBodyPart bodyPayloadPart=null;
 			if(payload!=null) {
 				ContentBody payloadBody = new StringBody(payload, ContentType.DEFAULT_TEXT);
 				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
-				bodyPayloadPart.addField("Content-Lenght", "" + payload.length());
+				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
 			}
 
 			/*
-			 * = FormBodyPartBuilder.create() .addField("Content-Lenght",
+			 * = FormBodyPartBuilder.create() .addField(HTTP.CONTENT_LEN,
 			 * ""+payload.length()) .setName("payload") .setBody(new StringBody(payload))
 			 * .build();
 			 */
@@ -235,6 +236,52 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			if(bodyPayloadPart!=null) {
 				multipartEntityBuilder.addPart(bodyPayloadPart);
 			}
+		} catch (Exception e) {
+			logger.error(e);
+		}
+		return multipartEntityBuilder.build();
+	}
+	
+	@Override
+	public HttpEntity createMultipartMessage(String header, String payload, String frowardTo, ContentType ctPayload) {
+		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
+//		multipartEntityBuilder.addTextBody("header", header);
+//		if (payload != null) {
+//			multipartEntityBuilder.addTextBody("payload", payload);
+//		}
+//		if (frowardTo != null) {
+//			multipartEntityBuilder.addTextBody("forwardTo", frowardTo);
+//		}
+
+		multipartEntityBuilder = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
+		try {
+			FormBodyPart bodyHeaderPart;
+			ContentBody headerBody = new StringBody(header, ContentType.APPLICATION_JSON);
+			bodyHeaderPart = FormBodyPartBuilder.create("header", headerBody).build();
+			bodyHeaderPart.addField(HTTP.CONTENT_LEN, "" + header.length());
+
+			FormBodyPart bodyPayloadPart = null;
+			if (payload != null) {
+				ContentBody payloadBody = new StringBody(payload, ctPayload);
+				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
+				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
+			}
+
+			FormBodyPart headerForwardTo = null;
+			if (frowardTo != null) {
+				ContentBody forwardToBody = new StringBody(frowardTo, ContentType.DEFAULT_TEXT);
+				headerForwardTo = FormBodyPartBuilder.create("forwardTo", forwardToBody).build();
+				headerForwardTo.addField(HTTP.CONTENT_LEN, "" + frowardTo.length());
+			}
+
+			if (frowardTo != null) {
+				multipartEntityBuilder.addPart(headerForwardTo);
+			}
+			multipartEntityBuilder.addPart(bodyHeaderPart);
+			if (payload != null) {
+				multipartEntityBuilder.addPart(bodyPayloadPart);
+			}
+
 		} catch (Exception e) {
 			logger.error(e);
 		}

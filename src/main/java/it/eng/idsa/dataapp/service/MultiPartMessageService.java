@@ -1,6 +1,7 @@
 package it.eng.idsa.dataapp.service;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.entity.ContentType;
 
 import de.fraunhofer.iais.eis.Message;
 
@@ -26,5 +27,6 @@ public interface MultiPartMessageService {
 	String getResponseHeader(Message header);
 	String getResponseHeader(String header);
 	Message createRejectionMessageLocalIssues(Message header);
+	HttpEntity createMultipartMessage(String header, String payload, String frowardTo, ContentType ctPayload);
 
 }

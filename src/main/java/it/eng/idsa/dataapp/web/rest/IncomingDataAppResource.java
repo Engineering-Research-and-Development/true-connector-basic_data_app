@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.apache.http.ParseException;
@@ -29,9 +27,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
@@ -126,10 +121,10 @@ public class IncomingDataAppResource {
 		}
 
 		String headerResponse = multiPartMessageServiceImpl.getResponseHeader(headerMessage);
-		String responsePayload = createResponsePayload();
+//		String responsePayload = createResponsePayload();
 		MultipartMessage responseMessage = new MultipartMessageBuilder()
                 										.withHeaderContent(headerResponse)
-                										.withPayloadContent(responsePayload)
+//                										.withPayloadContent(responsePayload)
                 										.build();
         String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
 		
@@ -140,47 +135,6 @@ public class IncomingDataAppResource {
 		
 	}
 
-	//======================================================================
-	// body: form-data
-	//======================================================================
-	@RequestMapping(
-            value = "/routerBodyFormData",
-            method = RequestMethod.POST,
-            produces = {MediaType.MULTIPART_FORM_DATA_VALUE, "multipart/mixed"}
-    )
-    @Async
-    public ResponseEntity<?> routerMix(@RequestHeader HttpHeaders httpHeaders,
-    										@RequestParam(value = "header") String header,
-                                            @RequestHeader(value = "Response-Type", required = false) String responseType,
-                                            @RequestParam(value = "payload", required = false) String payload) throws ParseException, IOException {
-		
-		logger.info("Multipart/form request");
-
-		// Received "header" and "payload"
-		logger.info("header"+header);
-		logger.info("headers=" + httpHeaders);
-		if (payload != null) {
-			logger.info("payload lenght = " + payload.length());
-		} else {
-			logger.info("Payload is empty");
-		}
-		
-		String headerResponse = multiPartMessageServiceImpl.getResponseHeader(header);
-		String responsePayload = createResponsePayload();
-
-		// prepare body response - multipart message.
-		MultipartMessage responseMessage = new MultipartMessageBuilder()
-				.withHeaderContent(headerResponse)
-				.withPayloadContent(responsePayload)
-				.build();
-		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
-		
-		return ResponseEntity.ok()
-				.header("foo", "bar")
-				.header("Content-Type", "multipart/mixed; boundary=CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6;charset=UTF-8")
-				.body(responseMessageString);
-		
-	}
 	
 		//======================================================================
 		// http-header
@@ -216,12 +170,12 @@ public class IncomingDataAppResource {
 				logger.info("Payload is empty");
 			}
 			
-			String responsePayload = createResponsePayload();
+//			String responsePayload = createResponsePayload();
 			return ResponseEntity.ok()
 					.header("foo", "bar")
 					.headers(createHttpHeaderResponseHeaders())
 					.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-					.body(responsePayload);
+					.body(null);
 			
 		}
 		
@@ -242,22 +196,6 @@ public class IncomingDataAppResource {
 			
 			return headers;
 		}
-
-	private String createResponsePayload() {
-		// Put check sum in the payload
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		String formattedDate = dateFormat.format(date);
-		
-		 Map<String, String> jsonObject = new HashMap<>();
-         jsonObject.put("firstName", "John");
-         jsonObject.put("lastName", "Doe");
-         jsonObject.put("dateOfBirth", formattedDate);
-         jsonObject.put("address", "591  Franklin Street, Pennsylvania");
-         jsonObject.put("checksum", "ABC123 " + formattedDate);
-         Gson gson = new GsonBuilder().create();
-         return gson.toJson(jsonObject);
-	}
 
 	@PostMapping("/dataAppIncomingMessageSender")
 	public ResponseEntity<?> postMessageSender(@RequestBody String data){
