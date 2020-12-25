@@ -12,7 +12,7 @@ import org.springframework.http.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public class PayloadUtil {
+public class MessageUtil {
 	
 	public static String createResponsePayload() {
 		// Put check sum in the payload
@@ -41,9 +41,7 @@ public class PayloadUtil {
 		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/artifactResponseMessage/" + UUID.randomUUID().toString());
 		headers.add("IDS-Issued", formattedDate);
 		headers.add("IDS-ModelVersion", "4.0.0");
-		headers.add("IDS-IssuerConnector", "http://iais.fraunhofer.de/ids/mdm-connector");
-//				headers.add("IDS-TransferContract", "https://mdm-connector.ids.isst.fraunhofer.de/examplecontract/bab-bayern-sample/");
-//				headers.add("IDS-CorrelationMessage", "http://industrialdataspace.org/connectorUnavailableMessage/1a421b8c-3407-44a8-aeb9-253f145c869a");
+		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
 
 		return headers;
 	}

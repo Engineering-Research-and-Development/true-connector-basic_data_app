@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import it.eng.idsa.dataapp.util.PayloadUtil;
+import it.eng.idsa.dataapp.util.MessageUtil;
 
 @Controller
-@ConditionalOnProperty(name = "application.http.config", havingValue = "http-header")
+@ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "http-header")
 @RequestMapping("/data")
 public class DataControllerHttpHeader {
 
@@ -43,8 +43,8 @@ public class DataControllerHttpHeader {
 			logger.info("Payload is empty");
 		}
 
-		String responsePayload = PayloadUtil.createResponsePayload();
-		return ResponseEntity.ok().header("foo", "bar").headers(PayloadUtil.createHttpHeaderResponseHeaders())
+		String responsePayload = MessageUtil.createResponsePayload();
+		return ResponseEntity.ok().header("foo", "bar").headers(MessageUtil.createHttpHeaderResponseHeaders())
 				.header("Content-Type", MediaType.APPLICATION_JSON_VALUE).body(responsePayload);
 
 	}

@@ -243,28 +243,22 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	}
 	
 	@Override
-	public HttpEntity createMultipartMessage(String header, String payload, String frowardTo, ContentType ctPayload) {
+	public HttpEntity createMultipartMessageForm(String header, String payload, String frowardTo, ContentType ctPayload) {
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
-//		multipartEntityBuilder.addTextBody("header", header);
-//		if (payload != null) {
-//			multipartEntityBuilder.addTextBody("payload", payload);
-//		}
-//		if (frowardTo != null) {
-//			multipartEntityBuilder.addTextBody("forwardTo", frowardTo);
-//		}
-
 		multipartEntityBuilder = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
 		try {
 			FormBodyPart bodyHeaderPart;
 			ContentBody headerBody = new StringBody(header, ContentType.APPLICATION_JSON);
 			bodyHeaderPart = FormBodyPartBuilder.create("header", headerBody).build();
 			bodyHeaderPart.addField(HTTP.CONTENT_LEN, "" + header.length());
+			multipartEntityBuilder.addPart(bodyHeaderPart);
 
 			FormBodyPart bodyPayloadPart = null;
 			if (payload != null) {
 				ContentBody payloadBody = new StringBody(payload, ctPayload);
 				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
 				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
+				multipartEntityBuilder.addPart(bodyPayloadPart);
 			}
 
 			FormBodyPart headerForwardTo = null;
@@ -272,14 +266,30 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				ContentBody forwardToBody = new StringBody(frowardTo, ContentType.DEFAULT_TEXT);
 				headerForwardTo = FormBodyPartBuilder.create("forwardTo", forwardToBody).build();
 				headerForwardTo.addField(HTTP.CONTENT_LEN, "" + frowardTo.length());
+				multipartEntityBuilder.addPart(headerForwardTo);
+			}
+
+		} catch (Exception e) {
+			logger.error(e);
+		}
+		return multipartEntityBuilder.build();
+	}
+	
+	@Override
+	public HttpEntity createMultipartMessageMix(String header, String payload, String frowardTo, ContentType ctPayload) {
+		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
+		multipartEntityBuilder = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
+		try {
+			ContentBody headerBody = new StringBody(header, ContentType.APPLICATION_JSON);
+			multipartEntityBuilder.addPart("header", headerBody);
+			if (payload != null) {
+				ContentBody payloadBody = new StringBody(payload, ctPayload);
+				multipartEntityBuilder.addPart("payload", payloadBody);
 			}
 
 			if (frowardTo != null) {
-				multipartEntityBuilder.addPart(headerForwardTo);
-			}
-			multipartEntityBuilder.addPart(bodyHeaderPart);
-			if (payload != null) {
-				multipartEntityBuilder.addPart(bodyPayloadPart);
+				ContentBody forwardToBody = new StringBody(frowardTo, ContentType.DEFAULT_TEXT);
+				multipartEntityBuilder.addPart("forwardTo", forwardToBody);
 			}
 
 		} catch (Exception e) {

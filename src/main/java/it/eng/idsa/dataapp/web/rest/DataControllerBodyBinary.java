@@ -1,8 +1,11 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.http.ParseException;
+import org.apache.http.entity.mime.MIME;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +22,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
-import it.eng.idsa.dataapp.util.PayloadUtil;
+import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
 @Controller
-@ConditionalOnProperty(name = "application.http.config", havingValue = "mixed")
+@ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "mixed")
 @RequestMapping("/data")
 public class DataControllerBodyBinary {
 
@@ -49,20 +52,33 @@ public class DataControllerBodyBinary {
 		logger.info("header=" + headerSerialized);
 		logger.info("headers=" + httpHeaders);
 		if (payload != null) {
-			logger.info("payload lenght = " + payload.length());
+			logger.info("payload length = " + payload.length());
 		} else {
 			logger.info("Payload is empty");
 		}
 
 		String headerResponse = multiPartMessageService.getResponseHeader(headerMessage);
-		String responsePayload = PayloadUtil.createResponsePayload();
+		String responsePayload = MessageUtil.createResponsePayload();
 		MultipartMessage responseMessage = new MultipartMessageBuilder().withHeaderContent(headerResponse)
 				.withPayloadContent(responsePayload).build();
 		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
+		
+		Optional<String> boundary = getMessageBoundaryFromMessage(responseMessageString);
+		String contentType = "multipart/mixed; boundary=" + boundary.orElse("---aaa") + ";charset=UTF-8";
 
-		return ResponseEntity.ok().header("foo", "bar")
-				.header("Content-Type", "multipart/mixed; boundary=CQWZRdCCXr5aIuonjmRXF-QzcZ2Kyi4Dkn6;charset=UTF-8")
+		return ResponseEntity.ok()
+				.header("foo", "bar")
+				.header(MIME.CONTENT_TYPE, contentType)
 				.body(responseMessageString);
 
 	}
+	
+	private Optional<String> getMessageBoundaryFromMessage(String message) {
+        String boundary = null;
+        Stream<String> lines = message.lines();
+        boundary = lines.filter(line -> line.startsWith("--"))
+                .findFirst()
+                .get();
+        return Optional.ofNullable(boundary);
+    }
 }

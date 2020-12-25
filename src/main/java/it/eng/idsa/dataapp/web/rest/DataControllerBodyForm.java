@@ -19,15 +19,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
-import it.eng.idsa.dataapp.util.PayloadUtil;
+import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 
 @RestController
-@ConditionalOnProperty(name = "application.http.config", havingValue = "form")
+@ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "form")
 @RequestMapping({"/data"})
-public class DataControllerMultipartForm {
-	private static final Logger logger = LogManager.getLogger(DataControllerMultipartForm.class);
+public class DataControllerBodyForm {
+	private static final Logger logger = LogManager.getLogger(DataControllerBodyForm.class);
 
 	@Autowired
 	private MultiPartMessageService multiPartMessageService;
@@ -53,7 +53,7 @@ public class DataControllerMultipartForm {
 		}
 		
 		String headerResponse = multiPartMessageService.getResponseHeader(header);
-		String responsePayload = PayloadUtil.createResponsePayload();
+		String responsePayload = MessageUtil.createResponsePayload();
 
 		// prepare body response - multipart message.
 		MultipartMessage responseMessage = new MultipartMessageBuilder()
@@ -61,7 +61,7 @@ public class DataControllerMultipartForm {
 				.withPayloadContent(responsePayload)
 				.build();
 		
-		HttpEntity resultEntity = multiPartMessageService.createMultipartMessage(responseMessage.getHeaderContentString(), 
+		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(responseMessage.getHeaderContentString(), 
 				responseMessage.getPayloadContent(), null, ContentType.APPLICATION_JSON);
 		
 		return ResponseEntity.ok()
