@@ -276,29 +276,6 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	}
 	
 	@Override
-	public HttpEntity createMultipartMessageMix(String header, String payload, String frowardTo, ContentType ctPayload) {
-		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
-		multipartEntityBuilder = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
-		try {
-			ContentBody headerBody = new StringBody(header, ContentType.APPLICATION_JSON);
-			multipartEntityBuilder.addPart("header", headerBody);
-			if (payload != null) {
-				ContentBody payloadBody = new StringBody(payload, ctPayload);
-				multipartEntityBuilder.addPart("payload", payloadBody);
-			}
-
-			if (frowardTo != null) {
-				ContentBody forwardToBody = new StringBody(frowardTo, ContentType.DEFAULT_TEXT);
-				multipartEntityBuilder.addPart("forwardTo", forwardToBody);
-			}
-
-		} catch (Exception e) {
-			logger.error(e);
-		}
-		return multipartEntityBuilder.build();
-	}
-
-	@Override
 	public String getToken(String message) {
 		JsonObject messageObject = new JsonParser().parse(message).getAsJsonObject();
 		JsonObject authorizationTokenObject = messageObject.get("securityToken").getAsJsonObject();

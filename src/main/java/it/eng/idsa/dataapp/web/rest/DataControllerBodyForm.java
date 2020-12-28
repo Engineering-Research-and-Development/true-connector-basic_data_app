@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.util.MessageUtil;
-import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
-import it.eng.idsa.multipart.domain.MultipartMessage;
 
 @RestController
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "form")
@@ -52,17 +50,10 @@ public class DataControllerBodyForm {
 			logger.info("Payload is empty");
 		}
 		
-		String headerResponse = multiPartMessageService.getResponseHeader(header);
-		String responsePayload = MessageUtil.createResponsePayload();
-
 		// prepare body response - multipart message.
-		MultipartMessage responseMessage = new MultipartMessageBuilder()
-				.withHeaderContent(headerResponse)
-				.withPayloadContent(responsePayload)
-				.build();
 		
-		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(responseMessage.getHeaderContentString(), 
-				responseMessage.getPayloadContent(), null, ContentType.APPLICATION_JSON);
+		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(multiPartMessageService.getResponseHeader(header), 
+				MessageUtil.createResponsePayload(), null, ContentType.APPLICATION_JSON);
 		
 		return ResponseEntity.ok()
 				.header("foo", "bar")

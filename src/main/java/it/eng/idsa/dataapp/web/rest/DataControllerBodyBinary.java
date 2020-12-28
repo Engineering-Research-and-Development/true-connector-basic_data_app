@@ -2,7 +2,6 @@ package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.apache.http.ParseException;
 import org.apache.http.entity.mime.MIME;
@@ -63,7 +62,7 @@ public class DataControllerBodyBinary {
 				.withPayloadContent(responsePayload).build();
 		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
 		
-		Optional<String> boundary = getMessageBoundaryFromMessage(responseMessageString);
+		Optional<String> boundary = MultipartMessageProcessor.getMessageBoundaryFromMessage(responseMessageString);
 		String contentType = "multipart/mixed; boundary=" + boundary.orElse("---aaa") + ";charset=UTF-8";
 
 		return ResponseEntity.ok()
@@ -73,12 +72,4 @@ public class DataControllerBodyBinary {
 
 	}
 	
-	private Optional<String> getMessageBoundaryFromMessage(String message) {
-        String boundary = null;
-        Stream<String> lines = message.lines();
-        boundary = lines.filter(line -> line.startsWith("--"))
-                .findFirst()
-                .get();
-        return Optional.ofNullable(boundary);
-    }
 }

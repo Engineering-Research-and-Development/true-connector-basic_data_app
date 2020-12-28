@@ -5,9 +5,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-
-import org.springframework.http.HttpHeaders;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,20 +27,5 @@ public class MessageUtil {
          return gson.toJson(jsonObject);
 	}
 	
-	public static HttpHeaders createHttpHeaderResponseHeaders() {
-		HttpHeaders headers = new HttpHeaders();
-
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-		Date date = new Date();
-		String formattedDate = dateFormat.format(date);
-
-		headers.add("IDS-Messagetype", "ids:ArtifactResponseMessage");
-		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/artifactResponseMessage/" + UUID.randomUUID().toString());
-		headers.add("IDS-Issued", formattedDate);
-		headers.add("IDS-ModelVersion", "4.0.0");
-		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
-
-		return headers;
-	}
 
 }

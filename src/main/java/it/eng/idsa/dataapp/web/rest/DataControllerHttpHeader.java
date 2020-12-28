@@ -1,6 +1,10 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 
 import org.apache.http.ParseException;
 import org.apache.logging.log4j.LogManager;
@@ -44,8 +48,25 @@ public class DataControllerHttpHeader {
 		}
 
 		String responsePayload = MessageUtil.createResponsePayload();
-		return ResponseEntity.ok().header("foo", "bar").headers(MessageUtil.createHttpHeaderResponseHeaders())
+		return ResponseEntity.ok().header("foo", "bar").headers(createHttpHeaderResponseHeaders())
 				.header("Content-Type", MediaType.APPLICATION_JSON_VALUE).body(responsePayload);
 
+	}
+	
+	
+	private HttpHeaders createHttpHeaderResponseHeaders() {
+		HttpHeaders headers = new HttpHeaders();
+
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		Date date = new Date();
+		String formattedDate = dateFormat.format(date);
+
+		headers.add("IDS-Messagetype", "ids:ArtifactResponseMessage");
+		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/artifactResponseMessage/" + UUID.randomUUID().toString());
+		headers.add("IDS-Issued", formattedDate);
+		headers.add("IDS-ModelVersion", "4.0.0");
+		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
+
+		return headers;
 	}
 }
