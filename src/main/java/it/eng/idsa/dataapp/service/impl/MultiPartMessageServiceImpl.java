@@ -28,8 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
@@ -119,7 +117,6 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return output;
 	}
 
-
     @Override
     public String getResponseHeader(String header) {
 	    Message message = null;
@@ -147,8 +144,6 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return output;
     }
 
-
-
     @Override
 	public Message getMessage(Object header) {
 		Message message = null;
@@ -158,10 +153,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			logger.error(e);
 		}
 		return message;
-
 	}
-
-
 
 	public Message getIDSMessage(String header) {
 		Message message = null;
@@ -277,9 +269,25 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	
 	@Override
 	public String getToken(String message) {
-		JsonObject messageObject = new JsonParser().parse(message).getAsJsonObject();
-		JsonObject authorizationTokenObject = messageObject.get("securityToken").getAsJsonObject();
-		String token = authorizationTokenObject.get("tokenValue").getAsString();
+		JSONParser parser = new JSONParser();
+		JSONObject jsonObject;
+		String token = null;
+		try {
+			jsonObject = (JSONObject) parser.parse(message);
+			jsonObject = (JSONObject) jsonObject.get("ids:securityToken");
+			if (jsonObject == null) {
+				logger.error(
+						"Token is not set: securityToken is not set in the part of the header in the multipart message");
+			} else {
+				token = (String) jsonObject.get("ids:tokenValue");
+				if (token == null) {
+					logger.error(
+							"Token is not set: tokenValue is not set in the part of the header in the multipart message");
+				}
+			}
+		} catch (ParseException e) {
+			logger.error("Error while getting token from message", e);
+		}
 		return token;
 	}
 

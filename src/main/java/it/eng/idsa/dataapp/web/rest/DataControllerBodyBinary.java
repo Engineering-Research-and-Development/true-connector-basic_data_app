@@ -1,9 +1,7 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import java.io.IOException;
 import java.util.Optional;
 
-import org.apache.http.ParseException;
 import org.apache.http.entity.mime.MIME;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
@@ -41,8 +41,7 @@ public class DataControllerBodyBinary {
 	public ResponseEntity<?> routerBinary(@RequestHeader HttpHeaders httpHeaders,
 			@RequestPart(value = "header") Message headerMessage,
 			@RequestHeader(value = "Response-Type", required = false) String responseType,
-			@RequestPart(value = "payload", required = false) String payload)
-			throws org.json.simple.parser.ParseException, ParseException, IOException {
+			@RequestPart(value = "payload", required = false) String payload) throws JsonProcessingException {
 
 		logger.info("Multipart/mixed request");
 
@@ -69,7 +68,5 @@ public class DataControllerBodyBinary {
 				.header("foo", "bar")
 				.header(MIME.CONTENT_TYPE, contentType)
 				.body(responseMessageString);
-
 	}
-	
 }

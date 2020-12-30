@@ -3,7 +3,6 @@ package it.eng.idsa.dataapp.web.rest;
 import java.io.IOException;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.ParseException;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,8 +35,7 @@ public class DataControllerBodyForm {
     public ResponseEntity<?> routerForm(@RequestHeader HttpHeaders httpHeaders,
     									@RequestParam(value = "header") String header,
                                         @RequestHeader(value = "Response-Type", required = false) String responseType,
-                                        @RequestParam(value = "payload", required = false) String payload)
-                                        throws ParseException, IOException {
+                                        @RequestParam(value = "payload", required = false) String payload) throws UnsupportedOperationException, IOException {
 		
 		logger.info("Multipart/form request");
 
@@ -52,15 +50,15 @@ public class DataControllerBodyForm {
 		
 		// prepare body response - multipart message.
 		
-		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(multiPartMessageService.getResponseHeader(header), 
-				MessageUtil.createResponsePayload(), null, ContentType.APPLICATION_JSON);
+		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(
+				multiPartMessageService.getResponseHeader(header), 
+				MessageUtil.createResponsePayload(), 
+				null, 
+				ContentType.APPLICATION_JSON);
 		
 		return ResponseEntity.ok()
 				.header("foo", "bar")
 				.header(resultEntity.getContentType().getName(), resultEntity.getContentType().getValue())
 				.body(resultEntity.getContent().readAllBytes());
-		
 	}
-	
-	
 }

@@ -1,12 +1,10 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
-import org.apache.http.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,15 +29,11 @@ public class DataControllerHttpHeader {
 
 	@PostMapping
 	@Async
-	public ResponseEntity<?> routerHttpHeader(@RequestHeader HttpHeaders httpHeaders,
-			@RequestBody(required = false) String payload)
-			throws org.json.simple.parser.ParseException, ParseException, IOException {
+	public ResponseEntity<?> routerHttpHeader(
+			@RequestHeader HttpHeaders httpHeaders,
+			@RequestBody(required = false) String payload) {
 
 		logger.info("Http Header request");
-
-		httpHeaders.remove("Content-Length");
-		httpHeaders.remove("Content-Type");
-
 		logger.info("headers=" + httpHeaders);
 		if (payload != null) {
 			logger.info("payload lenght = " + payload.length());
@@ -48,9 +42,11 @@ public class DataControllerHttpHeader {
 		}
 
 		String responsePayload = MessageUtil.createResponsePayload();
-		return ResponseEntity.ok().header("foo", "bar").headers(createHttpHeaderResponseHeaders())
-				.header("Content-Type", MediaType.APPLICATION_JSON_VALUE).body(responsePayload);
-
+		return ResponseEntity.ok()
+				.header("foo", "bar")
+				.headers(createHttpHeaderResponseHeaders())
+				.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+				.body(responsePayload);
 	}
 	
 	
