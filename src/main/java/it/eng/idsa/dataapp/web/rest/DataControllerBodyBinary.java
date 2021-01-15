@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.apache.http.entity.mime.MIME;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +12,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,15 +26,17 @@ import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
 @Controller
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "mixed")
-@RequestMapping("/data")
 public class DataControllerBodyBinary {
 
 	private static final Logger logger = LogManager.getLogger(DataControllerBodyBinary.class);
-
-	@Autowired
+	
 	private MultiPartMessageService multiPartMessageService;
 
-	@PostMapping
+	public DataControllerBodyBinary(MultiPartMessageService multiPartMessageService) {
+		this.multiPartMessageService = multiPartMessageService;
+	}
+	
+	@PostMapping(value = "/data")
 	@Async
 	public ResponseEntity<?> routerBinary(@RequestHeader HttpHeaders httpHeaders,
 			@RequestPart(value = "header") Message headerMessage,
