@@ -43,7 +43,7 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 @RestController
 @EnableAutoConfiguration
-@RequestMapping({ "/" })
+//@RequestMapping({ "/" })
 public class FileSenderResource {
 	private static final Logger logger = LogManager.getLogger(FileSenderResource.class);
 

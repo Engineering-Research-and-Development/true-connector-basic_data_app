@@ -20,10 +20,10 @@ public class ServerPortCustomizer implements WebServerFactoryCustomizer<Configur
 
     @Override
     public void customize(ConfigurableWebServerFactory factory) {
-        if (isEnabledWebSocket)
-            factory.setPort(fileSenderPort); //0 switch off the Tomcat server
-        else {
-            factory.setPort(port);
-        }
+//        if (isEnabledWebSocket)
+//            factory.setPort(fileSenderPort); //0 switch off the Tomcat server
+//        else {
+//            factory.setPort(port);
+//        }
     }
 }
