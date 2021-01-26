@@ -17,5 +17,7 @@ public interface ProxyService {
 	ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders) throws URISyntaxException;
 	ResponseEntity<String> proxyHttpHeader(ProxyRequest proxyRequest, HttpHeaders httpHeaders) throws URISyntaxException;
 	
+	ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest, HttpHeaders httpHeaders);
+	
 	ProxyRequest parseIncommingProxyRequest(String body);
 }

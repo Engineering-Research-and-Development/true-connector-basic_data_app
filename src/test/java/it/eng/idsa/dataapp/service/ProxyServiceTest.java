@@ -3,6 +3,8 @@ package it.eng.idsa.dataapp.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -29,6 +31,7 @@ import org.springframework.web.client.RestTemplate;
 
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
+import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
 
 public class ProxyServiceTest {
@@ -37,7 +40,10 @@ public class ProxyServiceTest {
 	private String message;
 
 	private ProxyServiceImpl service;
-	
+	@Mock
+	private MultiPartMessageServiceImpl multiPartMessageService;
+	@Mock
+	private RecreateFileService recreateFileService;
 	@Mock
 	private HttpHeaders httpHeaders;
 	@Mock
@@ -56,7 +62,7 @@ public class ProxyServiceTest {
 	public void init() {
 		MockitoAnnotations.initMocks(this);
 		when(restTemplateBuilder.build()).thenReturn(restTemplate);
-		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties);
+		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, multiPartMessageService, recreateFileService);
 		message = getMessageJson();
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");
@@ -140,6 +146,17 @@ public class ProxyServiceTest {
 		assertNotNull(pr.getMessage());
 		assertFalse(CollectionUtils.isEmpty(pr.getMessageAsHeader()));
 	}
+	
+	@Test
+	public void parseIncommingProxyRequestWss() {
+		ProxyRequest pr = service.parseIncommingProxyRequest(getProxyRequestRequestedArtifact());
+		assertNotNull(pr);
+		assertEquals(ProxyRequest.WSS, pr.getMultipart());
+		assertEquals("test.csv", pr.getRequestedArtifact());
+		assertNull(pr.getPayload());
+		assertNull(pr.getMessage());
+		assertTrue(CollectionUtils.isEmpty(pr.getMessageAsHeader()));
+	}
 
 	private String getProxyRequest() {
 		return "{\r\n" + 
@@ -173,6 +190,13 @@ public class ProxyServiceTest {
 				"        \"IDS-Id\":\"https://w3id.org/idsa/autogen/artifactResponseMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f\",\r\n" + 
 				"        \"IDS-IssuerConnector\":\"http://w3id.org/engrd/connector/\"\r\n" + 
 				"        }\r\n" + 
+				"}";
+	}
+	
+	private String getProxyRequestRequestedArtifact() {
+		return "{\r\n" + 
+				"    \"multipart\": \"wss\",\r\n" + 
+				"    \"requestedArtifact\": \"test.csv\",\r\n" + 
 				"}";
 	}
 

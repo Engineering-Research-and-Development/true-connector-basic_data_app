@@ -94,9 +94,14 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 
 		} catch (Exception e) {
 			logger.error("Error while reading resource from disk", e);
-			Message rejectionMessage = multiPartMessageService.createRejectionMessageLocalIssues(requestMessage);
-			MultipartMessage responseMessageRejection = new MultipartMessageBuilder().withHeaderContent(rejectionMessage)
-					.withPayloadContent(null).build();
+			Message rejectionMessage = multiPartMessageService.createRejectionCommunicationLocalIssues(requestMessage);
+			String payload = "{\r\n" + 
+					"	\"reason\" : \"Resource '" + e.getMessage()  + "' not found\"\r\n" + 
+					"}";
+			MultipartMessage responseMessageRejection = new MultipartMessageBuilder()
+					.withHeaderContent(rejectionMessage)
+					.withPayloadContent(payload)
+					.build();
 			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageRejection, false);
 
 		}

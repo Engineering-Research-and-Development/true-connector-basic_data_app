@@ -1,8 +1,5 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,10 +29,20 @@ public class ProxyController {
 		this.proxySrvice = proxySrvice;
 	}
 
+	/**
+	 * Unique entry point in data App for proxying multipart mixed, multipart form, http-header and wss requestss towards ECC
+	 * @param httpHeaders
+	 * @param body - json representation containing information needed for correct forwarding
+	 * @param method
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
 	@RequestMapping("/proxy")
 	public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
-			@RequestBody(required = false) String body, HttpMethod method, HttpServletRequest request,
-			HttpServletResponse response) throws URISyntaxException, IOException {
+			@RequestBody String body, HttpMethod method, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
 
 		ProxyRequest proxyRequest = proxySrvice.parseIncommingProxyRequest(body);
 		logger.debug("Type: " + proxyRequest.getMultipart());
@@ -53,6 +60,9 @@ public class ProxyController {
 		case ProxyRequest.MULTIPART_HEADER:
 			logger.info("Forwarding request using {}", ProxyRequest.MULTIPART_HEADER);
 			return proxySrvice.proxyHttpHeader(proxyRequest, httpHeaders);
+		case ProxyRequest.WSS:
+			logger.info("Forwarding request using {}", ProxyRequest.WSS);
+			return proxySrvice.requestArtifact(proxyRequest, httpHeaders);
 		default:
 			logger.info("Wrong value for multipart field '{}'", proxyRequest.getMultipart());
 			return new ResponseEntity<>("Missing proper value for MULTIPART, should be one of: '" + ProxyRequest.MULTIPART_MIXED + 

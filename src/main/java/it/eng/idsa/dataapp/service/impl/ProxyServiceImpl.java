@@ -1,8 +1,13 @@
 package it.eng.idsa.dataapp.service.impl;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.GregorianCalendar;
 import java.util.Map;
+
+import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -21,29 +26,46 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
+import de.fraunhofer.iais.eis.ArtifactRequestMessage;
+import de.fraunhofer.iais.eis.ArtifactRequestMessageBuilder;
+import de.fraunhofer.iais.eis.ArtifactResponseMessage;
+import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.ProxyService;
+import it.eng.idsa.dataapp.service.RecreateFileService;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
+import it.eng.idsa.streamer.WebSocketClientManager;
+import it.eng.idsa.streamer.util.MultiPartMessageServiceUtil;
+import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 @Service
 public class ProxyServiceImpl implements ProxyService {
 	private static final Object MULTIAPRT = "multipart";
 	private static final String MESSAGE = "message";
 	private static final String PAYLOAD = "payload";
+	private static final String REQUESTED_ARTIFACT = "requestedArtifact";
+
 	private static final String MESSAGE_AS_HEADERS = "messageAsHeaders";
 
 	private static final Logger logger = LogManager.getLogger(ProxyService.class);
 
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
+	private MultiPartMessageServiceImpl multiPartMessageService;
+	private RecreateFileService recreateFileService;
 	
-	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties) {
+	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties,
+			MultiPartMessageServiceImpl multiPartMessageService, RecreateFileService recreateFileService) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
+		this.multiPartMessageService = multiPartMessageService;
+		this.recreateFileService = recreateFileService;
 	}
 	
 	@Override
@@ -112,6 +134,8 @@ public class ProxyServiceImpl implements ProxyService {
 			
 			String multipart =  (String) jsonObject.get(MULTIAPRT);
 			
+			String requestedArtifact = (String) jsonObject.get(REQUESTED_ARTIFACT);
+			
 			JSONObject partJson = (JSONObject) jsonObject.get(MESSAGE);
 			String message =  partJson != null ? partJson.toJSONString().replace("\\/","/") : null;
 			
@@ -120,7 +144,7 @@ public class ProxyServiceImpl implements ProxyService {
 			
 			Map<String, Object> messageAsMap = (JSONObject) jsonObject.get(MESSAGE_AS_HEADERS);
 			
-			return new ProxyRequest(multipart, message, payload, messageAsMap);
+			return new ProxyRequest(multipart, message, payload, requestedArtifact, messageAsMap);
 		} catch (ParseException e) {
 			logger.error("Error parsing payoad", e);
 		}
@@ -221,5 +245,67 @@ public class ProxyServiceImpl implements ProxyService {
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
 		logResponse(resp);
 		return resp;
+	}
+
+	@Override
+	public ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest, HttpHeaders httpHeaders){
+		String forwardToInternal = httpHeaders.getFirst("Forward-To-Internal");
+		String forwardTo = httpHeaders.getFirst("Forward-To");
+		
+		if(StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
+			return ResponseEntity.badRequest().body("Missing required headers Forward-To or Forward-To-Internal");
+		}
+		
+		URI requestedArtifactURI = URI
+				.create("http://w3id.org/engrd/connector/artifact/" + proxyRequest.getRequestedArtifact());
+		Message artifactRequestMessage;
+		try {
+			artifactRequestMessage = new ArtifactRequestMessageBuilder()
+					._issued_(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()))
+					._issuerConnector_(URI.create("http://w3id.org/engrd/connector"))
+					._modelVersion_("4.0.0")
+					._requestedArtifact_(requestedArtifactURI)
+					.build();
+
+			Serializer serializer = new Serializer();
+			String requestMessage = serializer.serialize(artifactRequestMessage);
+			FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
+			String responseMessage = WebSocketClientManager.getMessageWebSocketSender()
+					.sendMultipartMessageWebSocketOverHttps(requestMessage, proxyRequest.getPayload(), forwardToInternal);
+			
+			String fileNameSaved = saveFileToDisk(responseMessage, artifactRequestMessage);
+			
+			if(fileNameSaved != null) {
+				return ResponseEntity.ok("{​​\"message\":\"File '" + fileNameSaved + "' created successfully\"}");
+			}
+			return ResponseEntity.ok(responseMessage);
+		} catch (Exception exc) {
+			logger.error("Error while processing request {}", exc);
+			 throw new ResponseStatusException(
+			           HttpStatus.INTERNAL_SERVER_ERROR, 
+			           "Error while processing request, check logs for more details", 
+			           exc);
+		}
+	}
+	
+	
+	private String saveFileToDisk(String responseMessage, Message requestMessage) throws IOException {
+		Message responseMsg = multiPartMessageService.getMessage(responseMessage);
+
+		String requestedArtifact = null;
+		if (requestMessage instanceof ArtifactRequestMessage && responseMsg instanceof ArtifactResponseMessage) {
+			String payload = MultiPartMessageServiceUtil.getPayload(responseMessage);
+			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
+			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
+			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
+			logger.info("About to save file " + requestedArtifact);
+			recreateFileService.recreateTheFile(payload, new File(requestedArtifact));
+			logger.info("File saved");
+		} else {
+			logger.info("Did not have ArtifactRequestMessage and ResponseMessage - nothing to save");
+			requestedArtifact = null;
+		}
+		
+		return requestedArtifact;
 	}
 }
