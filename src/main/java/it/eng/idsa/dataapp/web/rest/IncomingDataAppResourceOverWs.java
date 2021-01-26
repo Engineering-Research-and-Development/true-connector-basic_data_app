@@ -3,7 +3,6 @@ package it.eng.idsa.dataapp.web.rest;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DateFormat;
@@ -13,7 +12,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,11 +123,10 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 	}
 
 	private String readFile(String requestedArtifact) throws IOException {
-		logger.info("Reading file from disk (classPath) " + requestedArtifact);
-		InputStream is = Files.newInputStream(dataLakeDirectory.resolve(requestedArtifact));
-		String message = IOUtils.toString(is, "UTF8");
-		String mmm = Base64.getEncoder().encodeToString(message.getBytes());
+		logger.info("Reading file {} from datalake", requestedArtifact);
+		byte[] fileContent = Files.readAllBytes(dataLakeDirectory.resolve(requestedArtifact));
+		String base64EncodedFile = Base64.getEncoder().encodeToString(fileContent);
 		logger.info("File read from disk.");
-		return mmm;
+		return base64EncodedFile;
 	}
 }
