@@ -12,7 +12,7 @@ public interface ProxyService {
 	ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders) throws URISyntaxException;
 	ResponseEntity<String> proxyHttpHeader(ProxyRequest proxyRequest, HttpHeaders httpHeaders) throws URISyntaxException;
 	
-	ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest, HttpHeaders httpHeaders);
+	ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest);
 	
 	ProxyRequest parseIncommingProxyRequest(String body);
 }

@@ -50,6 +50,8 @@ public class ProxyServiceImpl implements ProxyService {
 	private static final String MESSAGE = "message";
 	private static final String PAYLOAD = "payload";
 	private static final String REQUESTED_ARTIFACT = "requestedArtifact";
+	private static final String FORWARD_TO = "Forward-To";
+	private static final String FORWARD_TO_INTERNAL = "Forward-To-Internal";
 
 	private static final String MESSAGE_AS_HEADERS = "messageAsHeaders";
 
@@ -77,6 +79,10 @@ public class ProxyServiceImpl implements ProxyService {
 			
 			String multipart =  (String) jsonObject.get(MULTIAPRT);
 			
+			String forwardTo =  (String) jsonObject.get(FORWARD_TO);
+			
+			String forwardToInternal =  (String) jsonObject.get(FORWARD_TO_INTERNAL);
+			
 			String requestedArtifact = (String) jsonObject.get(REQUESTED_ARTIFACT);
 			
 			JSONObject partJson = (JSONObject) jsonObject.get(MESSAGE);
@@ -87,7 +93,7 @@ public class ProxyServiceImpl implements ProxyService {
 			
 			Map<String, Object> messageAsMap = (JSONObject) jsonObject.get(MESSAGE_AS_HEADERS);
 			
-			return new ProxyRequest(multipart, message, payload, requestedArtifact, messageAsMap);
+			return new ProxyRequest(multipart, forwardTo, forwardToInternal, message, payload, requestedArtifact, messageAsMap);
 		} catch (ParseException e) {
 			logger.error("Error parsing payoad", e);
 		}
@@ -113,6 +119,7 @@ public class ProxyServiceImpl implements ProxyService {
 		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
 				eccProperties.getPort(), eccProperties.getMixContext(),
 				null, null);
+		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
 		HttpEntity<String> requestEntity = new HttpEntity<String>(proxyPayload, httpHeaders);
 		logger.info("Forwarding mix POST request to {}", thirdPartyApi.toString());
 		
@@ -135,6 +142,7 @@ public class ProxyServiceImpl implements ProxyService {
 		map.add("header", proxyRequest.getMessage());
 		map.add("payload", proxyRequest.getPayload());
 		httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
 		HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, httpHeaders);
 		
 		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
@@ -169,9 +177,9 @@ public class ProxyServiceImpl implements ProxyService {
 	}
 
 	@Override
-	public ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest, HttpHeaders httpHeaders){
-		String forwardToInternal = httpHeaders.getFirst("Forward-To-Internal");
-		String forwardTo = httpHeaders.getFirst("Forward-To");
+	public ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest){
+		String forwardToInternal = proxyRequest.getForwardToInternal();
+		String forwardTo = proxyRequest.getForwardTo();
 		
 		if(StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
 			return ResponseEntity.badRequest().body("Missing required headers Forward-To or Forward-To-Internal");

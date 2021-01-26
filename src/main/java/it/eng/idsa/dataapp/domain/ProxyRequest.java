@@ -14,6 +14,8 @@ public class ProxyRequest {
 	public static final String WSS = "wss";
 
 	private String multipart;
+	private String forwardTo;
+	private String forwardToInternal;
 	private String message;
 	private String payload;
 	private String requestedArtifact;
@@ -23,16 +25,18 @@ public class ProxyRequest {
 		super();
 	}
 
-	public ProxyRequest(String multipart, String message, String payload, String requestedArtifact,
-			Map<String, Object> messageAsHeader) {
+	public ProxyRequest(String multipart, String forwardTo, String forwardToInternal, String message, String payload,
+			String requestedArtifact, Map<String, Object> messageAsHeader) {
 		super();
 		this.multipart = multipart;
+		this.forwardTo = forwardTo;
+		this.forwardToInternal = forwardToInternal;
 		this.message = message;
 		this.payload = payload;
 		this.requestedArtifact = requestedArtifact;
 		this.messageAsHeader = messageAsHeader;
 	}
-	
+
 	public String getMultipart() {
 		return multipart;
 	}
@@ -63,4 +67,22 @@ public class ProxyRequest {
 	public void setMessageAsHeader(Map<String, Object> messageAsHeader) {
 		this.messageAsHeader = messageAsHeader;
 	}
+
+	public String getForwardTo() {
+		return forwardTo;
+	}
+
+	public void setForwardTo(String forwardTo) {
+		this.forwardTo = forwardTo;
+	}
+
+	public String getForwardToInternal() {
+		return forwardToInternal;
+	}
+
+	public void setForwardToInternal(String forwardToInternal) {
+		this.forwardToInternal = forwardToInternal;
+	}
+	
+	
 }

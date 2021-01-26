@@ -42,12 +42,12 @@ Following CURL command matches the request
 
 ```
 curl --location --request POST 'https://localhost:8083/proxy' \
---header 'Forward-To: https://localhost:8890/data' \
---header 'Forward-To-Internal: wss://localhost:8887' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
-    "multipart": "mixed",
+    "multipart": "wss",
+    "Forward-To": "https://localhost:8890/data",
+    "Forward-To-Internal": "wss://localhost:8887",
     "requestedArtifact" : "test1.csv",
 	 "message": {
 	  "@context" : {
