@@ -69,63 +69,6 @@ public class ProxyServiceImpl implements ProxyService {
 	}
 	
 	@Override
-	@Deprecated
-	public ResponseEntity<String> proxyMultipartMix(String body, HttpHeaders httpHeaders) 
-			throws URISyntaxException {
-		String header = getPayloadPart(body, MESSAGE);
-		String payload = getPayloadPart(body, PAYLOAD);
-
-		MultipartMessage mm = new MultipartMessageBuilder().withHeaderContent(header).withPayloadContent(payload).build();
-		String proxyPayload = MultipartMessageProcessor.multipartMessagetoString(mm, false, true);
-		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
-				eccProperties.getPort(), eccProperties.getMixContext(),
-				null, null);
-		HttpEntity<String> requestEntity = new HttpEntity<String>(proxyPayload, httpHeaders);
-		logger.info("Forwarding mix POST request to {}", thirdPartyApi.toString());
-		
-		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logResponse(resp);
-		return resp;
-	}
-
-	@Override
-	@Deprecated
-	public ResponseEntity<String> proxyMultipartForm(String body, HttpHeaders httpHeaders) throws URISyntaxException {
-		String header = getPayloadPart(body, MESSAGE);
-		String payload = getPayloadPart(body, PAYLOAD);
-		
-		LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-		map.add("header", header);
-		map.add("payload", payload);
-		httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
-		HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, httpHeaders);
-		
-		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
-				eccProperties.getPort(), eccProperties.getFormContext(),
-				null, null);
-		
-		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
-		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logResponse(resp);
-		return resp;
-	}
-
-	@Override
-	@Deprecated
-	public ResponseEntity<String> proxyHttpHeader(String body, HttpHeaders httpHeaders) throws URISyntaxException {
-		HttpEntity<String> requestEntity = new HttpEntity<String>(body, httpHeaders);
-		
-		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
-				eccProperties.getPort(), eccProperties.getHeaderContext(),
-				null, null);
-
-		logger.info("Forwarding header POST request to {}", thirdPartyApi.toString());
-		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logResponse(resp);
-		return resp;
-	}
-	
-	@Override
 	public ProxyRequest parseIncommingProxyRequest(String body) {
 		JSONParser parser = new JSONParser();
 		JSONObject jsonObject;
@@ -149,28 +92,6 @@ public class ProxyServiceImpl implements ProxyService {
 			logger.error("Error parsing payoad", e);
 		}
 		return new ProxyRequest();
-	}
-
-	private void logResponse(ResponseEntity<String> resp) {
-		logger.info("Response received with status code {}", resp.getStatusCode());
-		logger.info("Response headers\n{}", resp.getHeaders());
-		logger.info("Response body\n{}", resp.getBody());
-	}
-	
-	private String getPayloadPart(String payload, String part) {
-		JSONParser parser=new JSONParser();
-		JSONObject jsonObject;
-		try {
-			jsonObject = (JSONObject) parser.parse(payload);
-			if("multipart".equals(part)) {
-				return (String) jsonObject.get(part);
-			}
-			JSONObject partJson = (JSONObject) jsonObject.get(part);
-			return partJson.toJSONString().replace("\\/","/");
-		} catch (ParseException e) {
-			logger.error("Error parsing payoad", e);
-		}
-		return null;
 	}
 
 	@Override
@@ -288,7 +209,29 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 	}
 	
+	private void logResponse(ResponseEntity<String> resp) {
+		logger.info("Response received with status code {}", resp.getStatusCode());
+		logger.info("Response headers\n{}", resp.getHeaders());
+		logger.info("Response body\n{}", resp.getBody());
+	}
 	
+	private String getPayloadPart(String payload, String part) {
+		JSONParser parser=new JSONParser();
+		JSONObject jsonObject;
+		try {
+			jsonObject = (JSONObject) parser.parse(payload);
+			if("multipart".equals(part)) {
+				return (String) jsonObject.get(part);
+			}
+			JSONObject partJson = (JSONObject) jsonObject.get(part);
+			return partJson.toJSONString().replace("\\/","/");
+		} catch (ParseException e) {
+			logger.error("Error parsing payoad", e);
+		}
+		return null;
+	}
+	
+	// TODO should we move this method to separate class?
 	private String saveFileToDisk(String responseMessage, Message requestMessage) throws IOException {
 		Message responseMsg = multiPartMessageService.getMessage(responseMessage);
 
