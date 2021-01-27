@@ -1,6 +1,17 @@
 # market4.0-data_app_test_BE
 
 
+## Dedicated endpoint in dataApp
+
+```
+@RequestMapping("/proxy")
+public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
+			@RequestBody String body, HttpMethod method, HttpServletRequest request,
+			HttpServletResponse response)
+```
+This methods is used in both REST and WSS flows.
+
+
 ## WebSocket file exchange
 
 To use wss flow on the egde and between ecc, do the following:
@@ -44,19 +55,11 @@ curl --location --request POST 'https://localhost:8083/proxy' \
     "Forward-To-Internal": "wss://localhost:8887",
     "requestedArtifact" : "test1.csv"
 }'
-
-There is dedicated endpoint in dataApp
-
 ```
-@RequestMapping("/proxy")
-public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
-			@RequestBody String body, HttpMethod method, HttpServletRequest request,
-			HttpServletResponse response)
-```
-This methods is used in both REST and WSS flows.
+## REST requests
 
-Following CURL command matches the request
-```
+### Mixed
+
 ```
 curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'fizz: buzz' \
@@ -84,19 +87,69 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 	},
 	"payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
-		},
-    "messageAsHeaders": {
+		}
+}'
+
+```
+
+### Form
+
+```
+curl --location --request POST 'https://localhost:8083/proxy' \
+--header 'fizz: buzz' \
+--header 'Content-Type: text/plain' \
+--data-raw '{
+    "multipart": "form",
+    "Forward-To": "https://localhost:8890/data",
+	 "message": {
+	  "@context" : {
+		"ids" : "https://w3id.org/idsa/core/"
+	  },
+	  "@type" : "ids:ArtifactRequestMessage",
+	  "@id" : "https://w3id.org/idsa/autogen/artifactRequestMessage/76481a41-8117-4c79-bdf4-9903ef8f825a",
+	  "ids:issued" : {
+		"@value" : "2020-11-25T16:43:27.051+01:00",
+		"@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+	  },
+	  "ids:modelVersion" : "4.0.0",
+	  "ids:issuerConnector" : {
+		"@id" : "http://w3id.org/engrd/connector/"
+	  },
+	  "ids:requestedArtifact" : {
+	   "@id" : "http://w3id.org/engrd/connector/artifact/1"
+	  }
+	},
+	"payload" : {
+		"catalog.offers.0.resourceEndpoints.path":"/pet2"
+		}
+}'
+
+```
+
+### Http-header
+
+```
+curl --location --request POST 'https://localhost:8083/proxy' \
+--header 'fizz: buzz' \
+--header 'Content-Type: text/plain' \
+--data-raw '{
+    "multipart": "http-header",
+    "Forward-To": "https://localhost:8890/data",
+	"messageAsHeaders": {
         "IDS-RequestedArtifact":"http://w3id.org/engrd/connector/artifact/1",
         "IDS-Messagetype":"ids:ArtifactRequestMessage",
         "IDS-ModelVersion":"4.0.0",
         "IDS-Issued":"2021-01-15T13:09:42.306Z",
         "IDS-Id":"https://w3id.org/idsa/autogen/artifactResponseMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f",
         "IDS-IssuerConnector":"http://w3id.org/engrd/connector/"
-        }
+        },
+	"payload" : {
+		"catalog.offers.0.resourceEndpoints.path":"/pet2"
+		}
 }'
 
 ```
-For <b>REST flow</b>, multipart field should be set to one of the following values: 'mixed', 'form' or 'http-header'.
+For <b>REST flow</b>, multipart field should be set to one of the following values: 'mixed', 'form' or 'http-header'.<br/>
 In case of mixed or form flow, 'message' and 'payload' parts are used to construct request and forward to ECC connector A-endpoint using Forward-To header value.<br />
 In case of http-header flow, messageAsHeaders and payload are used to construct http-header like request and forward it to ECC A-endpoint.
 
