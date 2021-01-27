@@ -38,6 +38,13 @@ wss://localhost:8887
 wss://localhost:8086
 
 ```
+curl --location --request POST 'https://localhost:8083/proxy' \
+--data-raw '{
+    "multipart": "wss",
+    "Forward-To": "wss://localhost:8086",
+    "Forward-To-Internal": "wss://localhost:8887",
+    "requestedArtifact" : "test1.csv"
+}'
 
 There is dedicated endpoint in dataApp
 
@@ -50,16 +57,14 @@ public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
 This methods is used in both REST and WSS flows.
 
 Following CURL command matches the request
-
+```
 ```
 curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
-    "multipart": "wss",
+    "multipart": "mixed",
     "Forward-To": "https://localhost:8890/data",
-    "Forward-To-Internal": "wss://localhost:8887",
-    "requestedArtifact" : "test1.csv",
 	 "message": {
 	  "@context" : {
 		"ids" : "https://w3id.org/idsa/core/"
@@ -90,9 +95,8 @@ curl --location --request POST 'https://localhost:8083/proxy' \
         "IDS-IssuerConnector":"http://w3id.org/engrd/connector/"
         }
 }'
+
 ```
-
-
 For <b>REST flow</b>, multipart field should be set to one of the following values: 'mixed', 'form' or 'http-header'.
 In case of mixed or form flow, 'message' and 'payload' parts are used to construct request and forward to ECC connector A-endpoint using Forward-To header value.<br />
 In case of http-header flow, messageAsHeaders and payload are used to construct http-header like request and forward it to ECC A-endpoint.
