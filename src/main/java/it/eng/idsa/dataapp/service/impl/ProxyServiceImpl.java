@@ -182,7 +182,7 @@ public class ProxyServiceImpl implements ProxyService {
 		String forwardTo = proxyRequest.getForwardTo();
 		
 		if(StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
-			return ResponseEntity.badRequest().body("Missing required headers Forward-To or Forward-To-Internal");
+			return ResponseEntity.badRequest().body("Missing required fields Forward-To or Forward-To-Internal");
 		}
 		
 		URI requestedArtifactURI = URI
