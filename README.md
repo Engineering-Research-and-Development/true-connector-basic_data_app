@@ -30,7 +30,6 @@ application.idscp.isEnabled=false
 
 For <b>WSS flow</b>, multipart should be set to 'wss', and requestedArtifact should have value of the file/artifact that is requested over wss.
 
-Fields required:<br />
 **Forward-To-Internal** - this property will make wss connection on A-endpoint on Sender; we use 8887 port, same like for http communication, since in wss config, it will be disabled.<br />
 wss://localhost:8887
 
