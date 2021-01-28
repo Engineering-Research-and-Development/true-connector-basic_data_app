@@ -169,6 +169,7 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 		logger.info("Forwarding header POST request to {}", thirdPartyApi.toString());
 		proxyRequest.getMessageAsHeader().forEach((k,v) -> httpHeaders.add(k, (String) v));
+		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
 		HttpEntity<String> requestEntity = new HttpEntity<>(proxyRequest.getPayload(), httpHeaders);
 		
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
