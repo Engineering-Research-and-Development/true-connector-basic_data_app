@@ -27,6 +27,7 @@ public interface MultiPartMessageService {
 	String getResponseHeader(Message header);
 	String getResponseHeader(String header);
 	Message createRejectionMessageLocalIssues(Message header);
+	Message createRejectionCommunicationLocalIssues(Message header);
 	HttpEntity createMultipartMessageForm(String header, String payload, String frowardTo, ContentType ctPayload);
 
 }

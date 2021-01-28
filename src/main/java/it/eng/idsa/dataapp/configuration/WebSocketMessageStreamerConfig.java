@@ -13,12 +13,12 @@ import org.springframework.context.annotation.Configuration;
  */
 
 @Configuration
-@ConditionalOnProperty(
-        value="application.websocket.isEnabled",
-        havingValue = "true",
-        matchIfMissing = false)
+//@ConditionalOnProperty(
+//        value="application.websocket.isEnabled",
+//        havingValue = "true",
+//        matchIfMissing = false)
 public class WebSocketMessageStreamerConfig {
-    @Value("${server.port}")
+    @Value("${application.fileSenderPort}")
     private int port;
 
     @Bean

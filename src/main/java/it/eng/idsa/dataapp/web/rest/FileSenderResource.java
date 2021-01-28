@@ -7,6 +7,8 @@ import java.net.URI;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.commons.io.IOUtils;
@@ -14,11 +16,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,7 +46,7 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 @RestController
 @EnableAutoConfiguration
-@RequestMapping({ "/" })
+//@RequestMapping({ "/" })
 public class FileSenderResource {
 	private static final Logger logger = LogManager.getLogger(FileSenderResource.class);
 
@@ -96,8 +99,19 @@ public class FileSenderResource {
 	}
 	
 	
+	/**
+	 * This method should not be used, check instead {@link it.eng.idsa.dataapp.web.rest.ProxyController#proxyRequest(HttpHeaders,
+			 String, HttpMethod, HttpServletRequest, HttpServletResponse)}
+	 * @param forwardToInternal
+	 * @param forwardTo
+	 * @param requestedArtifact
+	 * @param payload
+	 * @return
+	 * @throws Exception
+	 */
 	@PostMapping("/artifactRequestMessage")
 	@ResponseBody
+	@Deprecated
 	public String requestArtifact(@RequestHeader("Forward-To-Internal") String forwardToInternal,
 			@RequestHeader("Forward-To") String forwardTo, @RequestParam String requestedArtifact,
 			@Nullable @RequestBody String payload) throws Exception {
