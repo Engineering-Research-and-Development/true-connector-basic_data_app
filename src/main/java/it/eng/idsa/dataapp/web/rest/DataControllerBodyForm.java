@@ -51,7 +51,9 @@ public class DataControllerBodyForm {
 		// prepare body response - multipart message.
 
 		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(
-				multiPartMessageService.getResponseHeader(header), MessageUtil.createResponsePayload(), null,
+				multiPartMessageService.getResponseHeader(header),
+				header.contains("ids:ContractRequestMessage") ? MessageUtil.createContractAgreement():MessageUtil.createResponsePayload(),
+				null,
 				ContentType.APPLICATION_JSON);
 
 		return ResponseEntity.ok().header("foo", "bar")

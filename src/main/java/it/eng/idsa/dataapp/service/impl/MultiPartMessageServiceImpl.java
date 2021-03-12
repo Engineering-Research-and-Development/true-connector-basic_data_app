@@ -31,6 +31,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
+import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.ContractAgreementMessageBuilder;
+import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.NotificationMessageBuilder;
 import de.fraunhofer.iais.eis.RejectionMessageBuilder;
@@ -135,7 +138,9 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
                 header = new NotificationMessageBuilder().build();
             if (header instanceof ArtifactRequestMessage){
                 output = serializeMessage(createArtifactResponseMessage((ArtifactRequestMessage) header));
-            } else {
+            } else if (header instanceof ContractRequestMessage) {
+            	 output = serializeMessage(createContractAgreementMessage((ContractAgreementMessage) header));
+			}else {
                 output = serializeMessage(createResultMessage(header));
             }
         } catch (IOException e) {
@@ -144,7 +149,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return output;
     }
 
-    @Override
+	@Override
 	public Message getMessage(Object header) {
 		Message message = null;
 		try {
@@ -291,6 +296,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return token;
 	}
 
+	@Override
 	public Message createResultMessage(Message header) {
 		return new ResultMessageBuilder()
 				._issuerConnector_(whoIAm())
@@ -301,6 +307,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				.build();
 	}
 
+	@Override
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
 		return new ArtifactResponseMessageBuilder()
 				._issuerConnector_(whoIAm())
@@ -308,6 +315,17 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._modelVersion_(informationModelVersion)
 				._recipientConnector_(asList(header.getIssuerConnector()))
 				._correlationMessage_(header.getId())
+				.build();
+	}
+	
+	@Override
+	public Message createContractAgreementMessage(ContractAgreementMessage header) {
+		return new ContractAgreementMessageBuilder()
+				._modelVersion_(informationModelVersion)
+				._transferContract_(header.getTransferContract())
+				._correlationMessage_(header.getCorrelationMessage())
+				._issued_(DateUtil.now())
+				._issuerConnector_(whoIAmEngRDProvider())
 				.build();
 	}
 
@@ -337,6 +355,13 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	private URI whoIAm() {
 		return URI.create("auto-generated");
 	}
+	
+	private URI whoIAmEngRDProvider() {
+		return URI.create("https://w3id.org/engrd/connector/provider");
+	}
+	
+	
+	
 
 	public Message createRejectionMessageLocalIssues(Message header) {
 		return new RejectionMessageBuilder()

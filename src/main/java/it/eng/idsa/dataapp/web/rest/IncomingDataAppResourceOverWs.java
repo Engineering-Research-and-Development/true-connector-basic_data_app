@@ -21,8 +21,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
+import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
+import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
@@ -55,10 +58,18 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);			
 			logger.info("About to get file from " + requestedArtifact);
 			response = readRequestedArtifact(requestMessage, requestedArtifact);
+		} else if (requestMessage instanceof ContractRequestMessage) {
+			response = contractAgreementResponse(requestMessage);
 		} else {
 			response = createDummyResponse(requestHeader);
 		}
 		WebSocketServerManager.getMessageWebSocketResponse().sendResponse(response);
+	}
+
+	private String contractAgreementResponse(Message requestMessage) {
+		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder().withHeaderContent(multiPartMessageService.createContractAgreementMessage((ContractAgreementMessage) requestMessage))
+				.withPayloadContent(MessageUtil.createContractAgreement()).build();
+		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
 	}
 
 	private String createDummyResponse(String resquestMessage) {

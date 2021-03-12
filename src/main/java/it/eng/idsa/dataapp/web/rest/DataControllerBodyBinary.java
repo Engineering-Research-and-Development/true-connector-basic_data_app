@@ -56,7 +56,7 @@ public class DataControllerBodyBinary {
 		}
 
 		String headerResponse = multiPartMessageService.getResponseHeader(headerMessage);
-		String responsePayload = MessageUtil.createResponsePayload();
+		String responsePayload = headerResponse.contains("ids:ContractRequestMessage") ? MessageUtil.createContractAgreement():MessageUtil.createResponsePayload();
 		MultipartMessage responseMessage = new MultipartMessageBuilder().withHeaderContent(headerResponse)
 				.withPayloadContent(responsePayload).build();
 		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);

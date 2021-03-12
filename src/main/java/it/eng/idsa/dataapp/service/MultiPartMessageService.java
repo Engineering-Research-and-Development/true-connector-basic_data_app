@@ -3,6 +3,8 @@ package it.eng.idsa.dataapp.service;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 
+import de.fraunhofer.iais.eis.ArtifactRequestMessage;
+import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.Message;
 
 /**
@@ -29,5 +31,8 @@ public interface MultiPartMessageService {
 	Message createRejectionMessageLocalIssues(Message header);
 	Message createRejectionCommunicationLocalIssues(Message header);
 	HttpEntity createMultipartMessageForm(String header, String payload, String frowardTo, ContentType ctPayload);
+	Message createResultMessage(Message header);
+	Message createArtifactResponseMessage(ArtifactRequestMessage header);
+	Message createContractAgreementMessage(ContractAgreementMessage header);
 
 }
