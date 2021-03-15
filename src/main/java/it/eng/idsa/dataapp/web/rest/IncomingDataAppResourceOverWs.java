@@ -67,8 +67,11 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 	}
 
 	private String contractAgreementResponse(Message requestMessage) {
-		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder().withHeaderContent(multiPartMessageService.createContractAgreementMessage((ContractAgreementMessage) requestMessage))
-				.withPayloadContent(MessageUtil.createContractAgreement()).build();
+		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
+				.withHeaderContent(multiPartMessageService
+				.createContractAgreementMessage((ContractAgreementMessage) requestMessage))
+				.withPayloadContent(MessageUtil.createContractAgreement())
+				.build();
 		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
 	}
 

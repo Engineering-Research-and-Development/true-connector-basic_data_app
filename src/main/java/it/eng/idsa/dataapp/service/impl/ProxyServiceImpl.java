@@ -47,7 +47,7 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 @Service
 public class ProxyServiceImpl implements ProxyService {
-	private static final Object MULTIPART = "multipart";
+	private static final String MULTIPART = "multipart";
 	private static final String MESSAGE = "message";
 	private static final String PAYLOAD = "payload";
 	private static final String REQUESTED_ARTIFACT = "requestedArtifact";

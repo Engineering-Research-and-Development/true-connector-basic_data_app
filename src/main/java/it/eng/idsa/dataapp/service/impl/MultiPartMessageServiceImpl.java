@@ -323,7 +323,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return new ContractAgreementMessageBuilder()
 				._modelVersion_(informationModelVersion)
 				._transferContract_(header.getTransferContract())
-				._correlationMessage_(header.getCorrelationMessage())
+				._correlationMessage_(header.getId())
 				._issued_(DateUtil.now())
 				._issuerConnector_(whoIAmEngRDProvider())
 				.build();
