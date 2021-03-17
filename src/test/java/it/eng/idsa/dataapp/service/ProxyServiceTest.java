@@ -63,7 +63,7 @@ public class ProxyServiceTest {
 	public void init() {
 		MockitoAnnotations.initMocks(this);
 		when(restTemplateBuilder.build()).thenReturn(restTemplate);
-		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, multiPartMessageService, recreateFileService,dataLakeDirectory);
+		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, multiPartMessageService, recreateFileService, dataLakeDirectory);
 		message = getMessageJson();
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");
