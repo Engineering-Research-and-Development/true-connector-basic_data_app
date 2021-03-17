@@ -255,16 +255,14 @@ public class ProxyServiceImpl implements ProxyService {
 			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
 			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
-			String dataLake= dataLakeDirectory + File.pathSeparator + requestedArtifact;
+			String dataLake= dataLakeDirectory + FileSystems.getDefault().getSeparator() + requestedArtifact;
 			logger.info("About to save file " + dataLake);
-			
-			recreateFileService.recreateTheFile(payload, new File(dataLakeDirectory + FileSystems.getDefault().getSeparator() + requestedArtifact));
+			recreateFileService.recreateTheFile(payload, new File(dataLake));
 			logger.info("File saved");
 		} else {
 			logger.info("Did not have ArtifactRequestMessage and ResponseMessage - nothing to save");
 			requestedArtifact = null;
 		}
-		
 		return requestedArtifact;
 	}
 }
