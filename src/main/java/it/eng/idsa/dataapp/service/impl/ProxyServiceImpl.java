@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystems;
 import java.util.GregorianCalendar;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -61,13 +63,16 @@ public class ProxyServiceImpl implements ProxyService {
 	private ECCProperties eccProperties;
 	private MultiPartMessageServiceImpl multiPartMessageService;
 	private RecreateFileService recreateFileService;
+	private String dataLakeDirectory;
 	
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties,
-			MultiPartMessageServiceImpl multiPartMessageService, RecreateFileService recreateFileService) {
+			MultiPartMessageServiceImpl multiPartMessageService, RecreateFileService recreateFileService,
+			@Value("${application.dataLakeDirectory}") String dataLakeDirectory) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.multiPartMessageService = multiPartMessageService;
 		this.recreateFileService = recreateFileService;
+		this.dataLakeDirectory = dataLakeDirectory;
 	}
 	
 	@Override
@@ -250,8 +255,10 @@ public class ProxyServiceImpl implements ProxyService {
 			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
 			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
-			logger.info("About to save file " + requestedArtifact);
-			recreateFileService.recreateTheFile(payload, new File(requestedArtifact));
+			String dataLake= dataLakeDirectory + File.pathSeparator + requestedArtifact;
+			logger.info("About to save file " + dataLake);
+			
+			recreateFileService.recreateTheFile(payload, new File(dataLakeDirectory + FileSystems.getDefault().getSeparator() + requestedArtifact));
 			logger.info("File saved");
 		} else {
 			logger.info("Did not have ArtifactRequestMessage and ResponseMessage - nothing to save");
