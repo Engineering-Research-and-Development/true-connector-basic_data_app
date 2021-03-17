@@ -263,7 +263,7 @@ public class ProxyServiceImpl implements ProxyService {
 	}
 
 	@Override
-	public ResponseEntity<String> contractAgreement(ProxyRequest proxyRequest) {
+	public ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest) {
 		String forwardToInternal = proxyRequest.getForwardToInternal();
 		String forwardTo = proxyRequest.getForwardTo();
 		

@@ -15,5 +15,5 @@ public interface ProxyService {
 	ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest);
 	
 	ProxyRequest parseIncommingProxyRequest(String body);
-	ResponseEntity<String> contractAgreement(ProxyRequest proxyRequest);
+	ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest);
 }

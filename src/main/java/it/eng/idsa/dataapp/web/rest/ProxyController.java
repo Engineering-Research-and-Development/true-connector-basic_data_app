@@ -65,7 +65,7 @@ public class ProxyController {
 			if (StringUtils.isNotBlank(proxyRequest.getRequestedArtifact())) {
 				return proxySrvice.requestArtifact(proxyRequest);
 			} else {
-				return proxySrvice.contractAgreement(proxyRequest);
+				return proxySrvice.proxyWSSRequest(proxyRequest);
 			}
 		default:
 			logger.info("Wrong value for multipart field '{}'", proxyRequest.getMultipart());
