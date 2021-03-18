@@ -70,7 +70,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
 				.withHeaderContent(multiPartMessageService
 				.createContractAgreementMessage((ContractAgreementMessage) requestMessage))
-				.withPayloadContent(MessageUtil.createContractAgreement())
+				.withPayloadContent(MessageUtil.createContractAgreement(dataLakeDirectory))
 				.build();
 		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
 	}
@@ -80,15 +80,19 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 		try {
 			String responsePayload = createResponsePayload();
 			// prepare multipart message.
-			MultipartMessage responseMessage = new MultipartMessageBuilder().withHeaderContent(resquestMessage)
-					.withPayloadContent(responsePayload).build();
+			MultipartMessage responseMessage = new MultipartMessageBuilder()
+					.withHeaderContent(resquestMessage)
+					.withPayloadContent(responsePayload)
+					.build();
 			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
 
 		} catch (Exception e) {
 			logger.error("Error while creating dummy response", e);
 			Message rejectionMessage = multiPartMessageService.createRejectionMessageLocalIssues(multiPartMessageService.getMessage(resquestMessage));
-			MultipartMessage responseMessageRejection = new MultipartMessageBuilder().withHeaderContent(rejectionMessage)
-					.withPayloadContent(null).build();
+			MultipartMessage responseMessageRejection = new MultipartMessageBuilder()
+					.withHeaderContent(rejectionMessage)
+					.withPayloadContent(null)
+					.build();
 			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageRejection, false);
 		}
 		return responseMessageString;
@@ -100,8 +104,10 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 			String responsePayload = readFile(requestedArtifact);
 			String responseMessage = multiPartMessageService.getResponseHeader(requestMessage);
 			// prepare multipart message.
-			MultipartMessage responseMessageMultipart = new MultipartMessageBuilder().withHeaderContent(responseMessage)
-					.withPayloadContent(responsePayload).build();
+			MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
+					.withHeaderContent(responseMessage)
+					.withPayloadContent(responsePayload)
+					.build();
 			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
 
 		} catch (Exception e) {
