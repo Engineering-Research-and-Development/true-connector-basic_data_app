@@ -299,22 +299,22 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	@Override
 	public Message createResultMessage(Message header) {
 		return new ResultMessageBuilder()
-				._issuerConnector_(whoIAm())
+				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
-				._recipientConnector_(asList(header.getIssuerConnector()))
-				._correlationMessage_(header.getId())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				.build();
 	}
 
 	@Override
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
 		return new ArtifactResponseMessageBuilder()
-				._issuerConnector_(whoIAm())
+				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
-				._recipientConnector_(asList(header.getIssuerConnector()))
-				._correlationMessage_(header.getId())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				.build();
 	}
 	
@@ -323,7 +323,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return new ContractAgreementMessageBuilder()
 				._modelVersion_(informationModelVersion)
 				._transferContract_(header.getTransferContract())
-				._correlationMessage_(header.getId())
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._issued_(DateUtil.now())
 				._issuerConnector_(whoIAmEngRDProvider())
 				.build();
@@ -332,22 +332,22 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	public Message createRejectionMessage(Message header) {
 		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAm())
+				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
-				._recipientConnector_(header!=null?asList(header.getIssuerConnector()):asList(URI.create("auto-generated")))
-				._correlationMessage_(header!=null?header.getId():URI.create(""))
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
 				.build();
 	}
 
 	public Message createRejectionToken(Message header) {
 		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAm())
+				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
-				._recipientConnector_(asList(header.getIssuerConnector()))
-				._correlationMessage_(header.getId())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
 				.build();
 	}
@@ -365,22 +365,22 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	public Message createRejectionMessageLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
-				._issuerConnector_(URI.create("auto-generated"))
+				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
-				//._recipientConnectors_(header!=null?asList(header.getIssuerConnector()):asList(URI.create("auto-generated")))
-				._correlationMessage_(URI.create("auto-generated"))
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
 				.build();
 	}
 
 	public Message createRejectionTokenLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
-				._issuerConnector_(header.getIssuerConnector())
+				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
-				._recipientConnector_(asList(header.getIssuerConnector()))
-				._correlationMessage_(header.getId())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
 				.build();
 	}
@@ -388,11 +388,11 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	public Message createRejectionCommunicationLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
-				._issuerConnector_(header.getIssuerConnector())
+				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
-				._recipientConnector_(asList(header.getIssuerConnector()))
-				._correlationMessage_(header.getId())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.NOT_FOUND)
 				.build();
 	}
