@@ -1,5 +1,6 @@
 package it.eng.idsa.dataapp.web.rest;
 
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -7,6 +8,7 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import de.fraunhofer.iais.eis.ArtifactResponseMessage;
+import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import it.eng.idsa.dataapp.util.MessageUtil;
 
 @Controller
@@ -24,11 +28,13 @@ import it.eng.idsa.dataapp.util.MessageUtil;
 public class DataControllerHttpHeader {
 
 	private static final Logger logger = LogManager.getLogger(DataControllerHttpHeader.class);
+	
+	@Value("${application.dataLakeDirectory}")
+	private Path dataLakeDirectory;
 
 	@PostMapping(value = "/data")
 	@Async
-	public ResponseEntity<?> routerHttpHeader(
-			@RequestHeader HttpHeaders httpHeaders,
+	public ResponseEntity<?> routerHttpHeader(@RequestHeader HttpHeaders httpHeaders,
 			@RequestBody(required = false) String payload) {
 
 		logger.info("Http Header request");
@@ -39,27 +45,44 @@ public class DataControllerHttpHeader {
 			logger.info("Payload is empty");
 		}
 
-		String responsePayload = MessageUtil.createResponsePayload();
-		return ResponseEntity.ok()
-				.header("foo", "bar")
-				.headers(createHttpHeaderResponseHeaders())
+		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
+
+		return ResponseEntity.ok().header("foo", "bar")
+				.headers(createResponseMessageHeaders(requestMessageType))
 				.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-				.body(responsePayload);
+				.body("ids:ContractRequestMessage".equals(requestMessageType) ?
+						MessageUtil.createContractAgreement(dataLakeDirectory) : 
+							MessageUtil.createResponsePayload());
 	}
-	
-	private HttpHeaders createHttpHeaderResponseHeaders() {
+
+	private HttpHeaders createResponseMessageHeaders(String requestMessageType) {
 		HttpHeaders headers = new HttpHeaders();
 
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 		Date date = new Date();
 		String formattedDate = dateFormat.format(date);
 
-		headers.add("IDS-Messagetype", "ids:ArtifactResponseMessage");
-		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/artifactResponseMessage/" + UUID.randomUUID().toString());
+		String responseMessageType = null;
+
+		if ("ids:ContractRequestMessage".equals(requestMessageType)) {
+			responseMessageType = ContractAgreementMessage.class.getSimpleName();
+		} else {
+			responseMessageType = ArtifactResponseMessage.class.getSimpleName();
+		}
+
+		headers.add("IDS-Messagetype", "ids:" + responseMessageType);
+		
+		//changes first letter to lower case
+		responseMessageType = Character.toLowerCase(responseMessageType.charAt(0)) + responseMessageType.substring(1);
+		
 		headers.add("IDS-Issued", formattedDate);
-		headers.add("IDS-ModelVersion", "4.0.0");
 		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
+		headers.add("IDS-CorrelationMessage", "https://w3id.org/idsa/autogen/"+ responseMessageType +"//"+ UUID.randomUUID().toString());
+		headers.add("IDS-TransferContract", "http://iais.fraunhofer.de/iais/eis/ids/1559059616204");
+		headers.add("IDS-ModelVersion", "4.0.0");
+		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"//"+ UUID.randomUUID().toString());
 
 		return headers;
 	}
+
 }

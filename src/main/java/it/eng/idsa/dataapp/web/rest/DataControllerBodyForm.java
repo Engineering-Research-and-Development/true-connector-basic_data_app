@@ -1,11 +1,13 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +26,12 @@ public class DataControllerBodyForm {
 	private static final Logger logger = LogManager.getLogger(DataControllerBodyForm.class);
 
 	private MultiPartMessageService multiPartMessageService;
+	private Path dataLakeDirectory;
 	
-	public DataControllerBodyForm(MultiPartMessageService multiPartMessageService) {
+	public DataControllerBodyForm(MultiPartMessageService multiPartMessageService,
+			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory) {
 		this.multiPartMessageService= multiPartMessageService;
+		this.dataLakeDirectory = dataLakeDirectory;
     }
 
 	@PostMapping(value = "/data")
@@ -51,7 +56,11 @@ public class DataControllerBodyForm {
 		// prepare body response - multipart message.
 
 		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(
-				multiPartMessageService.getResponseHeader(header), MessageUtil.createResponsePayload(), null,
+				multiPartMessageService.getResponseHeader(header),
+				header.contains("ids:ContractRequestMessage") ? 
+						MessageUtil.createContractAgreement(dataLakeDirectory) :
+							MessageUtil.createResponsePayload(),
+				null,
 				ContentType.APPLICATION_JSON);
 
 		return ResponseEntity.ok().header("foo", "bar")

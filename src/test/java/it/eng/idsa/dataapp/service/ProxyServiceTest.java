@@ -149,13 +149,24 @@ public class ProxyServiceTest {
 	}
 	
 	@Test
-	public void parseIncommingProxyRequestWss() {
+	public void parseIncommingProxyRequestWssRequestArtifact() {
 		ProxyRequest pr = service.parseIncommingProxyRequest(getProxyRequestRequestedArtifact());
 		assertNotNull(pr);
 		assertEquals(ProxyRequest.WSS, pr.getMultipart());
 		assertEquals("test.csv", pr.getRequestedArtifact());
 		assertNull(pr.getPayload());
 		assertNull(pr.getMessage());
+		assertTrue(CollectionUtils.isEmpty(pr.getMessageAsHeader()));
+	}
+	
+	@Test
+	public void parseIncommingProxyRequestWssContractAgreement() {
+		ProxyRequest pr = service.parseIncommingProxyRequest(getProxyRequestContractRequest());
+		assertNotNull(pr);
+		assertEquals(ProxyRequest.WSS, pr.getMultipart());
+		assertNull(pr.getRequestedArtifact());
+		assertNotNull(pr.getPayload());
+		assertNotNull(pr.getMessage());
 		assertTrue(CollectionUtils.isEmpty(pr.getMessageAsHeader()));
 	}
 
@@ -199,6 +210,68 @@ public class ProxyServiceTest {
 				"    \"multipart\": \"wss\",\r\n" + 
 				"    \"requestedArtifact\": \"test.csv\",\r\n" + 
 				"}";
+	}
+	
+	private String getProxyRequestContractRequest() {
+		return "{\r\n" + 
+				"    \"multipart\": \"wss\",\r\n" + 
+				"    \"Forward-To\": \"wss://localhost:8086\",\r\n" + 
+				"    \"Forward-To-Internal\": \"wss://localhost:8887\",\r\n" + 
+				"    \"message\": {\r\n" + 
+				"\r\n" + 
+				"        \"@type\": \"ids:ContractRequestMessage\",\r\n" + 
+				"        \"issued\": \"2019-05-28T16:06:56.201Z\",\r\n" + 
+				"        \"issuerConnector\": \"http://w3id.org/engrd/connector\",\r\n" + 
+				"        \"correlationMessage\": \"https://w3id.org/idsa/autogen/contractOfferMessage/9bfedd37-d592-4064-b440-b9b82b9cc6fb\",\r\n" + 
+				"        \"transferContract\": \"http://w3id.org/engrd/1559059616204\",\r\n" + 
+				"        \"modelVersion\": \"1.0.2-SNAPSHOT\",\r\n" + 
+				"        \"@id\": \"https://w3id.org/idsa/autogen/contractAgreementMessage/dd65f60d-994d-4f0a-9050-e46a13300e8e\"\r\n" + 
+				"    },\r\n" + 
+				"    \"payload\": {\r\n" + 
+				"        \"@context\": \"https://w3id.org/idsa/contexts/context.jsonld\",\r\n" + 
+				"        \"@type\": \"ids:ContractRequest\",\r\n" + 
+				"        \"@id\": \"https://w3id.org/engrd/connector/examplecontract/bab-bayernsample/\",\r\n" + 
+				"        \"consumer\": \"https://w3id.org/engrd/connector/consumer\",\r\n" + 
+				"        \"provider\": \"https://w3id.org/engrd/connector/provider\",\r\n" + 
+				"        \"permissions\": [{\r\n" + 
+				"                \"@type\": \"ids:Permission\",\r\n" + 
+				"                \"actions\": [{\r\n" + 
+				"                        \"@id\": \"https://w3id.org/idsa/code/action/USE\"\r\n" + 
+				"                    }\r\n" + 
+				"                ],\r\n" + 
+				"                \"constraints\": [{\r\n" + 
+				"                        \"@type\": \"ids:Constraint\",\r\n" + 
+				"                        \"operator\": {\r\n" + 
+				"                            \"@id\": \"https://w3id.org/idsa/core/gt\"\r\n" + 
+				"                        },\r\n" + 
+				"                        \"leftOperand\": {\r\n" + 
+				"                            \"@id\": \"https://w3id.org/idsa/core/DATE_TIME\"\r\n" + 
+				"                        },\r\n" + 
+				"                        \"rightOperand\": {\r\n" + 
+				"                            \"@value\": \"\\\"2019-01-01T00:00:00.000+00:00\\\"^^xsd:dateTime\"\r\n" + 
+				"                        }\r\n" + 
+				"                    }, {\r\n" + 
+				"                        \"@type\": \"ids:Constraint\",\r\n" + 
+				"                        \"operator\": {\r\n" + 
+				"                            \"@id\": \"https://w3id.org/idsa/core/lt\"\r\n" + 
+				"                        },\r\n" + 
+				"                        \"leftOperand\": {\r\n" + 
+				"                            \"@id\": \"https://w3id.org/idsa/core/DATE_TIME\"\r\n" + 
+				"                        },\r\n" + 
+				"                        \"rightOperand\": {\r\n" + 
+				"                            \"@value\": \"\\\"2019-12-31T23:59:59.999+00:00\\\"^^xsd:dateTime\"\r\n" + 
+				"                        }\r\n" + 
+				"                    }\r\n" + 
+				"                ]\r\n" + 
+				"            }\r\n" + 
+				"        ],\r\n" + 
+				"        \"contractDocument\": {\r\n" + 
+				"            \"@type\": \"ids:TextResource\",\r\n" + 
+				"            \"@id\": \"https://creativecommons.org/licenses/by-nc/4.0/legalcode\"\r\n" + 
+				"        }\r\n" + 
+				"    }\r\n" + 
+				"\r\n" + 
+				"}\r\n";
 	}
 
 	// TODO replace with java implementation or TestUtilMessageService

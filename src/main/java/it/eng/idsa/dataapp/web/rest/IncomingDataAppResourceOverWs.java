@@ -21,8 +21,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
+import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
+import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
@@ -55,10 +58,21 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);			
 			logger.info("About to get file from " + requestedArtifact);
 			response = readRequestedArtifact(requestMessage, requestedArtifact);
+		} else if (requestMessage instanceof ContractRequestMessage) {
+			response = contractAgreementResponse(requestMessage);
 		} else {
 			response = createDummyResponse(requestHeader);
 		}
 		WebSocketServerManager.getMessageWebSocketResponse().sendResponse(response);
+	}
+
+	private String contractAgreementResponse(Message requestMessage) {
+		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
+				.withHeaderContent(multiPartMessageService
+				.createContractAgreementMessage((ContractAgreementMessage) requestMessage))
+				.withPayloadContent(MessageUtil.createContractAgreement(dataLakeDirectory))
+				.build();
+		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
 	}
 
 	private String createDummyResponse(String resquestMessage) {
@@ -66,15 +80,19 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 		try {
 			String responsePayload = createResponsePayload();
 			// prepare multipart message.
-			MultipartMessage responseMessage = new MultipartMessageBuilder().withHeaderContent(resquestMessage)
-					.withPayloadContent(responsePayload).build();
+			MultipartMessage responseMessage = new MultipartMessageBuilder()
+					.withHeaderContent(resquestMessage)
+					.withPayloadContent(responsePayload)
+					.build();
 			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
 
 		} catch (Exception e) {
 			logger.error("Error while creating dummy response", e);
 			Message rejectionMessage = multiPartMessageService.createRejectionMessageLocalIssues(multiPartMessageService.getMessage(resquestMessage));
-			MultipartMessage responseMessageRejection = new MultipartMessageBuilder().withHeaderContent(rejectionMessage)
-					.withPayloadContent(null).build();
+			MultipartMessage responseMessageRejection = new MultipartMessageBuilder()
+					.withHeaderContent(rejectionMessage)
+					.withPayloadContent(null)
+					.build();
 			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageRejection, false);
 		}
 		return responseMessageString;
@@ -86,8 +104,10 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 			String responsePayload = readFile(requestedArtifact);
 			String responseMessage = multiPartMessageService.getResponseHeader(requestMessage);
 			// prepare multipart message.
-			MultipartMessage responseMessageMultipart = new MultipartMessageBuilder().withHeaderContent(responseMessage)
-					.withPayloadContent(responsePayload).build();
+			MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
+					.withHeaderContent(responseMessage)
+					.withPayloadContent(responsePayload)
+					.build();
 			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
 
 		} catch (Exception e) {

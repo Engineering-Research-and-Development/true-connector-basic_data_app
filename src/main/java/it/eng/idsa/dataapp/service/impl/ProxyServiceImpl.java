@@ -37,6 +37,7 @@ import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
+import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.service.ProxyService;
 import it.eng.idsa.dataapp.service.RecreateFileService;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
@@ -48,7 +49,7 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 @Service
 public class ProxyServiceImpl implements ProxyService {
-	private static final Object MULTIAPRT = "multipart";
+	private static final String MULTIPART = "multipart";
 	private static final String MESSAGE = "message";
 	private static final String PAYLOAD = "payload";
 	private static final String REQUESTED_ARTIFACT = "requestedArtifact";
@@ -61,12 +62,12 @@ public class ProxyServiceImpl implements ProxyService {
 
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
-	private MultiPartMessageServiceImpl multiPartMessageService;
+	private MultiPartMessageService multiPartMessageService;
 	private RecreateFileService recreateFileService;
 	private String dataLakeDirectory;
 	
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties,
-			MultiPartMessageServiceImpl multiPartMessageService, RecreateFileService recreateFileService,
+			MultiPartMessageService multiPartMessageService, RecreateFileService recreateFileService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
@@ -82,7 +83,7 @@ public class ProxyServiceImpl implements ProxyService {
 		try {
 			jsonObject = (JSONObject) parser.parse(body);
 			
-			String multipart =  (String) jsonObject.get(MULTIAPRT);
+			String multipart =  (String) jsonObject.get(MULTIPART);
 			
 			String forwardTo =  (String) jsonObject.get(FORWARD_TO);
 			
@@ -264,5 +265,30 @@ public class ProxyServiceImpl implements ProxyService {
 			requestedArtifact = null;
 		}
 		return requestedArtifact;
+	}
+
+	@Override
+	public ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest) {
+		String forwardToInternal = proxyRequest.getForwardToInternal();
+		String forwardTo = proxyRequest.getForwardTo();
+		
+		if(StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
+			return ResponseEntity.badRequest().body("Missing required fields Forward-To or Forward-To-Internal");
+		}
+		
+		FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
+		String responseMessage = null;
+		try {
+			responseMessage = WebSocketClientManager.getMessageWebSocketSender()
+					.sendMultipartMessageWebSocketOverHttps(proxyRequest.getMessage(), proxyRequest.getPayload(), forwardToInternal);
+		} catch (Exception exc) {
+			logger.error("Error while processing request {}", exc);
+			 throw new ResponseStatusException(
+			           HttpStatus.INTERNAL_SERVER_ERROR, 
+			           "Error while processing request, check logs for more details", 
+			           exc);
+		}
+		
+		return ResponseEntity.ok(responseMessage);
 	}
 }
