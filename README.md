@@ -166,7 +166,7 @@ application.ecc.header-context=/incoming-data-app/multipartMessageHttpHeader
 
 Following properties are used to construct A-endpoint URL, http or https.
 
-#Contract Negotiation - simple flow
+# Contract Negotiation - simple flow
 
 DataApp will send ContractAgreementMessage once *ids:ContractRequestMessage* message is received as input message.</br>
 Payload for this reponse (ContractAgreement) will be read from file, named contract_agreement.json. This file is located in *dataLakeDirectory*. If
