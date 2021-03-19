@@ -1,12 +1,10 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 import org.apache.http.entity.mime.MIME;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -33,12 +31,12 @@ public class DataControllerBodyBinary {
 	private static final Logger logger = LogManager.getLogger(DataControllerBodyBinary.class);
 	
 	private MultiPartMessageService multiPartMessageService;
-	private Path dataLakeDirectory;
+	private MessageUtil messageUtil;
 
 	public DataControllerBodyBinary(MultiPartMessageService multiPartMessageService,
-			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory) {
+			MessageUtil messageUtil) {
 		this.multiPartMessageService = multiPartMessageService;
-		this.dataLakeDirectory = dataLakeDirectory;
+		this.messageUtil = messageUtil;
 	}
 	
 	@PostMapping(value = "/data")
@@ -61,9 +59,7 @@ public class DataControllerBodyBinary {
 		}
 
 		String headerResponse = multiPartMessageService.getResponseHeader(headerMessage);
-		String responsePayload = headerResponse.contains("ids:ContractRequestMessage") ? 
-				MessageUtil.createContractAgreement(dataLakeDirectory) :
-					MessageUtil.createResponsePayload();
+		String responsePayload = messageUtil.createResponsePayload(headerMessage);
 		MultipartMessage responseMessage = new MultipartMessageBuilder()
 				.withHeaderContent(headerResponse)
 				.withPayloadContent(responsePayload)

@@ -21,7 +21,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
-import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
@@ -44,6 +43,9 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 
 	@Autowired
 	private MultiPartMessageService multiPartMessageService;
+	
+	@Autowired
+	private MessageUtil messageUtil;
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
@@ -69,8 +71,8 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 	private String contractAgreementResponse(Message requestMessage) {
 		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
 				.withHeaderContent(multiPartMessageService
-				.createContractAgreementMessage((ContractAgreementMessage) requestMessage))
-				.withPayloadContent(MessageUtil.createContractAgreement(dataLakeDirectory))
+				.createContractAgreementMessage((ContractRequestMessage) requestMessage))
+				.withPayloadContent(messageUtil.createResponsePayload(requestMessage))
 				.build();
 		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
 	}

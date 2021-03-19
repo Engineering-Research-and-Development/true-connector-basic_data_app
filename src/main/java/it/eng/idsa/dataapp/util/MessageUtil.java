@@ -12,15 +12,45 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.ContractRequestMessage;
+import de.fraunhofer.iais.eis.Message;
+
+@Component
 public class MessageUtil {
+	
+	@Value("${application.dataLakeDirectory}") 
+	private Path dataLakeDirectory;
 	
 	private static final Logger logger = LogManager.getLogger(MessageUtil.class);
 	
-	public static String createResponsePayload() {
+	public String createResponsePayload(Message requestHeader) {
+		if(requestHeader instanceof ContractRequestMessage) {
+			return createContractAgreement(dataLakeDirectory);
+		} else if(requestHeader instanceof ContractAgreementMessage) {
+			return null;
+		} else {
+			return createResponsePayload();
+		}
+	}
+	
+	public String createResponsePayload(String requestHeader) {
+		if(requestHeader.contains(ContractRequestMessage.class.getCanonicalName())) {
+			return createContractAgreement(dataLakeDirectory);
+		} else if(requestHeader.contains(ContractAgreementMessage.class.getCanonicalName())) {
+			return null;
+		} else {
+			return createResponsePayload();
+		}
+	}
+	
+	private  String createResponsePayload() {
 		// Put check sum in the payload
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
@@ -36,7 +66,7 @@ public class MessageUtil {
          return gson.toJson(jsonObject);
 	}
 	
-	public static String createContractAgreement(Path dataLakeDirectory) {
+	private String createContractAgreement(Path dataLakeDirectory) {
 		String contractAgreement = null;
 		byte[] bytes;
 		try {
