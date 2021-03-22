@@ -77,7 +77,6 @@ public class DataControllerHttpHeader {
 		headers.add("IDS-Issued", formattedDate);
 		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
 		headers.add("IDS-CorrelationMessage", "https://w3id.org/idsa/autogen/"+ responseMessageType +"//"+ UUID.randomUUID().toString());
-		headers.add("IDS-TransferContract", "http://iais.fraunhofer.de/iais/eis/ids/1559059616204");
 		headers.add("IDS-ModelVersion", "4.0.0");
 		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"//"+ UUID.randomUUID().toString());
 
