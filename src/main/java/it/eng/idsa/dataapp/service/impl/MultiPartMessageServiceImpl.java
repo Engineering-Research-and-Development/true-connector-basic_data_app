@@ -35,6 +35,7 @@ import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessageBuilder;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.MessageProcessedNotificationMessageBuilder;
 import de.fraunhofer.iais.eis.NotificationMessageBuilder;
 import de.fraunhofer.iais.eis.RejectionMessageBuilder;
 import de.fraunhofer.iais.eis.RejectionReason;
@@ -43,6 +44,7 @@ import de.fraunhofer.iais.eis.Token;
 import de.fraunhofer.iais.eis.TokenBuilder;
 import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
+import de.fraunhofer.iais.eis.util.Util;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
@@ -139,8 +141,10 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
             if (header instanceof ArtifactRequestMessage){
                 output = serializeMessage(createArtifactResponseMessage((ArtifactRequestMessage) header));
             } else if (header instanceof ContractRequestMessage) {
-            	 output = serializeMessage(createContractAgreementMessage((ContractAgreementMessage) header));
-			}else {
+            	 output = serializeMessage(createContractAgreementMessage((ContractRequestMessage) header));
+			} else if (header instanceof ContractAgreementMessage) {
+           	 	output = serializeMessage(createProcessNotificationMessage((ContractAgreementMessage) header));
+			} else {
                 output = serializeMessage(createResultMessage(header));
             }
         } catch (IOException e) {
@@ -319,13 +323,14 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	}
 	
 	@Override
-	public Message createContractAgreementMessage(ContractAgreementMessage header) {
+	public Message createContractAgreementMessage(ContractRequestMessage header) {
 		return new ContractAgreementMessageBuilder()
 				._modelVersion_(informationModelVersion)
 				._transferContract_(header.getTransferContract())
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._issued_(DateUtil.now())
 				._issuerConnector_(whoIAmEngRDProvider())
+				._recipientConnector_(Util.asList(header != null ? header.getIssuerConnector() : whoIAm()))
 				.build();
 	}
 
@@ -360,7 +365,15 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		return URI.create("https://w3id.org/engrd/connector/provider");
 	}
 	
-	
+	private Message createProcessNotificationMessage(ContractAgreementMessage header) {
+		return new MessageProcessedNotificationMessageBuilder()
+				._issued_(DateUtil.now())
+				._modelVersion_(informationModelVersion)
+				._issuerConnector_(whoIAmEngRDProvider())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				.build();
+	}
 	
 
 	public Message createRejectionMessageLocalIssues(Message header) {

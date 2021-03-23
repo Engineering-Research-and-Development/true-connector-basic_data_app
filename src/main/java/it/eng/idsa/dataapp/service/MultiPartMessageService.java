@@ -4,7 +4,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
-import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 
 /**
@@ -33,6 +33,6 @@ public interface MultiPartMessageService {
 	HttpEntity createMultipartMessageForm(String header, String payload, String frowardTo, ContentType ctPayload);
 	Message createResultMessage(Message header);
 	Message createArtifactResponseMessage(ArtifactRequestMessage header);
-	Message createContractAgreementMessage(ContractAgreementMessage header);
+	Message createContractAgreementMessage(ContractRequestMessage header);
 
 }

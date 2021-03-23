@@ -1,6 +1,5 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -8,7 +7,6 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -29,8 +27,11 @@ public class DataControllerHttpHeader {
 
 	private static final Logger logger = LogManager.getLogger(DataControllerHttpHeader.class);
 	
-	@Value("${application.dataLakeDirectory}")
-	private Path dataLakeDirectory;
+	private MessageUtil messageUtil;
+	
+	public DataControllerHttpHeader(MessageUtil messageUtil) {
+		this.messageUtil = messageUtil;
+	}
 
 	@PostMapping(value = "/data")
 	@Async
@@ -50,9 +51,7 @@ public class DataControllerHttpHeader {
 		return ResponseEntity.ok().header("foo", "bar")
 				.headers(createResponseMessageHeaders(requestMessageType))
 				.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-				.body("ids:ContractRequestMessage".equals(requestMessageType) ?
-						MessageUtil.createContractAgreement(dataLakeDirectory) : 
-							MessageUtil.createResponsePayload());
+				.body(messageUtil.createResponsePayload(requestMessageType));
 	}
 
 	private HttpHeaders createResponseMessageHeaders(String requestMessageType) {
@@ -78,7 +77,6 @@ public class DataControllerHttpHeader {
 		headers.add("IDS-Issued", formattedDate);
 		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
 		headers.add("IDS-CorrelationMessage", "https://w3id.org/idsa/autogen/"+ responseMessageType +"//"+ UUID.randomUUID().toString());
-		headers.add("IDS-TransferContract", "http://iais.fraunhofer.de/iais/eis/ids/1559059616204");
 		headers.add("IDS-ModelVersion", "4.0.0");
 		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"//"+ UUID.randomUUID().toString());
 
