@@ -23,19 +23,34 @@ application.dataLakeDirectory=
 ```
 Use application.dataLakeDirectory= property to pint where files are located that needs to be exchanged over wss.
 
-In ECC property file:
+In ECC property file to use Web Socket between ECC:
 
 ```
 application.openDataAppReceiver=https://localhost:9000/incoming-data-app/routerBodyBinary
 application.openDataAppReceiverRouter=mixed
 application.eccHttpSendRouter=mixed
 
-# Enable WebSocket over Https -> Disable Idscp to use!
+# Enable WebSocket over Https -> Disable Idscp2 to use!
 application.websocket.isEnabled=true
 #Enable WS communication channel from/to DataAPP
 application.dataApp.websocket.isEnabled=true
 
-application.idscp.isEnabled=false
+application.idscp2.isEnabled=false
+
+```
+
+In ECC property file to use IDSCP2 between ECC:
+
+```
+application.openDataAppReceiver=https://localhost:9000/incoming-data-app/routerBodyBinary
+application.openDataAppReceiverRouter=mixed
+application.eccHttpSendRouter=mixed
+
+application.websocket.isEnabled=false
+#Enable WS communication channel from/to DataAPP
+application.dataApp.websocket.isEnabled=true
+
+application.idscp2.isEnabled=true
 
 ```
 
