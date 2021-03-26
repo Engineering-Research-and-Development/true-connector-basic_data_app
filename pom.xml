@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>it.eng.idsa</groupId>
 	<artifactId>market4.0-data-app</artifactId>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.4-SNAPSHOT</version>
 	<name>market4.0-data-app</name>
 	<description>The project for market4.0-data-app</description>
 
@@ -126,22 +126,10 @@
 		</dependency>
 
 
-		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt -->
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-			<version>0.9.1</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp -->
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.nimbusds</groupId>
-			<artifactId>nimbus-jose-jwt</artifactId>
-			<version>7.5.1</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/javax.validation/validation-api -->
@@ -184,7 +172,7 @@
 	</dependencies>
 
 	<build>
-	 	<resources>
+	<resources>
       		<resource>
         		<directory>src/main/resources</directory>
         			<excludes>
@@ -194,7 +182,6 @@
           		</excludes>
          	</resource>
         </resources>
-         
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
