@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import de.fraunhofer.iais.eis.Message;
-import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
@@ -42,15 +40,15 @@ public class DataControllerBodyBinary {
 	@PostMapping(value = "/data")
 	@Async
 	public ResponseEntity<?> routerBinary(@RequestHeader HttpHeaders httpHeaders,
-			@RequestPart(value = "header") Message headerMessage,
+			@RequestPart(value = "header") String headerMessage,
 			@RequestHeader(value = "Response-Type", required = false) String responseType,
 			@RequestPart(value = "payload", required = false) String payload) throws JsonProcessingException {
 
 		logger.info("Multipart/mixed request");
 
 		// Convert de.fraunhofer.iais.eis.Message to the String
-		String headerSerialized = new Serializer().serializePlainJson(headerMessage);
-		logger.info("header=" + headerSerialized);
+//		String headerSerialized = new Serializer().serializePlainJson(headerMessage);
+		logger.info("header=" + headerMessage);
 		logger.info("headers=" + httpHeaders);
 		if (payload != null) {
 			logger.info("payload length = " + payload.length());
