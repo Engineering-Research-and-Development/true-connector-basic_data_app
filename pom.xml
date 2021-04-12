@@ -172,7 +172,8 @@
 	</dependencies>
 
 	<build>
-	<resources>
+	
+		<resources>
       		<resource>
 		 	 	<filtering>true</filtering>
         		<directory>src/main/resources</directory>
@@ -184,6 +185,15 @@
          	</resource>
         </resources>
 		<plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-resources-plugin</artifactId>
+			<configuration>
+				<nonFilteredFileExtensions>
+					<nonFilteredFileExtension>jks</nonFilteredFileExtension>
+				</nonFilteredFileExtensions>
+			</configuration>
+		</plugin>
 		<plugin>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-maven-plugin</artifactId>
