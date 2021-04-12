@@ -9,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,7 +32,6 @@ public class DataControllerBodyForm {
     }
 
 	@PostMapping(value = "/data")
-	@Async
 	public ResponseEntity<?> routerForm(@RequestHeader HttpHeaders httpHeaders,
 			@RequestParam(value = "header") String header,
 			@RequestHeader(value = "Response-Type", required = false) String responseType,
