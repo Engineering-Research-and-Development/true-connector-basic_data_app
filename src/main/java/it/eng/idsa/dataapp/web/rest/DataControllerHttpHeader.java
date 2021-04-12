@@ -11,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,7 +33,6 @@ public class DataControllerHttpHeader {
 	}
 
 	@PostMapping(value = "/data")
-	@Async
 	public ResponseEntity<?> routerHttpHeader(@RequestHeader HttpHeaders httpHeaders,
 			@RequestBody(required = false) String payload) {
 

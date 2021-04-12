@@ -1,8 +1,5 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,8 +38,7 @@ public class ProxyController {
 	 */
 	@RequestMapping("/proxy")
 	public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
-			@RequestBody String body, HttpMethod method, HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
+			@RequestBody String body, HttpMethod method) throws Exception {
 
 		ProxyRequest proxyRequest = proxySrvice.parseIncommingProxyRequest(body);
 		logger.debug("Type: " + proxyRequest.getMultipart());

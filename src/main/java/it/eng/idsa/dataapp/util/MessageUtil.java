@@ -41,9 +41,9 @@ public class MessageUtil {
 	}
 	
 	public String createResponsePayload(String requestHeader) {
-		if(requestHeader.contains(ContractRequestMessage.class.getCanonicalName())) {
+		if(requestHeader.contains(ContractRequestMessage.class.getSimpleName())) {
 			return createContractAgreement(dataLakeDirectory);
-		} else if(requestHeader.contains(ContractAgreementMessage.class.getCanonicalName())) {
+		} else if(requestHeader.contains(ContractAgreementMessage.class.getSimpleName())) {
 			return null;
 		} else {
 			return createResponsePayload();

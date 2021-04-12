@@ -20,7 +20,7 @@
 		<tomcat.version>9.0.27</tomcat.version>
 		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
 		<information.model.version>4.0.0</information.model.version>
-		<websocket.message.streamer.version>1.0.8-SNAPSHOT</websocket.message.streamer.version>
+		<websocket.message.streamer.version>1.0.9-SNAPSHOT</websocket.message.streamer.version>
       	<multipart.message.processor.version>1.0.7-SNAPSHOT</multipart.message.processor.version>
 	</properties>
 	
@@ -174,6 +174,7 @@
 	<build>
 	<resources>
       		<resource>
+		 	 	<filtering>true</filtering>
         		<directory>src/main/resources</directory>
         			<excludes>
           				<exclude>dataFiles/**</exclude>
@@ -183,19 +184,19 @@
          	</resource>
         </resources>
 		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>build-info</id>
-						<goals>
-							<goal>build-info</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+		<plugin>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+			<executions>
+				<execution>
+					<id>build-info</id>
+					<goals>
+						<goal>build-info</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
+</build>
 
 </project>
