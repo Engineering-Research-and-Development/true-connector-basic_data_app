@@ -5,8 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -24,7 +24,7 @@ import it.eng.idsa.dataapp.util.MessageUtil;
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "http-header")
 public class DataControllerHttpHeader {
 
-	private static final Logger logger = LogManager.getLogger(DataControllerHttpHeader.class);
+	private static final Logger logger = LoggerFactory.getLogger(DataControllerHttpHeader.class);
 	
 	private MessageUtil messageUtil;
 	

@@ -11,8 +11,8 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -27,7 +27,7 @@ import it.eng.idsa.dataapp.web.rest.DataControllerBodyBinary;
 @ConditionalOnProperty(name = "application.ecc.protocol", havingValue = "https")
 public class SecureRestTemplateCustomizer implements RestTemplateCustomizer {
 
-	private static final Logger logger = LogManager.getLogger(DataControllerBodyBinary.class);
+	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyBinary.class);
 
 	@Value("${server.ssl.key-store}")
 	private String trustStore;
