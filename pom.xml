@@ -195,7 +195,7 @@
 					<exclude>test/**</exclude>
 					<exclude>examples-multipart-messages/**</exclude>
 					<exclude>*.jks</exclude>
-					<exclude>logback.xml</exclude>
+<!-- 					<exclude>*.properties</exclude> -->
 				</excludes>
 			</resource>
 		</resources>
@@ -203,7 +203,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
 				<configuration>
 					<release>${project.java.version}</release>
 					<encoding>${project.build.sourceEncoding}</encoding>
