@@ -194,6 +194,8 @@
 					<exclude>dataFiles/**</exclude>
 					<exclude>test/**</exclude>
 					<exclude>examples-multipart-messages/**</exclude>
+					<exclude>*.jks</exclude>
+					<exclude>logback.xml</exclude>
 				</excludes>
 			</resource>
 		</resources>
