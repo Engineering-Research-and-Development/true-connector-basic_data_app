@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ import it.eng.idsa.dataapp.util.MessageUtil;
 @RestController
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "form")
 public class DataControllerBodyForm {
-	private static final Logger logger = LogManager.getLogger(DataControllerBodyForm.class);
+	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyForm.class);
 
 	private MultiPartMessageService multiPartMessageService;
 	private MessageUtil messageUtil;

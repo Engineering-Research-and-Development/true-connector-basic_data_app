@@ -18,11 +18,11 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.protocol.HTTP;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,7 +64,7 @@ import it.eng.idsa.multipart.util.DateUtil;
 @Transactional
 public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
-	private static final Logger logger = LogManager.getLogger(MultiPartMessageServiceImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(MultiPartMessageServiceImpl.class);
 	
 	@Value("${information.model.version}")
 	private String informationModelVersion;
@@ -159,7 +159,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		try {
 			message = new Serializer().deserialize(String.valueOf(header), Message.class);
 		} catch (IOException e) {
-			logger.error(e);
+			logger.error("Error while deserializing message", e);
 		}
 		return message;
 	}
@@ -169,7 +169,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		try {
 			message = new Serializer().deserialize(String.valueOf(header), Message.class);
 		} catch (IOException e) {
-			logger.error(e);
+			logger.error("Error while deserializing message", e);
 		}
 		return message;
 	}
@@ -184,13 +184,13 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				multipartEntityBuilder.addTextBody("header", serializeMessage(createRejectionMessageLocalIssues(getMessage(header))));
 			} catch (JsonProcessingException e) {
 				multipartEntityBuilder.addTextBody("header", "INTERNAL ERROR");
-				logger.error(e);
+				logger.error(e.getMessage());
 			} catch (IOException e) {
-				logger.error(e);
+				logger.error(e.getMessage());
 			}
-			logger.error(e1);
+			logger.error(e1.getMessage());
 		} catch (IOException e) {
-			logger.error(e);
+			logger.error(e.getMessage());
 		}
 		if(payload!=null) {
 			multipartEntityBuilder.addTextBody("payload", payload);
@@ -238,7 +238,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				multipartEntityBuilder.addPart(bodyPayloadPart);
 			}
 		} catch (Exception e) {
-			logger.error(e);
+			logger.error(e.getMessage(), e);
 		}
 		return multipartEntityBuilder.build();
 	}
@@ -271,7 +271,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			}
 
 		} catch (Exception e) {
-			logger.error(e);
+			logger.error(e.getMessage(), e);
 		}
 		return multipartEntityBuilder.build();
 	}

@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +28,7 @@ public class MessageUtil {
 	@Value("${application.dataLakeDirectory}") 
 	private Path dataLakeDirectory;
 	
-	private static final Logger logger = LogManager.getLogger(MessageUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(MessageUtil.class);
 	
 	public String createResponsePayload(Message requestHeader) {
 		if(requestHeader instanceof ContractRequestMessage) {

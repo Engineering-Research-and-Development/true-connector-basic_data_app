@@ -3,8 +3,8 @@ package it.eng.idsa.dataapp.web.rest;
 import java.util.Optional;
 
 import org.apache.http.entity.mime.MIME;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "mixed")
 public class DataControllerBodyBinary {
 
-	private static final Logger logger = LogManager.getLogger(DataControllerBodyBinary.class);
+	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyBinary.class);
 	
 	private MultiPartMessageService multiPartMessageService;
 	private MessageUtil messageUtil;

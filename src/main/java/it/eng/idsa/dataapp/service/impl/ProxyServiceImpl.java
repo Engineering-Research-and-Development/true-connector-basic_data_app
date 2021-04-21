@@ -11,11 +11,11 @@ import java.util.Map;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -58,7 +58,7 @@ public class ProxyServiceImpl implements ProxyService {
 
 	private static final String MESSAGE_AS_HEADERS = "messageAsHeaders";
 
-	private static final Logger logger = LogManager.getLogger(ProxyService.class);
+	private static final Logger logger = LoggerFactory.getLogger(ProxyService.class);
 
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;

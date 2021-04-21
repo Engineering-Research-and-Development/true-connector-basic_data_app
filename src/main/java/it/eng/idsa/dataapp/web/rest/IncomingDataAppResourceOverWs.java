@@ -12,8 +12,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -36,7 +36,7 @@ import it.eng.idsa.streamer.WebSocketServerManager;
 
 public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 
-	private static final Logger logger = LogManager.getLogger(IncomingDataAppResourceOverWs.class);
+	private static final Logger logger = LoggerFactory.getLogger(IncomingDataAppResourceOverWs.class);
 
 	@Value("${application.dataLakeDirectory}")
 	private Path dataLakeDirectory;
