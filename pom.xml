@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>it.eng.idsa</groupId>
 	<artifactId>market4.0-data-app</artifactId>
-	<version>0.0.5-SNAPSHOT</version>
+	<version>0.0.6-SNAPSHOT</version>
 	<name>market4.0-data-app</name>
 	<description>The project for market4.0-data-app</description>
 
@@ -19,9 +19,9 @@
 		<java.version>11</java.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
-		<information.model.version>4.0.0</information.model.version>
-		<websocket.message.streamer.version>1.0.10-SNAPSHOT</websocket.message.streamer.version>
-      	<multipart.message.processor.version>1.0.8-SNAPSHOT</multipart.message.processor.version>
+		<information.model.version>4.0.6</information.model.version>
+      	<multipart.message.processor.version>1.0.9-SNAPSHOT</multipart.message.processor.version>
+		<websocket.message.streamer.version>1.0.11-SNAPSHOT</websocket.message.streamer.version>
 	</properties>
 	
  	<repositories> 
@@ -98,15 +98,15 @@
 		</dependency>
 
 		<!-- Fraunhofer -->
+		 <dependency>
+            <groupId>de.fraunhofer.iais.eis.ids.infomodel</groupId>
+            <artifactId>java</artifactId>
+            <version>${information.model.version}</version>
+        </dependency>
 		<dependency>
-			<groupId>de.fraunhofer.iais.eis.ids.infomodel</groupId>
-			<artifactId>java</artifactId>
-			<version>${information.model.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>de.fraunhofer.iais.eis.ids</groupId>
-			<artifactId>infomodel-serializer</artifactId>
-			<version>${information.model.version}</version>
+		    <groupId>de.fraunhofer.iais.eis.ids.infomodel</groupId>
+		    <artifactId>validation-serialization-provider</artifactId>
+		    <version>${information.model.version}</version>
 		</dependency>
 		
 		<!-- it.eng.idsa -->

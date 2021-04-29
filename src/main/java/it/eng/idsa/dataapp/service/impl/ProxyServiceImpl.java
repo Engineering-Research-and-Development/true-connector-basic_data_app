@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
-import java.util.GregorianCalendar;
-import java.util.Map;
-
-import javax.xml.datatype.DatatypeFactory;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
@@ -25,7 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactRequestMessageBuilder;
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
+import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
@@ -43,6 +40,8 @@ import it.eng.idsa.dataapp.service.RecreateFileService;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
+import it.eng.idsa.multipart.util.DateUtil;
+import it.eng.idsa.multipart.util.TestUtilMessageService;
 import it.eng.idsa.streamer.WebSocketClientManager;
 import it.eng.idsa.streamer.util.MultiPartMessageServiceUtil;
 import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
@@ -50,13 +49,12 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 @Service
 public class ProxyServiceImpl implements ProxyService {
 	private static final String MULTIPART = "multipart";
-	private static final String MESSAGE = "message";
 	private static final String PAYLOAD = "payload";
 	private static final String REQUESTED_ARTIFACT = "requestedArtifact";
 	private static final String FORWARD_TO = "Forward-To";
 	private static final String FORWARD_TO_INTERNAL = "Forward-To-Internal";
+	private static final String MESSAGE_TYPE = "messageType";
 
-	private static final String MESSAGE_AS_HEADERS = "messageAsHeaders";
 
 	private static final Logger logger = LoggerFactory.getLogger(ProxyService.class);
 
@@ -84,22 +82,15 @@ public class ProxyServiceImpl implements ProxyService {
 			jsonObject = (JSONObject) parser.parse(body);
 			
 			String multipart =  (String) jsonObject.get(MULTIPART);
-			
 			String forwardTo =  (String) jsonObject.get(FORWARD_TO);
-			
 			String forwardToInternal =  (String) jsonObject.get(FORWARD_TO_INTERNAL);
-			
 			String requestedArtifact = (String) jsonObject.get(REQUESTED_ARTIFACT);
+			String messageType = (String) jsonObject.get(MESSAGE_TYPE);
 			
-			JSONObject partJson = (JSONObject) jsonObject.get(MESSAGE);
-			String message =  partJson != null ? partJson.toJSONString().replace("\\/","/") : null;
-			
-			partJson = (JSONObject) jsonObject.get(PAYLOAD);
+			JSONObject partJson = (JSONObject) jsonObject.get(PAYLOAD);
 			String payload =  partJson != null ? partJson.toJSONString().replace("\\/","/") : null;
 			
-			Map<String, Object> messageAsMap = (JSONObject) jsonObject.get(MESSAGE_AS_HEADERS);
-			
-			return new ProxyRequest(multipart, forwardTo, forwardToInternal, message, payload, requestedArtifact, messageAsMap);
+			return new ProxyRequest(multipart, forwardTo, forwardToInternal, payload, requestedArtifact, messageType);
 		} catch (ParseException e) {
 			logger.error("Error parsing payoad", e);
 		}
@@ -110,14 +101,16 @@ public class ProxyServiceImpl implements ProxyService {
 	public ResponseEntity<String> proxyMultipartMix(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
 		
-		if(StringUtils.isEmpty(proxyRequest.getMessage())) {
-			logger.error("Missing '{}' part in the request", MESSAGE);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message part in body is mandatory for " 
+		if(StringUtils.isEmpty(proxyRequest.getMessageType())) {
+			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message type part in body is mandatory for " 
 					+ proxyRequest.getMultipart() + " flow");
 		}
 		
+		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact());
+		
 		MultipartMessage mm = new MultipartMessageBuilder()
-				.withHeaderContent(proxyRequest.getMessage())
+				.withHeaderContent(requestMessage)
 				.withPayloadContent(proxyRequest.getPayload())
 				.build();
 		
@@ -138,14 +131,16 @@ public class ProxyServiceImpl implements ProxyService {
 	public ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
 		
-		if(StringUtils.isEmpty(proxyRequest.getMessage())) {
-			logger.error("Missing '{}' part in the request", MESSAGE);
+		if(StringUtils.isEmpty(proxyRequest.getMessageType())) {
+			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message part in body is mandatory for " 
 					+ proxyRequest.getMultipart() + " flow");
 		}
 		
+		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact());
+		
 		LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-		map.add("header", proxyRequest.getMessage());
+		map.add("header", TestUtilMessageService.getMessageAsString(requestMessage));
 		map.add("payload", proxyRequest.getPayload());
 		httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
@@ -161,6 +156,17 @@ public class ProxyServiceImpl implements ProxyService {
 		return resp;
 	}
 
+	private Message createRequestMessage(String messageType, String requestedArtifact) {
+		if(ArtifactRequestMessage.class.getSimpleName().equals(messageType)) {
+			return TestUtilMessageService.getArtifactRequestMessage(requestedArtifact != null 
+					? URI.create(requestedArtifact) 
+							: TestUtilMessageService.REQUESTED_ARTIFACT);
+		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
+			return TestUtilMessageService.getContractAgreementMessage();
+		}
+		return null;
+	}
+
 	@Override
 	public ResponseEntity<String> proxyHttpHeader(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
@@ -168,19 +174,33 @@ public class ProxyServiceImpl implements ProxyService {
 				eccProperties.getPort(), eccProperties.getHeaderContext(),
 				null, null);
 
-		if(CollectionUtils.isEmpty(proxyRequest.getMessageAsHeader())) {
-			logger.error("Missing '{}' part in the request", MESSAGE_AS_HEADERS);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(MESSAGE_AS_HEADERS + " in body is mandatory for " 
+		if(StringUtils.isBlank(proxyRequest.getMessageType())) {
+			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(MESSAGE_TYPE + " in body is mandatory for " 
 					+ proxyRequest.getMultipart() + " flow");
 		}
 		logger.info("Forwarding header POST request to {}", thirdPartyApi.toString());
-		proxyRequest.getMessageAsHeader().forEach((k,v) -> httpHeaders.add(k, (String) v));
+		httpHeaders.addAll(createMessageAsHeader(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact()));
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
 		HttpEntity<String> requestEntity = new HttpEntity<>(proxyRequest.getPayload(), httpHeaders);
 		
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
 		logResponse(resp);
 		return resp;
+	}
+
+	private HttpHeaders createMessageAsHeader(String messageType, String requestedArtifact) {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		if(ArtifactRequestMessage.class.getSimpleName().equals(messageType)) {
+			httpHeaders.add("IDS-Messagetype", "ids:ArtifactRequestMessage");
+			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + ArtifactRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
+			httpHeaders.add("IDS-RequestedArtifact", requestedArtifact != null ? requestedArtifact : TestUtilMessageService.REQUESTED_ARTIFACT.toString());
+		}
+		httpHeaders.add("IDS-ModelVersion", "4.0.6");
+		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
+		httpHeaders.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector/");
+		
+		return httpHeaders;
 	}
 
 	@Override
@@ -197,9 +217,9 @@ public class ProxyServiceImpl implements ProxyService {
 		Message artifactRequestMessage;
 		try {
 			artifactRequestMessage = new ArtifactRequestMessageBuilder()
-					._issued_(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()))
+					._issued_(DateUtil.now())
 					._issuerConnector_(URI.create("http://w3id.org/engrd/connector"))
-					._modelVersion_("4.0.0")
+					._modelVersion_("4.0.6")
 					._requestedArtifact_(requestedArtifactURI)
 					.build();
 
@@ -230,21 +250,6 @@ public class ProxyServiceImpl implements ProxyService {
 		logger.info("Response body\n{}", resp.getBody());
 	}
 	
-	private String getPayloadPart(String payload, String part) {
-		JSONParser parser=new JSONParser();
-		JSONObject jsonObject;
-		try {
-			jsonObject = (JSONObject) parser.parse(payload);
-			if("multipart".equals(part)) {
-				return (String) jsonObject.get(part);
-			}
-			JSONObject partJson = (JSONObject) jsonObject.get(part);
-			return partJson.toJSONString().replace("\\/","/");
-		} catch (ParseException e) {
-			logger.error("Error parsing payoad", e);
-		}
-		return null;
-	}
 	
 	// TODO should we move this method to separate class?
 	private String saveFileToDisk(String responseMessage, Message requestMessage) throws IOException {
@@ -279,8 +284,10 @@ public class ProxyServiceImpl implements ProxyService {
 		FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
 		String responseMessage = null;
 		try {
+			Message requesMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact());
 			responseMessage = WebSocketClientManager.getMessageWebSocketSender()
-					.sendMultipartMessageWebSocketOverHttps(proxyRequest.getMessage(), proxyRequest.getPayload(), forwardToInternal);
+					.sendMultipartMessageWebSocketOverHttps(TestUtilMessageService.getMessageAsString(requesMessage), 
+							proxyRequest.getPayload(), forwardToInternal);
 		} catch (Exception exc) {
 			logger.error("Error while processing request {}", exc);
 			 throw new ResponseStatusException(

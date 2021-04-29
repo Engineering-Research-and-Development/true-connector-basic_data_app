@@ -49,6 +49,7 @@ import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.DateUtil;
+import it.eng.idsa.multipart.util.TestUtilMessageService;
 
 /**
  *
@@ -66,8 +67,11 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	private static final Logger logger = LoggerFactory.getLogger(MultiPartMessageServiceImpl.class);
 	
-	@Value("${information.model.version}")
 	private String informationModelVersion;
+	
+	public MultiPartMessageServiceImpl(@Value("${information.model.version}") String informationModelVersion) {
+		this.informationModelVersion = informationModelVersion;
+	}
 
 	@Override
 	public String getHeader(String body) {
@@ -306,8 +310,10 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
+				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._securityToken_(TestUtilMessageService.getDynamicAttributeToken())
 				.build();
 	}
 
@@ -317,8 +323,10 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(informationModelVersion)
+				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._securityToken_(TestUtilMessageService.getDynamicAttributeToken())
 				.build();
 	}
 	
@@ -330,7 +338,9 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._issued_(DateUtil.now())
 				._issuerConnector_(whoIAmEngRDProvider())
+				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(Util.asList(header != null ? header.getIssuerConnector() : whoIAm()))
+				._securityToken_(TestUtilMessageService.getDynamicAttributeToken())
 				.build();
 	}
 
