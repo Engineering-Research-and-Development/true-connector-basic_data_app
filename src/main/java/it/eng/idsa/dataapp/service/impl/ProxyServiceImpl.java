@@ -31,6 +31,7 @@ import de.fraunhofer.iais.eis.ArtifactRequestMessageBuilder;
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
@@ -199,6 +200,12 @@ public class ProxyServiceImpl implements ProxyService {
 		httpHeaders.add("IDS-ModelVersion", "4.0.6");
 		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
 		httpHeaders.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector/");
+		httpHeaders.add("IDS-SenderAgent", "http://sender.agent.com/");
+		
+		httpHeaders.add("IDS-SecurityToken-Type", "ids:DynamicAttributeToken");
+		httpHeaders.add("IDS-SecurityToken-Id", "https://w3id.org/idsa/autogen/" + UUID.randomUUID());
+		httpHeaders.add("IDS-SecurityToken-TokenFormat", TokenFormat.JWT.getId().toString());
+		httpHeaders.add("IDS-SecurityToken-TokenValue", TestUtilMessageService.TOKEN_VALUE);
 		
 		return httpHeaders;
 	}
@@ -207,6 +214,7 @@ public class ProxyServiceImpl implements ProxyService {
 	public ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest){
 		String forwardToInternal = proxyRequest.getForwardToInternal();
 		String forwardTo = proxyRequest.getForwardTo();
+		logger.info("Proxying wss ArtifactRequestMessage...");
 		
 		if(StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
 			return ResponseEntity.badRequest().body("Missing required fields Forward-To or Forward-To-Internal");
@@ -221,6 +229,8 @@ public class ProxyServiceImpl implements ProxyService {
 					._issuerConnector_(URI.create("http://w3id.org/engrd/connector"))
 					._modelVersion_("4.0.6")
 					._requestedArtifact_(requestedArtifactURI)
+					._securityToken_(TestUtilMessageService.getDynamicAttributeToken())
+					._senderAgent_(URI.create("https://sender.agent.com"))
 					.build();
 
 			Serializer serializer = new Serializer();
@@ -276,7 +286,7 @@ public class ProxyServiceImpl implements ProxyService {
 	public ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest) {
 		String forwardToInternal = proxyRequest.getForwardToInternal();
 		String forwardTo = proxyRequest.getForwardTo();
-		
+		logger.info("Proxying wss request ...");
 		if(StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
 			return ResponseEntity.badRequest().body("Missing required fields Forward-To or Forward-To-Internal");
 		}
