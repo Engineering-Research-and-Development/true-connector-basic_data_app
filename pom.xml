@@ -28,11 +28,11 @@
 		<repository> 
 			<id>snapshots</id> 
 			<name>maven-snapshots</name> 
-			<url>http://maven.iais.fraunhofer.de/artifactory/eis-ids-public</url> 
+			<url>https://maven.iais.fraunhofer.de/artifactory/eis-ids-public</url> 
 		</repository> 
 		<repository>
-	        <id>github-mmp</id>
-	        <url>https://${GITHUB_TOKEN}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/market4.0-ids_multipart_message_processor</url>
+	        <id>github</id>
+	        <url>https://${GITHUB_TOKEN}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development</url>
 	        <releases>
 	        	<enabled>true</enabled>
 	        </releases>
@@ -40,6 +40,7 @@
 	        	<enabled>true</enabled>
 	        </snapshots>
 	    </repository>
+	    <!-- 
 	    <repository>
 	        <id>github-wss</id>
 	        <url>https://${GITHUB_TOKEN}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/market4.0-websocket_message_streamer</url>
@@ -50,7 +51,16 @@
 	        	<enabled>true</enabled>
 	        </snapshots>
 	    </repository>
+	     -->
 	</repositories>
+	
+	<distributionManagement>
+	    <repository>
+	      <id>github</id>
+	      <name>GitHub Packages</name>
+	      <url>https://maven.pkg.github.com/Engineering-Research-and-Development/market4.0-data_app_test_BE</url>
+	    </repository>
+  	</distributionManagement>
 	
 	<dependencies>
 		<dependency>
