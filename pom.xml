@@ -30,6 +30,26 @@
 			<name>maven-snapshots</name> 
 			<url>http://maven.iais.fraunhofer.de/artifactory/eis-ids-public</url> 
 		</repository> 
+		<repository>
+	        <id>github-mmp</id>
+	        <url>https://${GITHUB_TOKEN}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/market4.0-ids_multipart_message_processor</url>
+	        <releases>
+	        	<enabled>true</enabled>
+	        </releases>
+	        <snapshots>
+	        	<enabled>true</enabled>
+	        </snapshots>
+	    </repository>
+	    <repository>
+	        <id>github-wss</id>
+	        <url>https://${GITHUB_TOKEN}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/market4.0-websocket_message_streamer</url>
+	        <releases>
+	        	<enabled>true</enabled>
+	        </releases>
+	        <snapshots>
+	        	<enabled>true</enabled>
+	        </snapshots>
+	    </repository>
 	</repositories>
 	
 	<dependencies>
