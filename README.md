@@ -81,28 +81,12 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "mixed",
-    "Forward-To": "https://localhost:8890/data",
-	 "message": {
-	  "@context" : {
-		"ids" : "https://w3id.org/idsa/core/"
-	  },
-	  "@type" : "ids:ArtifactRequestMessage",
-	  "@id" : "https://w3id.org/idsa/autogen/artifactRequestMessage/76481a41-8117-4c79-bdf4-9903ef8f825a",
-	  "ids:issued" : {
-		"@value" : "2020-11-25T16:43:27.051+01:00",
-		"@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
-	  },
-	  "ids:modelVersion" : "4.0.0",
-	  "ids:issuerConnector" : {
-		"@id" : "http://w3id.org/engrd/connector/"
-	  },
-	  "ids:requestedArtifact" : {
-	   "@id" : "http://w3id.org/engrd/connector/artifact/1"
-	  }
-	},
-	"payload" : {
+    "Forward-To": "https://localhost:8887/data",
+    "messageType":"ArtifactRequestMessage",
+    "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
-		}
+    }
 }'
 
 ```
@@ -115,28 +99,12 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "form",
-    "Forward-To": "https://localhost:8890/data",
-	 "message": {
-	  "@context" : {
-		"ids" : "https://w3id.org/idsa/core/"
-	  },
-	  "@type" : "ids:ArtifactRequestMessage",
-	  "@id" : "https://w3id.org/idsa/autogen/artifactRequestMessage/76481a41-8117-4c79-bdf4-9903ef8f825a",
-	  "ids:issued" : {
-		"@value" : "2020-11-25T16:43:27.051+01:00",
-		"@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
-	  },
-	  "ids:modelVersion" : "4.0.0",
-	  "ids:issuerConnector" : {
-		"@id" : "http://w3id.org/engrd/connector/"
-	  },
-	  "ids:requestedArtifact" : {
-	   "@id" : "http://w3id.org/engrd/connector/artifact/1"
-	  }
-	},
-	"payload" : {
+    "Forward-To": "https://localhost:8887/data",
+    "messageType":"ArtifactRequestMessage",
+    "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
-		}
+    }
 }'
 
 ```
@@ -149,26 +117,18 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "http-header",
-    "Forward-To": "https://localhost:8890/data",
-	"messageAsHeaders": {
-        "IDS-RequestedArtifact":"http://w3id.org/engrd/connector/artifact/1",
-        "IDS-Messagetype":"ids:ArtifactRequestMessage",
-        "IDS-ModelVersion":"4.0.0",
-        "IDS-Issued":"2021-01-15T13:09:42.306Z",
-        "IDS-Id":"https://w3id.org/idsa/autogen/artifactResponseMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f",
-        "IDS-IssuerConnector":"http://w3id.org/engrd/connector/"
-        },
-	"payload" : {
+    "Forward-To": "https://localhost:8887/data",
+    "messageType":"ArtifactRequestMessage",
+    "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
-		}
+    }
 }'
 
 ```
 For <b>REST flow</b>, multipart field should be set to one of the following values: 'mixed', 'form' or 'http-header'.<br/>
-In case of mixed or form flow, 'message' and 'payload' parts are used to construct request and forward to ECC connector A-endpoint using Forward-To header value.<br />
-In case of http-header flow, messageAsHeaders and payload are used to construct http-header like request and forward it to ECC A-endpoint.
-
-Configuration regarding A-endpoint for data consumer is located in proeprty file:
+Based on multipart type, and messageType, dataApp will create dedicated message, and send request to connector. At the moment, 2 messages are supported - 'ArtifactRequestMessage' and 'ContractAgreementMessage'.
+Configuration regarding A-endpoint for data consumer is located in property file:
 
 ```
 application.ecc.protocol=https

@@ -196,6 +196,9 @@ public class ProxyServiceImpl implements ProxyService {
 			httpHeaders.add("IDS-Messagetype", "ids:ArtifactRequestMessage");
 			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + ArtifactRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
 			httpHeaders.add("IDS-RequestedArtifact", requestedArtifact != null ? requestedArtifact : TestUtilMessageService.REQUESTED_ARTIFACT.toString());
+		}  else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
+			httpHeaders.add("IDS-Messagetype", "ids:ContractAgreementMessage");
+			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + ContractAgreementMessage.class.getSimpleName() + "/" + UUID.randomUUID());
 		}
 		httpHeaders.add("IDS-ModelVersion", "4.0.6");
 		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
