@@ -368,7 +368,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	}
 
 	private URI whoIAm() {
-		return URI.create("auto-generated");
+		return URI.create("http://auto-generated");
 	}
 	
 	private URI whoIAmEngRDProvider() {
@@ -421,7 +421,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	}
 
     public static String serializeMessage(Object message) throws IOException {
-        return MultipartMessageProcessor.serializeToPlainJson(message);
+        return MultipartMessageProcessor.serializeToJsonLD(message);
     }
 
 }

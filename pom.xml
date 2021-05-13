@@ -225,7 +225,7 @@
 					<exclude>test/**</exclude>
 					<exclude>examples-multipart-messages/**</exclude>
 					<exclude>*.jks</exclude>
-<!-- 					<exclude>*.properties</exclude> -->
+					<exclude>*.properties</exclude>
 				</excludes>
 			</resource>
 		</resources>

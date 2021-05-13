@@ -2,5 +2,5 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/base.xml" />
     <logger name="org.springframework" level="ERROR"/>
-    <logger name="it.eng.idsa.dataapp" level="INFO"/>
+    <logger name="it.eng.idsa" level="INFO"/>
  </configuration>
