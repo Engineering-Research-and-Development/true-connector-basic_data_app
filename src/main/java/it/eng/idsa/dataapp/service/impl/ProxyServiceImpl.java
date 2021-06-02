@@ -29,8 +29,11 @@ import org.springframework.web.server.ResponseStatusException;
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactRequestMessageBuilder;
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
+import de.fraunhofer.iais.eis.ConnectorUnavailableMessage;
+import de.fraunhofer.iais.eis.ConnectorUpdateMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.QueryMessage;
 import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
@@ -88,8 +91,13 @@ public class ProxyServiceImpl implements ProxyService {
 			String requestedArtifact = (String) jsonObject.get(REQUESTED_ARTIFACT);
 			String messageType = (String) jsonObject.get(MESSAGE_TYPE);
 			
-			JSONObject partJson = (JSONObject) jsonObject.get(PAYLOAD);
-			String payload =  partJson != null ? partJson.toJSONString().replace("\\/","/") : null;
+			String payload = null;
+			if(jsonObject.get(PAYLOAD) instanceof String) {
+				payload = ((String) jsonObject.get(PAYLOAD)).replace("\\/","/").replace("\\", "");
+			} else {
+				JSONObject partJson = (JSONObject) jsonObject.get(PAYLOAD);
+				payload =  partJson != null ? partJson.toJSONString().replace("\\/","/") : null;
+			}
 			
 			return new ProxyRequest(multipart, forwardTo, forwardToInternal, payload, requestedArtifact, messageType);
 		} catch (ParseException e) {
@@ -107,22 +115,44 @@ public class ProxyServiceImpl implements ProxyService {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message type part in body is mandatory for " 
 					+ proxyRequest.getMultipart() + " flow");
 		}
-		
+		URI thirdPartyApi = null;
+		String proxyPayload = null;
+		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
+
 		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact());
 		
-		MultipartMessage mm = new MultipartMessageBuilder()
-				.withHeaderContent(requestMessage)
-				.withPayloadContent(proxyRequest.getPayload())
-				.build();
+		if(requestMessage != null) {
+			MultipartMessage mm = new MultipartMessageBuilder()
+					.withHeaderContent(requestMessage)
+					.withPayloadContent(proxyRequest.getPayload())
+					.build();
+			proxyPayload = MultipartMessageProcessor.multipartMessagetoString(mm, false, true);
+			
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getMixContext(),
+					null, null);
+			
+		} else if (ConnectorUpdateMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+			logger.info("Broker message - ConnectorUpdateMessage");
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerRegisterContext(),
+					null, null);
+		} else if (ConnectorUnavailableMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+			logger.info("Broker message - ConnectorUnavailableMessage");
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerDeleteContext(),
+					null, null);
+		} else if (QueryMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+			logger.info("Broker message - QueryMessage");
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerQuerryContext(),
+					null, null);
+			proxyPayload = proxyRequest.getPayload();
+		}
 		
-		String proxyPayload = MultipartMessageProcessor.multipartMessagetoString(mm, false, true);
-		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
-				eccProperties.getPort(), eccProperties.getMixContext(),
-				null, null);
-		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
-		HttpEntity<String> requestEntity = new HttpEntity<String>(proxyPayload, httpHeaders);
 		logger.info("Forwarding mix POST request to {}", thirdPartyApi.toString());
 		
+		HttpEntity<String> requestEntity = new HttpEntity<String>(proxyPayload, httpHeaders);
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
 		logResponse(resp);
 		return resp;
@@ -139,19 +169,39 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 		
 		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact());
-		
+		URI thirdPartyApi = null;
+		HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = null;
 		LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-		map.add("header", TestUtilMessageService.getMessageAsString(requestMessage));
-		map.add("payload", proxyRequest.getPayload());
-		httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
-		HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, httpHeaders);
-		
-		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
-				eccProperties.getPort(), eccProperties.getFormContext(),
-				null, null);
+		httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+		if (requestMessage != null) {
+			map.add("header", TestUtilMessageService.getMessageAsString(requestMessage));
+			map.add("payload", proxyRequest.getPayload());
+			
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getFormContext(),
+					null, null);
+		} else if (ConnectorUpdateMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+			logger.info("Broker message - ConnectorUpdateMessage");
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerRegisterContext(),
+					null, null);
+		} else if (ConnectorUnavailableMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+			logger.info("Broker message - ConnectorUnavailableMessage");
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerDeleteContext(),
+					null, null);
+		} else if (QueryMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+			logger.info("Broker message - QueryMessage");
+			map.add("payload", proxyRequest.getPayload());
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerQuerryContext(),
+					null, null);
+		}
 		
 		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
+		requestEntity = new HttpEntity<>(map, httpHeaders);
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
 		logResponse(resp);
 		return resp;
@@ -164,7 +214,7 @@ public class ProxyServiceImpl implements ProxyService {
 							: TestUtilMessageService.REQUESTED_ARTIFACT);
 		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
 			return TestUtilMessageService.getContractAgreementMessage();
-		}
+		} 
 		return null;
 	}
 
@@ -184,6 +234,23 @@ public class ProxyServiceImpl implements ProxyService {
 		httpHeaders.addAll(createMessageAsHeader(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact()));
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
 		HttpEntity<String> requestEntity = new HttpEntity<>(proxyRequest.getPayload(), httpHeaders);
+		
+		if (ConnectorUpdateMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+			logger.info("Broker message - ConnectorUpdateMessage");
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerRegisterContext(),
+					null, null);
+		} else if (ConnectorUnavailableMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+		 	logger.info("Broker message - ConnectorUnavailableMessage");
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerDeleteContext(),
+					null, null);
+		} else if (QueryMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
+			logger.info("Broker message - QueryMessage");
+			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
+					eccProperties.getPort(), eccProperties.getBrokerQuerryContext(),
+					null, null);
+		}
 		
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
 		logResponse(resp);

@@ -148,3 +148,70 @@ Payload for this reponse (ContractAgreement) will be read from file, named contr
 you wish to send different ContractAgreement, just modify content of this file.
 This way, we are simulating simple contract negotiation sequence.
 
+# Broker interaction
+
+For broker interaction, example requests are listed below:
+You can choose different multiparts - mixed, form or http-header - this is how will DataApp send request to Execution Core Container.
+
+Flow is following: dataApp will create request, and send it to Execution Core Container, on dedicated endpoints. Those endpoints are configured in property file:
+
+```
+application.ecc.broker-register-context=/selfRegistration/register
+application.ecc.broker-update-context=/selfRegistration/update
+application.ecc.broker-delete-context=/selfRegistration/delete
+application.ecc.broker-passivate-context=/selfRegistration/passivate
+application.ecc.broker-querry-context=/selfRegistration/query
+```
+
+
+NOTE: Broker might support (at the moment) only mixed/form, so double check how connector is configured to send request to destination B-endpoint.
+
+## Register/Update connector to Broker
+
+```
+{
+    "multipart": "http-header",
+    "Forward-To": "https://broker.ids.isst.fraunhofer.de/infrastructure",
+    "messageType":"ConnectorUpdateMessage",
+}
+```
+
+## Unregister/passivate connector to Broker
+
+```
+{
+    "multipart": "http-header",
+    "Forward-To": "https://broker.ids.isst.fraunhofer.de/infrastructure",
+    "messageType":"ConnectorUnavailableMessage",
+}
+```
+
+## Query broker
+
+Payload is used to pass query to the Broker
+
+```
+{
+    "multipart": "http-header",
+    "Forward-To": "https://broker.ids.isst.fraunhofer.de/infrastructure",
+    "messageType":"QueryMessage",
+	 "payload" : "SELECT ?connectorUri WHERE \{ ?connectorUri a ids:BaseConnector . \}"
+}
+
+```
+
+Curl command:
+
+```
+curl --location --request POST 'https://localhost:8083/proxy' \
+--header 'fizz: buzz' \
+--header 'Content-Type: text/plain' \
+--data-raw '{
+    "multipart": "http-header",
+    "Forward-To": "https://ecc-provider:8086/data",
+    "Forward-To-Internal": "wss://ecc-consumer:8887",
+    "messageType":"QueryMessage",
+    "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+	"payload" : "SELECT ?connectorUri WHERE \{ ?connectorUri a ids:BaseConnector . \}"
+}'
+```
