@@ -152,6 +152,25 @@ public class ProxyServiceTest {
 		assertNotNull(pr.getPayload());
 		assertEquals(ContractAgreementMessage.class.getSimpleName(), pr.getMessageType());
 	}
+	
+	@Test
+	public void parseJsonPayload() {
+		ProxyRequest pr = service.parseIncommingProxyRequest(getJsonPayload());
+		assertNotNull(pr);
+		assertEquals(ProxyRequest.MULTIPART_HEADER, pr.getMultipart());
+		assertNotNull(pr.getPayload());
+		assertEquals(ArtifactRequestMessage.class.getSimpleName(), pr.getMessageType());
+	}
+	
+	@Test
+	public void parseStringPayload() {
+		ProxyRequest pr = service.parseIncommingProxyRequest(getStringPayload());
+		assertNotNull(pr);
+		assertEquals(ProxyRequest.MULTIPART_HEADER, pr.getMultipart());
+		assertNotNull(pr.getPayload());
+		assertEquals("SELECT ?connectorUri WHERE { ?connectorUri a ids:BaseConnector . }", pr.getPayload());
+		assertEquals(ArtifactRequestMessage.class.getSimpleName(), pr.getMessageType());
+	}
 
 	private String getProxyRequest() {
 		return "{\r\n" + 
@@ -183,5 +202,25 @@ public class ProxyServiceTest {
 						TestUtilMessageService.getContractAgreement()) 
 				+"\r\n" + 
 				"}\r\n";
+	}
+	
+	private String getJsonPayload() {
+		return "{\r\n" + 
+				"    \"multipart\": \"http-header\",\r\n" + 
+				"    \"Forward-To\": \"https://ecc-provider:8086/data\",\r\n" + 
+				"    \"messageType\":\"ArtifactRequestMessage\",\r\n" + 
+				"	 \"payload\" : {\r\n" + 
+				"		\"catalog.offers.0.resourceEndpoints.path\":\"/pet2\"\r\n" + 
+				"		}\r\n" + 
+				"}";
+	}
+	
+	private String getStringPayload() {
+		return "{\r\n" + 
+				"    \"multipart\": \"http-header\",\r\n" + 
+				"    \"Forward-To\": \"https://ecc-provider:8086/data\",\r\n" + 
+				"    \"messageType\":\"ArtifactRequestMessage\",\r\n" + 
+				"	 \"payload\" : \"SELECT ?connectorUri WHERE \\{ ?connectorUri a ids:BaseConnector . \\}\"" + 
+				"}";
 	}
 }
