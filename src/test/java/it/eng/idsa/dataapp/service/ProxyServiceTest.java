@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -29,15 +30,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.fraunhofer.iais.eis.QueryLanguage;
+import de.fraunhofer.iais.eis.QueryMessage;
+import de.fraunhofer.iais.eis.QueryMessageBuilder;
+import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
+import it.eng.idsa.multipart.util.DateUtil;
 
 public class ProxyServiceTest {
 
 	private static final String PAYLOAD = "Payload";
+	private static final String QUERY_STRING = "PREFIX ids: <https://w3id.org/idsa/core/>\r\n" + 
+				"SELECT ?connectorUri WHERE { ?connectorUri a ids:BaseConnector . }";
 	private String message;
+	
+	public static URI ISSUER_CONNECTOR = URI.create("http://w3id.org/engrd/connector");
+	public static URI RECIPIENT_CONNECTOR = URI.create("http://w3id.org/engrd/connector/recipient");
+	public static URI SENDER_AGENT = URI.create("http://sender.agent/sender");
+	public static URI AFFECTED_CONNECOTR = URI.create("https://affected.connecotr");
 
 	private ProxyServiceImpl service;
 	@Mock
@@ -169,6 +184,15 @@ public class ProxyServiceTest {
 		assertNotNull(pr.getMessage());
 		assertTrue(CollectionUtils.isEmpty(pr.getMessageAsHeader()));
 	}
+	
+	@Test
+	public void parseStringPayload() {
+		ProxyRequest pr = service.parseIncommingProxyRequest(getStringPayload());
+		assertNotNull(pr);
+		assertEquals(ProxyRequest.MULTIPART_HEADER, pr.getMultipart());
+		assertNotNull(pr.getPayload());
+		assertEquals(QUERY_STRING, pr.getPayload());
+	}
 
 	private String getProxyRequest() {
 		return "{\r\n" + 
@@ -209,6 +233,14 @@ public class ProxyServiceTest {
 		return "{\r\n" + 
 				"    \"multipart\": \"wss\",\r\n" + 
 				"    \"requestedArtifact\": \"test.csv\",\r\n" + 
+				"}";
+	}
+	
+	private String getStringPayload() {
+		return "{\r\n" + 
+				"    \"multipart\": \"http-header\",\r\n" + 
+				"    \"requestedArtifact\": \"test.csv\",\r\n" + 
+				"    \"payload\": \"PREFIX ids: <https://w3id.org/idsa/core/>\r\nSELECT ?connectorUri WHERE { ?connectorUri a ids:BaseConnector . }\", "+
 				"}";
 	}
 	
@@ -294,5 +326,31 @@ public class ProxyServiceTest {
 				"	   \"@id\" : \"http://w3id.org/engrd/connector/artifact/1\"\r\n" + 
 				"	  }\r\n" + 
 				"	}";
+	}
+	
+	@Test
+	public void getPaylaodRequestAsJson() throws IOException {
+		ProxyRequest pr = new ProxyRequest();
+		pr.setForwardTo("https://broker.ids.isst.fraunhofer.de/infrastructure");
+		pr.setMultipart("mixed");
+		Serializer s = new Serializer();
+		String message = s.serialize(getQueryMessage(SENDER_AGENT, ISSUER_CONNECTOR, QueryLanguage.SPARQL));
+		pr.setMessage(message);
+		pr.setPayload(QUERY_STRING);
+		
+		ObjectMapper mapper = new ObjectMapper();
+		System.out.println(mapper.writeValueAsString(pr));
+	}
+	
+	
+	private QueryMessage getQueryMessage(URI senderAgent, URI issuerConnector, QueryLanguage queryLanguage) {
+		return new QueryMessageBuilder() 
+				._modelVersion_("4.0.0")
+				._issued_(DateUtil.now())
+				._senderAgent_(senderAgent)
+				._issuerConnector_(issuerConnector)
+				._queryLanguage_(queryLanguage)
+//				._securityToken_(getDynamicAttributeToken())
+				.build();
 	}
 }

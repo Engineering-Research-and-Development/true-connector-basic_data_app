@@ -1,6 +1,10 @@
 package it.eng.idsa.dataapp.domain;
 
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * Class to wrap up data needed for proxy request logic
@@ -83,6 +87,19 @@ public class ProxyRequest {
 	public void setForwardToInternal(String forwardToInternal) {
 		this.forwardToInternal = forwardToInternal;
 	}
-	
-	
+	 
+	public String toString() {
+	        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+	            .append("multipart", multipart)
+	            .append("Forwrd-To", forwardTo)
+	            .append("Forward-To-Internal", forwardToInternal)
+	            .append("requestedArtifact", requestedArtifact)
+	            .append("message", message)
+	            .append("payload", payload)
+	            .append("msgAsHeaders", messageAsHeader != null ? messageAsHeader.keySet().stream()
+	            		.map(key -> key + "=" + (String) messageAsHeader.get(key))
+	            	    .collect(Collectors.joining(", ", "{", "}"))
+	            	    : null)
+	            .toString();
+	    }
 }
