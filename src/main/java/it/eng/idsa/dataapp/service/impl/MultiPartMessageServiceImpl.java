@@ -68,6 +68,10 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	private static final Logger logger = LoggerFactory.getLogger(MultiPartMessageServiceImpl.class);
 	
+	//check market4.0-data_app_test_BE/src/main/resources/dataFiles/contract_agreement.json for more information
+	private static final URI DEFAULT_CONTRACT_AGREEMENT = URI.create("https://w3id.org/idsa/autogen/contract/restrict-access-interval");
+	private static final URI DEFAULT_TARGET_ARTIFACT = URI.create("http://w3id.org/engrd/connector/artifact/1");
+	
 	@Value("${information.model.version}")
 	private String informationModelVersion;
 	
@@ -319,8 +323,8 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	@Override
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
 		if (header.getTransferContract() != null 
-				&& !(URI.create("https://contract.com/12").equals(header.getTransferContract())) 
-				&& URI.create("http://w3id.org/engrd/connector/artifact/12").equals(header.getRequestedArtifact())) {
+				&& !(DEFAULT_CONTRACT_AGREEMENT.equals(header.getTransferContract())) 
+				&& DEFAULT_TARGET_ARTIFACT.equals(header.getRequestedArtifact())) {
 			return createRejectionNotAuthorized(header);
 		}
 		return new ArtifactResponseMessageBuilder()
