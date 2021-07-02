@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.DescriptionResponseMessage;
+import de.fraunhofer.iais.eis.RejectionMessage;
+import de.fraunhofer.iais.eis.util.Util;
 import it.eng.idsa.dataapp.util.MessageUtil;
 
 @Controller
@@ -44,15 +47,30 @@ public class DataControllerHttpHeader {
 			logger.info("Payload is empty");
 		}
 
-		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
+		HttpHeaders responseHeaders = createResponseMessageHeaders(httpHeaders);
+		String responsePayload = null;
+		
+		if (!("ids:RejectionMessage".equals(responseHeaders.get("IDS-Messagetype").get(0)))) {
+			responsePayload = messageUtil.createResponsePayload(httpHeaders);
+		} else {
+			responsePayload = "Rejected message";
+		}
+		
+		if (responsePayload.contains("IDS-RejectionReason")) {
+			httpHeaders.put("IDS-Messagetype", Util.asList("ids:RejectionMessage"));
+			httpHeaders.put("IDS-RejectionReason", Util.asList(responsePayload.substring(responsePayload.indexOf(":")+1)));
+			responseHeaders = createResponseMessageHeaders(httpHeaders);
+			responsePayload = "Rejected message";
+		}
 
 		return ResponseEntity.ok().header("foo", "bar")
-				.headers(createResponseMessageHeaders(requestMessageType))
+				.headers(responseHeaders)
 				.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-				.body(messageUtil.createResponsePayload(requestMessageType));
+				.body(responsePayload);
 	}
 
-	private HttpHeaders createResponseMessageHeaders(String requestMessageType) {
+	private HttpHeaders createResponseMessageHeaders(HttpHeaders httpHeaders) {
+		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
 		HttpHeaders headers = new HttpHeaders();
 
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -60,23 +78,49 @@ public class DataControllerHttpHeader {
 		String formattedDate = dateFormat.format(date);
 
 		String responseMessageType = null;
+		String rejectionReason = null;
 
-		if ("ids:ContractRequestMessage".equals(requestMessageType)) {
+		switch (requestMessageType) {
+		case "ids:ContractRequestMessage":
 			responseMessageType = ContractAgreementMessage.class.getSimpleName();
-		} else {
-			responseMessageType = ArtifactResponseMessage.class.getSimpleName();
-		}
+			break;
 
-		headers.add("IDS-Messagetype", "ids:" + responseMessageType);
+		case "ids:ArtifactRequestMessage":
+			if (httpHeaders.containsKey("IDS-TransferContract")
+					&& !("https://contract.com/12".equals(httpHeaders.get("IDS-TransferContract").get(0)))
+					&& "http://w3id.org/engrd/connector/artifact/12"
+							.equals(httpHeaders.get("IDS-RequestedArtifact").get(0))) {
+				responseMessageType = RejectionMessage.class.getSimpleName();
+				rejectionReason = "https://w3id.org/idsa/code/NOT_AUTHORIZED";
+			} else {
+				responseMessageType = ArtifactResponseMessage.class.getSimpleName();
+			}
+			break;
+			
+		case "ids:DescriptionRequestMessage":
+			responseMessageType = DescriptionResponseMessage.class.getSimpleName();
+			break;
+			
+		case "ids:RejectionMessage":
+			responseMessageType = requestMessageType.substring(4);
+			rejectionReason = httpHeaders.get("IDS-RejectionReason").get(0);
+			break;
+
+		default:
+			break;
+		}
 		
-		//changes first letter to lower case
-		responseMessageType = Character.toLowerCase(responseMessageType.charAt(0)) + responseMessageType.substring(1);
-		
+		if (responseMessageType != null) {
+			headers.add("IDS-Messagetype", "ids:" + responseMessageType);
+		}
 		headers.add("IDS-Issued", formattedDate);
 		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
-		headers.add("IDS-CorrelationMessage", "https://w3id.org/idsa/autogen/"+ responseMessageType +"//"+ UUID.randomUUID().toString());
+		headers.add("IDS-CorrelationMessage", "https://w3id.org/idsa/autogen/"+ responseMessageType +"/"+ UUID.randomUUID().toString());
 		headers.add("IDS-ModelVersion", "4.0.0");
-		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"//"+ UUID.randomUUID().toString());
+		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"/"+ UUID.randomUUID().toString());
+		if (rejectionReason != null) {
+			headers.add("IDS-RejectionReason", rejectionReason);
+		}
 
 		return headers;
 	}

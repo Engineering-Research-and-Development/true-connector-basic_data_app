@@ -34,6 +34,8 @@ import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessageBuilder;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
+import de.fraunhofer.iais.eis.DescriptionRequestMessage;
+import de.fraunhofer.iais.eis.DescriptionResponseMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.MessageProcessedNotificationMessageBuilder;
 import de.fraunhofer.iais.eis.NotificationMessageBuilder;
@@ -68,7 +70,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	
 	@Value("${information.model.version}")
 	private String informationModelVersion;
-
+	
 	@Override
 	public String getHeader(String body) {
 		MultipartMessage deserializedMultipartMessage = MultipartMessageProcessor.parseMultipartMessage(body);
@@ -144,6 +146,8 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
             	 output = serializeMessage(createContractAgreementMessage((ContractRequestMessage) header));
 			} else if (header instanceof ContractAgreementMessage) {
            	 	output = serializeMessage(createProcessNotificationMessage((ContractAgreementMessage) header));
+			} else if (header instanceof DescriptionRequestMessage) {
+           	 	output = serializeMessage(createDescriptionResponseMessage((DescriptionRequestMessage) header));
 			} else {
                 output = serializeMessage(createResultMessage(header));
             }
@@ -152,6 +156,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		}
 		return output;
     }
+
 
 	@Override
 	public Message getMessage(Object header) {
@@ -313,6 +318,11 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 
 	@Override
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
+		if (header.getTransferContract() != null 
+				&& !(URI.create("https://contract.com/12").equals(header.getTransferContract())) 
+				&& URI.create("http://w3id.org/engrd/connector/artifact/12").equals(header.getRequestedArtifact())) {
+			return createRejectionNotAuthorized(header);
+		}
 		return new ArtifactResponseMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
@@ -331,6 +341,16 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._issued_(DateUtil.now())
 				._issuerConnector_(whoIAmEngRDProvider())
 				._recipientConnector_(Util.asList(header != null ? header.getIssuerConnector() : whoIAm()))
+				.build();
+	}
+	
+	private Message createDescriptionResponseMessage(DescriptionRequestMessage header) {
+		return new DescriptionResponseMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(informationModelVersion)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				.build();
 	}
 
@@ -407,6 +427,17 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.NOT_FOUND)
+				.build();
+	}
+	
+	public Message createRejectionNotAuthorized(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(informationModelVersion)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._rejectionReason_(RejectionReason.NOT_AUTHORIZED)
 				.build();
 	}
 
