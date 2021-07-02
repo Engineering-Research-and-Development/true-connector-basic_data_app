@@ -41,7 +41,8 @@ public class ProxyController {
 			@RequestBody String body, HttpMethod method) throws Exception {
 
 		ProxyRequest proxyRequest = proxySrvice.parseIncommingProxyRequest(body);
-		logger.debug("Type: " + proxyRequest.getMultipart());
+		logger.info("Type: " + proxyRequest.getMultipart());
+		logger.debug("Parsed proxy request: " + proxyRequest);
 		if(StringUtils.isEmpty(proxyRequest.getMultipart())) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Multipart field not found in request, mandatory for the flow");
 		}

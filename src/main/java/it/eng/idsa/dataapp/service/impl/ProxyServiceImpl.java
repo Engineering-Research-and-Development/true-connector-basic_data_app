@@ -94,8 +94,13 @@ public class ProxyServiceImpl implements ProxyService {
 			JSONObject partJson = (JSONObject) jsonObject.get(MESSAGE);
 			String message =  partJson != null ? partJson.toJSONString().replace("\\/","/") : null;
 			
-			partJson = (JSONObject) jsonObject.get(PAYLOAD);
-			String payload =  partJson != null ? partJson.toJSONString().replace("\\/","/") : null;
+			String payload = null;
+			if(jsonObject.get(PAYLOAD) instanceof String) {
+				payload = ((String) jsonObject.get(PAYLOAD));//.replace("\\/","/").replace("\\", "");
+			} else {
+				JSONObject partJsonPayload = (JSONObject) jsonObject.get(PAYLOAD);
+				payload =  partJsonPayload != null ? partJsonPayload.toJSONString().replace("\\/","/") : null;
+			}
 			
 			Map<String, Object> messageAsMap = (JSONObject) jsonObject.get(MESSAGE_AS_HEADERS);
 			
@@ -228,22 +233,6 @@ public class ProxyServiceImpl implements ProxyService {
 		logger.info("Response received with status code {}", resp.getStatusCode());
 		logger.info("Response headers\n{}", resp.getHeaders());
 		logger.info("Response body\n{}", resp.getBody());
-	}
-	
-	private String getPayloadPart(String payload, String part) {
-		JSONParser parser=new JSONParser();
-		JSONObject jsonObject;
-		try {
-			jsonObject = (JSONObject) parser.parse(payload);
-			if("multipart".equals(part)) {
-				return (String) jsonObject.get(part);
-			}
-			JSONObject partJson = (JSONObject) jsonObject.get(part);
-			return partJson.toJSONString().replace("\\/","/");
-		} catch (ParseException e) {
-			logger.error("Error parsing payoad", e);
-		}
-		return null;
 	}
 	
 	// TODO should we move this method to separate class?
