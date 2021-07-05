@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -63,8 +64,19 @@ public class MessageUtil {
 		} else if(requestHeader instanceof ContractAgreementMessage) {
 			return null;
 		} else if(requestHeader instanceof DescriptionRequestMessage) {
-			if (((DescriptionRequestMessage) requestHeader).getRequestedElement() != null) {
-				return getRequestedElement(((DescriptionRequestMessage) requestHeader).getRequestedElement());
+			DescriptionRequestMessage drm = (DescriptionRequestMessage) requestHeader;
+			if (drm.getRequestedElement() != null) {
+				String element = getRequestedElement(drm.getRequestedElement());
+				if (StringUtils.isNotBlank(element)) {
+					return element;
+				}else {
+					try {
+						return MultipartMessageProcessor.serializeToJsonLD(multiPartMessageService.createRejectionCommunicationLocalIssues(drm));
+					} catch (IOException e) {
+						logger.error("Could not serialize rejection",e);
+					}
+					return null;
+				}
 			}else {
 				return getSelfDescription();
 			}
@@ -80,7 +92,18 @@ public class MessageUtil {
 			return null;
 		} else if(requestHeader.contains(DescriptionRequestMessage.class.getSimpleName())) {
 			if (requestHeader.contains("ids:requestedElement")) {
-				return getRequestedElement(((DescriptionRequestMessage) multiPartMessageService.getMessage((Object)requestHeader)).getRequestedElement());
+				DescriptionRequestMessage drm = (DescriptionRequestMessage) multiPartMessageService.getMessage((Object)requestHeader);
+				String element = getRequestedElement(drm.getRequestedElement());
+				if (StringUtils.isNotBlank(element)) {
+					return element;
+				}else {
+					try {
+						return MultipartMessageProcessor.serializeToJsonLD(multiPartMessageService.createRejectionCommunicationLocalIssues(drm));
+					} catch (IOException e) {
+						logger.error("Could not serialize rejection",e);
+					}
+					return null;
+				}
 			}else {
 				return getSelfDescription();
 			}
@@ -97,7 +120,12 @@ public class MessageUtil {
 			return null;
 		} else if(requestMessageType.contains(DescriptionRequestMessage.class.getSimpleName())) {
 			if (httpHeaders.containsKey("IDS-RequestedElement")) {
-				return getRequestedElement(URI.create(httpHeaders.get("IDS-RequestedElement").get(0)));
+				String element = getRequestedElement(URI.create(httpHeaders.get("IDS-RequestedElement").get(0)));
+				if (StringUtils.isNotBlank(element)) {
+					return element;
+				}else {
+					return "IDS-RejectionReason:" + RejectionReason.NOT_FOUND.getId().toString();
+				}
 			}else {
 				return getSelfDescription();
 			}
@@ -167,6 +195,6 @@ public class MessageUtil {
 			}
 		}
 		logger.error("Requested element not found.");
-		return "IDS-RejectionReason:" + RejectionReason.NOT_FOUND.getId().toString();
+		return null;
 	}
 }
