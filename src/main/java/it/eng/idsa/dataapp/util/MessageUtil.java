@@ -18,12 +18,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import de.fraunhofer.iais.eis.BaseConnector;
+import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
@@ -59,26 +60,26 @@ public class MessageUtil {
 	}
 
 	public String createResponsePayload(Message requestHeader) {
-		if(requestHeader instanceof ContractRequestMessage) {
+		if (requestHeader instanceof ContractRequestMessage) {
 			return createContractAgreement(dataLakeDirectory);
-		} else if(requestHeader instanceof ContractAgreementMessage) {
+		} else if (requestHeader instanceof ContractAgreementMessage) {
 			return null;
-		} else if(requestHeader instanceof DescriptionRequestMessage) {
+		} else if (requestHeader instanceof DescriptionRequestMessage) {
 			DescriptionRequestMessage drm = (DescriptionRequestMessage) requestHeader;
 			if (drm.getRequestedElement() != null) {
-				String element = getRequestedElement(drm.getRequestedElement());
+				String element = getRequestedElement(drm.getRequestedElement(), getSelfDescription());
 				if (StringUtils.isNotBlank(element)) {
 					return element;
-				}else {
+				} else {
 					try {
 						return MultipartMessageProcessor.serializeToJsonLD(multiPartMessageService.createRejectionCommunicationLocalIssues(drm));
 					} catch (IOException e) {
-						logger.error("Could not serialize rejection",e);
+						logger.error("Could not serialize rejection", e);
 					}
 					return null;
 				}
-			}else {
-				return getSelfDescription();
+			} else {
+				return getSelfDescriptionAsString();
 			}
 		} else {
 			return createResponsePayload();
@@ -86,26 +87,26 @@ public class MessageUtil {
 	}
 	
 	public String createResponsePayload(String requestHeader) {
-		if(requestHeader.contains(ContractRequestMessage.class.getSimpleName())) {
+		if (requestHeader.contains(ContractRequestMessage.class.getSimpleName())) {
 			return createContractAgreement(dataLakeDirectory);
-		} else if(requestHeader.contains(ContractAgreementMessage.class.getSimpleName())) {
+		} else if (requestHeader.contains(ContractAgreementMessage.class.getSimpleName())) {
 			return null;
-		} else if(requestHeader.contains(DescriptionRequestMessage.class.getSimpleName())) {
+		} else if (requestHeader.contains(DescriptionRequestMessage.class.getSimpleName())) {
 			if (requestHeader.contains("ids:requestedElement")) {
-				DescriptionRequestMessage drm = (DescriptionRequestMessage) multiPartMessageService.getMessage((Object)requestHeader);
-				String element = getRequestedElement(drm.getRequestedElement());
+				DescriptionRequestMessage drm = (DescriptionRequestMessage) multiPartMessageService.getMessage((Object) requestHeader);
+				String element = getRequestedElement(drm.getRequestedElement(), getSelfDescription());
 				if (StringUtils.isNotBlank(element)) {
 					return element;
-				}else {
+				} else {
 					try {
 						return MultipartMessageProcessor.serializeToJsonLD(multiPartMessageService.createRejectionCommunicationLocalIssues(drm));
 					} catch (IOException e) {
-						logger.error("Could not serialize rejection",e);
+						logger.error("Could not serialize rejection", e);
 					}
 					return null;
 				}
-			}else {
-				return getSelfDescription();
+			} else {
+				return getSelfDescriptionAsString();
 			}
 		} else {
 			return createResponsePayload();
@@ -114,20 +115,20 @@ public class MessageUtil {
 	
 	public String createResponsePayload(HttpHeaders httpHeaders) {
 		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
-		if(requestMessageType.contains(ContractRequestMessage.class.getSimpleName())) {
+		if (requestMessageType.contains(ContractRequestMessage.class.getSimpleName())) {
 			return createContractAgreement(dataLakeDirectory);
-		} else if(requestMessageType.contains(ContractAgreementMessage.class.getSimpleName())) {
+		} else if (requestMessageType.contains(ContractAgreementMessage.class.getSimpleName())) {
 			return null;
-		} else if(requestMessageType.contains(DescriptionRequestMessage.class.getSimpleName())) {
+		} else if (requestMessageType.contains(DescriptionRequestMessage.class.getSimpleName())) {
 			if (httpHeaders.containsKey("IDS-RequestedElement")) {
-				String element = getRequestedElement(URI.create(httpHeaders.get("IDS-RequestedElement").get(0)));
+				String element = getRequestedElement(URI.create(httpHeaders.get("IDS-RequestedElement").get(0)), getSelfDescription());
 				if (StringUtils.isNotBlank(element)) {
 					return element;
-				}else {
+				} else {
 					return "IDS-RejectionReason:" + RejectionReason.NOT_FOUND.getId().toString();
 				}
-			}else {
-				return getSelfDescription();
+			} else {
+				return getSelfDescriptionAsString();
 			}
 		} else {
 			return createResponsePayload();
@@ -135,20 +136,20 @@ public class MessageUtil {
 	}
 	
 
-	private  String createResponsePayload() {
+	private String createResponsePayload() {
 		// Put check sum in the payload
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
 		String formattedDate = dateFormat.format(date);
-		
-		 Map<String, String> jsonObject = new HashMap<>();
-         jsonObject.put("firstName", "John");
-         jsonObject.put("lastName", "Doe");
-         jsonObject.put("dateOfBirth", formattedDate);
-         jsonObject.put("address", "591  Franklin Street, Pennsylvania");
-         jsonObject.put("checksum", "ABC123 " + formattedDate);
-         Gson gson = new GsonBuilder().create();
-         return gson.toJson(jsonObject);
+
+		Map<String, String> jsonObject = new HashMap<>();
+		jsonObject.put("firstName", "John");
+		jsonObject.put("lastName", "Doe");
+		jsonObject.put("dateOfBirth", formattedDate);
+		jsonObject.put("address", "591  Franklin Street, Pennsylvania");
+		jsonObject.put("checksum", "ABC123 " + formattedDate);
+		Gson gson = new GsonBuilder().create();
+		return gson.toJson(jsonObject);
 	}
 	
 	private String createContractAgreement(Path dataLakeDirectory) {
@@ -163,26 +164,35 @@ public class MessageUtil {
 		return contractAgreement;
 	}
 	
-	private String getSelfDescription() {
+	private Connector getSelfDescription() {
 		URI eccURI = null;
 		try {
-			eccURI = new URI("http", null, eccProperties.getHost(), 
-					8081, null,
-					null, null);
+			eccURI = new URI("http", null, eccProperties.getHost(), 8081, null, null, null);
 		} catch (URISyntaxException e) {
 			logger.error("Could not create URI for Self Description request.", e);
 		}
-		
-		return restTemplate.getForObject(eccURI, String.class);
+
+		try {
+			return new Serializer().deserialize(restTemplate.getForObject(eccURI, String.class), Connector.class);
+		} catch (RestClientException e) {
+			logger.error("Could not fetch self description from ECC", e);
+			return null;
+		} catch (IOException e) {
+			logger.error("Could not deserialize self description to Connector instance", e);
+			return null;
+		}
 	}
 	
-	private String getRequestedElement(URI requestedElement) {
-		BaseConnector connector = null;
+	private String getSelfDescriptionAsString() {
 		try {
-			connector = new Serializer().deserialize(getSelfDescription(), BaseConnector.class);
+			return new Serializer().serialize(getSelfDescription());
 		} catch (IOException e) {
-			logger.error("Could not deserialize self description", e);
+			logger.error("Could not serialize self description", e);
 		}
+		return null;
+	}
+	
+	private String getRequestedElement(URI requestedElement, Connector connector) {
 		for (ResourceCatalog catalog : connector.getResourceCatalog()) {
 			for (Resource offeredResource : catalog.getOfferedResource()) {
 				if (requestedElement.equals(offeredResource.getId())) {

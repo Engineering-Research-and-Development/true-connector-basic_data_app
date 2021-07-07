@@ -87,9 +87,8 @@ public class DataControllerHttpHeader {
 
 		case "ids:ArtifactRequestMessage":
 			if (httpHeaders.containsKey("IDS-TransferContract")
-					&& !("https://contract.com/12".equals(httpHeaders.get("IDS-TransferContract").get(0)))
-					&& "http://w3id.org/engrd/connector/artifact/12"
-							.equals(httpHeaders.get("IDS-RequestedArtifact").get(0))) {
+					&& !("https://w3id.org/idsa/autogen/contract/restrict-access-interval".equals(httpHeaders.get("IDS-TransferContract").get(0)))
+					&& "http://w3id.org/engrd/connector/artifact/1".equals(httpHeaders.get("IDS-RequestedArtifact").get(0))) {
 				responseMessageType = RejectionMessage.class.getSimpleName();
 				rejectionReason = "https://w3id.org/idsa/code/NOT_AUTHORIZED";
 			} else {
