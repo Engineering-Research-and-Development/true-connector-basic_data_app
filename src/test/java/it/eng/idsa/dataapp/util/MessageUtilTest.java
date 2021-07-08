@@ -2,6 +2,7 @@ package it.eng.idsa.dataapp.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
+import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Resource;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
@@ -56,44 +58,41 @@ public class MessageUtilTest {
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterMessageSuccessfull() {
+	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterMessageSuccessfull() throws IOException {
  		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement());
-		assertEquals(getMockSelfDescription(), payload);
+		assertEquals(serializer.serialize(serializer.deserialize(getMockSelfDescription(), Connector.class)), serializer.serialize(serializer.deserialize(payload, Connector.class)));
 	}
 	
 	@Test
 	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterMessageFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement());
-		assertNotEquals(getMockSelfDescription(), payload);
+ 		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement()));
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterStringSuccessfull() {
+	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterStringSuccessfull() throws IOException {
  		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement()));
-		assertEquals(getMockSelfDescription(), payload);
+		assertEquals(serializer.serialize(serializer.deserialize(getMockSelfDescription(), Connector.class)), serializer.serialize(serializer.deserialize(payload, Connector.class)));
 	}
 	
 	@Test
 	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterStringFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement()));
-		assertNotEquals(getMockSelfDescription(), payload);
+		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement())));
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterHttpHeadersSuccessfull() {
+	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterHttpHeadersSuccessfull() throws IOException {
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
  		String payload = messageUtil.createResponsePayload(headers);
-		assertEquals(getMockSelfDescription(), payload);
+		assertEquals(serializer.serialize(serializer.deserialize(getMockSelfDescription(), Connector.class)), serializer.serialize(serializer.deserialize(payload, Connector.class)));
 	}
 	
 	@Test
 	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterHttpHeadersFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
- 		String payload = messageUtil.createResponsePayload(headers);
-		assertNotEquals(getMockSelfDescription(), payload);
+		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(headers));
 	}
 	
 	@Test
