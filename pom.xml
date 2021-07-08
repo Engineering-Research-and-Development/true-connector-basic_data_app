@@ -20,8 +20,8 @@
 		<tomcat.version>9.0.27</tomcat.version>
 		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
 		<information.model.version>4.0.0</information.model.version>
-		<websocket.message.streamer.version>1.0.10.1-SNAPSHOT</websocket.message.streamer.version>
       	<multipart.message.processor.version>1.0.9-SNAPSHOT</multipart.message.processor.version>
+		<websocket.message.streamer.version>1.0.11-SNAPSHOT</websocket.message.streamer.version>
 	</properties>
 	
  	<repositories> 
@@ -143,6 +143,15 @@
 		                <groupId>org.slf4j</groupId>
 		            </exclusion>
 			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>it.eng.idsa</groupId>
+			<artifactId>multipart-message-processor</artifactId>
+			<version>${multipart.message.processor.version}</version>
+			<classifier>tests</classifier>
+		    <type>test-jar</type>
+		    <scope>test</scope>
 		</dependency>
 
 		<dependency>

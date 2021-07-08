@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
  - Increased version for multipart message processor library to 1.0.9-SHAPSHOT
+ - Increased version for websocket message streamer library to 1.0.11-SHAPSHOT
  
 ## [0.0.6-SNAPSHOT] - 2021-07-02
 

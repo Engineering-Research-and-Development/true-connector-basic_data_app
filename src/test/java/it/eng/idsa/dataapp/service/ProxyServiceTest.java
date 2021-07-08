@@ -40,6 +40,7 @@ import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
+import it.eng.idsa.multipart.processor.util.TestUtilMessageService;
 import it.eng.idsa.multipart.util.DateUtil;
 
 public class ProxyServiceTest {
@@ -342,7 +343,6 @@ public class ProxyServiceTest {
 		System.out.println(mapper.writeValueAsString(pr));
 	}
 	
-	
 	private QueryMessage getQueryMessage(URI senderAgent, URI issuerConnector, QueryLanguage queryLanguage) {
 		return new QueryMessageBuilder() 
 				._modelVersion_("4.0.0")
@@ -350,7 +350,7 @@ public class ProxyServiceTest {
 				._senderAgent_(senderAgent)
 				._issuerConnector_(issuerConnector)
 				._queryLanguage_(queryLanguage)
-//				._securityToken_(getDynamicAttributeToken())
+				._securityToken_(TestUtilMessageService.getDynamicAttributeToken())
 				.build();
 	}
 }
