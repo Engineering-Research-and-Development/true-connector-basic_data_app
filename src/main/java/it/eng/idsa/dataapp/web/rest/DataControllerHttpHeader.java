@@ -21,6 +21,7 @@ import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.DescriptionResponseMessage;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import de.fraunhofer.iais.eis.util.Util;
+import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.util.MessageUtil;
 
 @Controller
@@ -87,8 +88,10 @@ public class DataControllerHttpHeader {
 
 		case "ids:ArtifactRequestMessage":
 			if (httpHeaders.containsKey("IDS-TransferContract")
-					&& !("https://w3id.org/idsa/autogen/contract/restrict-access-interval".equals(httpHeaders.get("IDS-TransferContract").get(0)))
-					&& "http://w3id.org/engrd/connector/artifact/1".equals(httpHeaders.get("IDS-RequestedArtifact").get(0))) {
+					&& !(MultiPartMessageService.DEFAULT_CONTRACT_AGREEMENT
+							.equals(httpHeaders.get("IDS-TransferContract").get(0)))
+					&& MultiPartMessageService.DEFAULT_TARGET_ARTIFACT
+					.equals(httpHeaders.get("IDS-RequestedArtifact").get(0))) {
 				responseMessageType = RejectionMessage.class.getSimpleName();
 				rejectionReason = "https://w3id.org/idsa/code/NOT_AUTHORIZED";
 			} else {

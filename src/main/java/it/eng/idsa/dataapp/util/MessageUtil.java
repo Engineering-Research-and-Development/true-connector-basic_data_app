@@ -167,7 +167,7 @@ public class MessageUtil {
 	private Connector getSelfDescription() {
 		URI eccURI = null;
 		try {
-			eccURI = new URI("http", null, eccProperties.getHost(), 8081, null, null, null);
+			eccURI = new URI(eccProperties.getRESTprotocol(), null, eccProperties.getHost(), eccProperties.getRESTport(), null, null, null);
 		} catch (URISyntaxException e) {
 			logger.error("Could not create URI for Self Description request.", e);
 		}
