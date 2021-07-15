@@ -69,28 +69,28 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderMessageSuccessfull() throws IOException {
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement());
+ 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(null));
 		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
 	}
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderMessageFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
- 		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement()));
+ 		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(null)));
 	}
 	
 	//Description request message as String
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringSuccessfull() throws IOException {
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement()));
+ 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessage(null)));
 		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
 	}
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
-		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement())));
+		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessage(null))));
 	}
 	
 	//Description request message in Http Headers
@@ -114,13 +114,13 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderMessageSuccessfull() throws IOException {
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithRequestedElement(EXISTING_REQUESTED_ELEMENT_ID));
+ 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID));
 		assertEquals(EXISTING_REQUESTED_ELEMENT_ID, serializer.deserialize(payload, Resource.class).getId());
 	}
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderMessageFailed() throws IOException {
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithRequestedElement(NON_EXISTING_REQUESTED_ELEMENT_ID));
+ 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID));
 		assertTrue(serializer.deserialize(payload, RejectionMessage.class) instanceof RejectionMessage);
 	}
 	
@@ -128,7 +128,7 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderStringSuccessfull() throws IOException {
-		DescriptionRequestMessage drm = TestUtilMessageService.getDescriptionRequestMessageWithRequestedElement(EXISTING_REQUESTED_ELEMENT_ID);
+		DescriptionRequestMessage drm = TestUtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID);
 		String drmString = TestUtilMessageService.getMessageAsString(drm);
 		when(multiPartMessageService.getMessage((Object)drmString)).thenReturn(drm);
  		String payload = messageUtil.createResponsePayload(drmString);
@@ -137,7 +137,7 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderStringFailed() throws IOException {
-		DescriptionRequestMessage drm = TestUtilMessageService.getDescriptionRequestMessageWithRequestedElement(NON_EXISTING_REQUESTED_ELEMENT_ID);
+		DescriptionRequestMessage drm = TestUtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID);
 		String drmString = TestUtilMessageService.getMessageAsString(drm);
 		when(multiPartMessageService.getMessage((Object)drmString)).thenReturn(drm);
  		String payload = messageUtil.createResponsePayload(drmString);
