@@ -166,14 +166,17 @@ public class MessageUtil {
 	
 	private Connector getSelfDescription() {
 		URI eccURI = null;
-		try {
-			eccURI = new URI(eccProperties.getRESTprotocol(), null, eccProperties.getHost(), eccProperties.getRESTport(), null, null, null);
-		} catch (URISyntaxException e) {
-			logger.error("Could not create URI for Self Description request.", e);
-		}
 
 		try {
-			return new Serializer().deserialize(restTemplate.getForObject(eccURI, String.class), Connector.class);
+			eccURI = new URI(eccProperties.getRESTprotocol(), null, eccProperties.getHost(), eccProperties.getRESTport(), null, null, null);
+			logger.info("Fetching self description from ECC {}.", eccURI.toString());
+			String selfDescription = restTemplate.getForObject(eccURI, String.class);
+			logger.info("Deserializing self description.");
+			logger.debug("Self description content: {}{}", System.lineSeparator(), selfDescription);
+			return new Serializer().deserialize(selfDescription, Connector.class);
+		} catch (URISyntaxException e) {
+			logger.error("Could not create URI for Self Description request.", e);
+			return null;
 		} catch (RestClientException e) {
 			logger.error("Could not fetch self description from ECC", e);
 			return null;
@@ -185,7 +188,7 @@ public class MessageUtil {
 	
 	private String getSelfDescriptionAsString() {
 		try {
-			return new Serializer().serialize(getSelfDescription());
+			return MultipartMessageProcessor.serializeToJsonLD(getSelfDescription());
 		} catch (IOException e) {
 			logger.error("Could not serialize self description", e);
 		}

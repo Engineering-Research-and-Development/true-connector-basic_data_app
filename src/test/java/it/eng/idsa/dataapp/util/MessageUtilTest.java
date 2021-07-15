@@ -64,58 +64,70 @@ public class MessageUtilTest {
 		headers = new HttpHeaders();
 	}
 	
+	//Description request message without requested element
+	//Description request message as Java Object
+	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterMessageSuccessfull() throws IOException {
+	public void testResponsePayloadWithoutRequestedElementInHeaderMessageSuccessfull() throws IOException {
  		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement());
 		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterMessageFailed() {
+	public void testResponsePayloadWithoutRequestedElementInHeaderMessageFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
  		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement()));
 	}
 	
+	//Description request message as String
+	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterStringSuccessfull() throws IOException {
+	public void testResponsePayloadWithoutRequestedElementInHeaderStringSuccessfull() throws IOException {
  		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement()));
 		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterStringFailed() {
+	public void testResponsePayloadWithoutRequestedElementInHeaderStringFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
 		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessageWithoutRequestedElement())));
 	}
 	
+	//Description request message in Http Headers
+	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterHttpHeadersSuccessfull() throws IOException {
+	public void testResponsePayloadWithoutRequestedElementInHttpHeadersSuccessfull() throws IOException {
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
  		String payload = messageUtil.createResponsePayload(headers);
 		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithoutRequestedElementMethodParameterHttpHeadersFailed() {
+	public void testResponsePayloadWithoutRequestedElementInHttpHeadersFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
 		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(headers));
 	}
 	
+	//Description request message with requested element
+	//Description request message as Java Object
+	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithRequestedElementMethodParameterMessageSuccessfull() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHeaderMessageSuccessfull() throws IOException {
  		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithRequestedElement(EXISTING_REQUESTED_ELEMENT_ID));
 		assertEquals(EXISTING_REQUESTED_ELEMENT_ID, serializer.deserialize(payload, Resource.class).getId());
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithRequestedElementMethodParameterMessageFailed() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHeaderMessageFailed() throws IOException {
  		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessageWithRequestedElement(NON_EXISTING_REQUESTED_ELEMENT_ID));
 		assertTrue(serializer.deserialize(payload, RejectionMessage.class) instanceof RejectionMessage);
 	}
 	
+	//Description request message as String
+	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithRequestedElementMethodParameterStringSuccessfull() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHeaderStringSuccessfull() throws IOException {
 		DescriptionRequestMessage drm = TestUtilMessageService.getDescriptionRequestMessageWithRequestedElement(EXISTING_REQUESTED_ELEMENT_ID);
 		String drmString = TestUtilMessageService.getMessageAsString(drm);
 		when(multiPartMessageService.getMessage((Object)drmString)).thenReturn(drm);
@@ -124,7 +136,7 @@ public class MessageUtilTest {
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithRequestedElementMethodParameterStringFailed() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHeaderStringFailed() throws IOException {
 		DescriptionRequestMessage drm = TestUtilMessageService.getDescriptionRequestMessageWithRequestedElement(NON_EXISTING_REQUESTED_ELEMENT_ID);
 		String drmString = TestUtilMessageService.getMessageAsString(drm);
 		when(multiPartMessageService.getMessage((Object)drmString)).thenReturn(drm);
@@ -132,8 +144,10 @@ public class MessageUtilTest {
  		assertTrue(serializer.deserialize(payload, RejectionMessage.class) instanceof RejectionMessage);
 	}
 	
+	//Description request message in Http Headers
+	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithRequestedElementMethodParameterHttpHeadersSuccessfull() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHttpHeadersSuccessfull() throws IOException {
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
 		headers.add(IDS_REQUESTED_ELEMENT, EXISTING_REQUESTED_ELEMENT_ID.toString());
  		String payload = messageUtil.createResponsePayload(headers);
@@ -141,7 +155,7 @@ public class MessageUtilTest {
 	}
 	
 	@Test
-	public void createResponsePayloadFromDescriptionRequestMessageWithRequestedElementMethodParameterHttpHeadersFailed() {
+	public void testResponsePayloadWithRequestedElementInHttpHeadersFailed() {
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
 		headers.add(IDS_REQUESTED_ELEMENT, NON_EXISTING_REQUESTED_ELEMENT_ID.toString());
  		String payload = messageUtil.createResponsePayload(headers);

@@ -193,6 +193,6 @@ This way, we are simulating simple contract negotiation sequence.
 When receiving a Description Request Message we are preparing a response by creating a Description Response Message for the header part and putting the whole Self Description(ids:BaseConnector) or requested element from Self Description (ids:Resource) in the payload.
 In both cases a GET request is sent to the ECC in order to fetch the Self Description. The following properties need to be configured and correspond the Self Description configuration from the ECC.
 ```
-application.ecc.RESTprotocol=http
-application.ecc.RESTport=8081
+application.ecc.RESTprotocol=http|https
+application.ecc.RESTport=8081|8443
 ```
