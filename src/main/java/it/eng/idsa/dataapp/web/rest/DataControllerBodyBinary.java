@@ -29,7 +29,7 @@ public class DataControllerBodyBinary {
 	
 	private MultiPartMessageService multiPartMessageService;
 	private MessageUtil messageUtil;
-
+	
 	public DataControllerBodyBinary(MultiPartMessageService multiPartMessageService,
 			MessageUtil messageUtil) {
 		this.multiPartMessageService = multiPartMessageService;
@@ -55,7 +55,16 @@ public class DataControllerBodyBinary {
 		}
 
 		String headerResponse = multiPartMessageService.getResponseHeader(headerMessage);
-		String responsePayload = messageUtil.createResponsePayload(headerMessage);
+		String responsePayload = null;
+		if (!headerResponse.contains("ids:rejectionReason")) {
+			responsePayload = messageUtil.createResponsePayload(headerMessage);
+		}else {
+			responsePayload = "Rejected message";
+		}
+		if (responsePayload.contains("ids:rejectionReason")) {
+			headerResponse = responsePayload;
+			responsePayload = "Rejected message";
+		}
 		MultipartMessage responseMessage = new MultipartMessageBuilder()
 				.withHeaderContent(headerResponse)
 				.withPayloadContent(responsePayload)

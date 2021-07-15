@@ -48,11 +48,23 @@ public class DataControllerBodyForm {
 		} else {
 			logger.info("Payload is empty");
 		}
+		
+		String headerResponse = multiPartMessageService.getResponseHeader(header);
+		String responsePayload = null;
+		if (!headerResponse.contains("ids:rejectionReason")) {
+			responsePayload = messageUtil.createResponsePayload(header);
+		}else {
+			responsePayload = "Rejected message";
+		}
+		if (responsePayload.contains("ids:rejectionReason")) {
+			headerResponse = responsePayload;
+			responsePayload = "Rejected message";
+		}
 
 		// prepare body response - multipart message.
 		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(
-				multiPartMessageService.getResponseHeader(header),
-				messageUtil.createResponsePayload(header),
+				headerResponse,
+				responsePayload,
 				null,
 				ContentType.APPLICATION_JSON);
 
