@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>it.eng.idsa</groupId>
 	<artifactId>market4.0-data-app</artifactId>
-	<version>0.0.6-SNAPSHOT</version>
+	<version>0.0.9-SNAPSHOT</version>
 	<name>market4.0-data-app</name>
 	<description>The project for market4.0-data-app</description>
 
@@ -173,6 +173,15 @@
 		                <groupId>org.slf4j</groupId>
 		            </exclusion>
 			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>it.eng.idsa</groupId>
+			<artifactId>multipart-message-processor</artifactId>
+			<version>${multipart.message.processor.version}</version>
+			<classifier>tests</classifier>
+		    <type>test-jar</type>
+		    <scope>test</scope>
 		</dependency>
 
 		<dependency>

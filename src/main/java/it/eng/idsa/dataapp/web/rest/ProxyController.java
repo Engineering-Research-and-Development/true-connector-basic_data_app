@@ -20,10 +20,10 @@ public class ProxyController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ProxyController.class);
 
-	private ProxyService proxySrvice;
+	private ProxyService proxyService;
 
-	public ProxyController(ProxyService proxySrvice) {
-		this.proxySrvice = proxySrvice;
+	public ProxyController(ProxyService proxyService) {
+		this.proxyService = proxyService;
 	}
 
 	/**
@@ -40,8 +40,9 @@ public class ProxyController {
 	public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
 			@RequestBody String body, HttpMethod method) throws Exception {
 
-		ProxyRequest proxyRequest = proxySrvice.parseIncommingProxyRequest(body);
-		logger.debug("Type: " + proxyRequest.getMultipart());
+		ProxyRequest proxyRequest = proxyService.parseIncommingProxyRequest(body);
+		logger.info("Type: " + proxyRequest.getMultipart());
+		logger.debug("Parsed proxy request: " + proxyRequest);
 		if(StringUtils.isEmpty(proxyRequest.getMultipart())) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Multipart field not found in request, mandatory for the flow");
 		}
@@ -49,19 +50,19 @@ public class ProxyController {
 		switch (proxyRequest.getMultipart()) {
 		case ProxyRequest.MULTIPART_MIXED:
 			logger.info("Forwarding request using {}", ProxyRequest.MULTIPART_MIXED);
-			return proxySrvice.proxyMultipartMix(proxyRequest, httpHeaders);
+			return proxyService.proxyMultipartMix(proxyRequest, httpHeaders);
 		case ProxyRequest.MULTIPART_FORM:
 			logger.info("Forwarding request using {}", ProxyRequest.MULTIPART_FORM);
-			return proxySrvice.proxyMultipartForm(proxyRequest, httpHeaders);
+			return proxyService.proxyMultipartForm(proxyRequest, httpHeaders);
 		case ProxyRequest.MULTIPART_HEADER:
 			logger.info("Forwarding request using {}", ProxyRequest.MULTIPART_HEADER);
-			return proxySrvice.proxyHttpHeader(proxyRequest, httpHeaders);
+			return proxyService.proxyHttpHeader(proxyRequest, httpHeaders);
 		case ProxyRequest.WSS:
 			logger.info("Forwarding request using {}", ProxyRequest.WSS);
 			if (StringUtils.isNotBlank(proxyRequest.getRequestedArtifact())) {
-				return proxySrvice.requestArtifact(proxyRequest);
+				return proxyService.requestArtifact(proxyRequest);
 			} else {
-				return proxySrvice.proxyWSSRequest(proxyRequest);
+				return proxyService.proxyWSSRequest(proxyRequest);
 			}
 		default:
 			logger.info("Wrong value for multipart field '{}'", proxyRequest.getMultipart());

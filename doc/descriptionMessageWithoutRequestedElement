@@ -1,0 +1,19 @@
+@startuml
+
+participant ConsumerDataApp as CDA
+participant ConsumerECC as CECC
+participant ProviderECC as PECC
+participant ProviderDataApp as PDA
+
+title DescriptionMessage without RequestedElement
+
+CDA -> CECC : DescriptionRequestMessage
+CECC -> PECC : DescriptionRequestMessage
+PECC -> PDA : DescriptionRequestMessage
+PDA -> PDA : validate DescriptionRequestMessage
+PDA -> PECC : getSelfDescription
+PECC -> PDA : SelfDescription
+PDA -> PECC : (header: DescriptionResponseMessage; payload:SD) or RejectionMessage
+PECC -> CECC : DescriptionResponseMessage
+CECC -> CDA : DescriptionResponseMessage
+@enduml
