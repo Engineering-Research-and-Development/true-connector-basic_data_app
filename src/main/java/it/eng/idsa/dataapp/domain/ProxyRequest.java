@@ -17,13 +17,14 @@ public class ProxyRequest {
 	private String payload;
 	private String requestedArtifact;
 	private String messageType;
+	private String requestedElement;
 	
 	public ProxyRequest() {
 		super();
 	}
 
 	public ProxyRequest(String multipart, String forwardTo, String forwardToInternal, String payload,
-			String requestedArtifact, String messageType) {
+			String requestedArtifact, String messageType, String requestedElement) {
 		super();
 		this.multipart = multipart;
 		this.forwardTo = forwardTo;
@@ -31,6 +32,7 @@ public class ProxyRequest {
 		this.payload = payload;
 		this.requestedArtifact = requestedArtifact;
 		this.messageType = messageType;
+		this.requestedElement = requestedElement;
 	}
 
 	public String getMultipart() {
@@ -69,5 +71,15 @@ public class ProxyRequest {
 	public void setMessageType(String messageType) {
 		this.messageType = messageType;
 	}
+
+	public String getRequestedElement() {
+		return requestedElement;
+	}
+
+	public void setRequestedElement(String requestedElement) {
+		this.requestedElement = requestedElement;
+	}
+	
+	
 	
 }

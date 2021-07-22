@@ -8,28 +8,24 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 
-import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ResultMessage;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
-import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
-import it.eng.idsa.multipart.domain.MultipartMessage;
-import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
-import it.eng.idsa.multipart.util.TestUtilMessageService;
+import it.eng.idsa.multipart.util.UtilMessageService;
 
 public class MultiPartMessageServiceTest {
 
-	private static final String INFO_MODEL_VERSION = "4.0.6";
+	private static final String INFO_MODEL_VERSION = "4.1.1";
 	private MultiPartMessageService service = new MultiPartMessageServiceImpl(INFO_MODEL_VERSION);
 	// Added serializer since URI fields must be proper URI's not auto-generated
 	private Serializer serializer = new Serializer();
 	
 	@Test
 	public void createArtifactResponseMessage() throws IOException {
-		Message message = service.createArtifactResponseMessage(TestUtilMessageService.getArtifactRequestMessage());
+		Message message = service.createArtifactResponseMessage(UtilMessageService.getArtifactRequestMessage());
 		assertNotNull(message);
 		assertTrue(message instanceof ArtifactResponseMessage);
 		serializer.serialize(message);
@@ -37,7 +33,7 @@ public class MultiPartMessageServiceTest {
 	
 	@Test
 	public void createContractAgreementMessage() throws IOException {
-		Message message = service.createContractAgreementMessage(TestUtilMessageService.getContractRequestMessage());
+		Message message = service.createContractAgreementMessage(UtilMessageService.getContractRequestMessage());
 		assertNotNull(message);
 		assertTrue(message instanceof ContractAgreementMessage);
 		serializer.serialize(message);
@@ -45,7 +41,7 @@ public class MultiPartMessageServiceTest {
 	
 	@Test
 	public void createResultMessage() throws IOException {
-		Message message = service.createResultMessage(TestUtilMessageService.getArtifactRequestMessage());
+		Message message = service.createResultMessage(UtilMessageService.getArtifactRequestMessage());
 		assertNotNull(message);
 		assertTrue(message instanceof ResultMessage);
 		serializer.serialize(message);
@@ -53,9 +49,9 @@ public class MultiPartMessageServiceTest {
 	
 	@Test
 	public void getToken() throws IOException {
-		String token = service.getToken(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getArtifactRequestMessage()));
+		String token = service.getToken(UtilMessageService.getMessageAsString(UtilMessageService.getArtifactRequestMessage()));
 		assertNotNull(token);
-		assertEquals(TestUtilMessageService.TOKEN_VALUE, token);
+		assertEquals(UtilMessageService.TOKEN_VALUE, token);
 		serializer.serialize(token);
 	}
 }

@@ -6,7 +6,7 @@ Content-Length: 606
   "@type" : "ids:ArtifactRequestMessage",
   "issued" : "2020-11-10T13:09:42.306Z",
   "issuerConnector" : "http://true.engineering.it/ids/mdm-connector",
-  "modelVersion" : "4.0.0",
+  "modelVersion" : "4.1.1",
   "@id" : "https://w3id.org/idsa/autogen/artifactResponseMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f",
   "requestedArtifact" : "http://mdm-connector.ids.isst.fraunhofer.de/artifact/some_file_name2.csv"
 }

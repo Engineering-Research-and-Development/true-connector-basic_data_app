@@ -30,7 +30,7 @@ import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
-import it.eng.idsa.multipart.util.TestUtilMessageService;
+import it.eng.idsa.multipart.util.UtilMessageService;
 
 public class ProxyServiceTest {
 
@@ -198,8 +198,8 @@ public class ProxyServiceTest {
 				"\r\n" + 
 				"    \"payload\": "
 				+ 
-				TestUtilMessageService.getMessageAsString(
-						TestUtilMessageService.getContractAgreement()) 
+				UtilMessageService.getMessageAsString(
+						UtilMessageService.getContractAgreement()) 
 				+"\r\n" + 
 				"}\r\n";
 	}

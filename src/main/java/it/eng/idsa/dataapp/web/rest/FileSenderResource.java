@@ -15,6 +15,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -50,12 +51,22 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 public class FileSenderResource {
 	private static final Logger logger = LoggerFactory.getLogger(FileSenderResource.class);
 
-	@Autowired
 	MultiPartMessageServiceImpl multiPartMessageService;
 	
-	@Autowired
 	RecreateFileService recreateFileService;
 	
+	private String informationModelVersion;
+	
+	public FileSenderResource(MultiPartMessageServiceImpl multiPartMessageService,
+			RecreateFileService recreateFileService, @Value("${information.model.version}")String informationModelVersion) {
+		super();
+		this.multiPartMessageService = multiPartMessageService;
+		this.recreateFileService = recreateFileService;
+		this.informationModelVersion = informationModelVersion;
+	}
+
+
+
 	@PostMapping("/requireandsavefile")
 	@ResponseBody
 	public String requireAndSaveFile(@RequestHeader("Forward-To-Internal") String forwardToInternal,
@@ -120,7 +131,7 @@ public class FileSenderResource {
 		Message artifactRequestMessage = new ArtifactRequestMessageBuilder()
 				._issued_(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()))
 				._issuerConnector_(URI.create("http://w3id.org/engrd/connector"))
-				._modelVersion_("4.0.0")
+				._modelVersion_(informationModelVersion)
 				._requestedArtifact_(requestedArtifactURI)
 				.build();
 		Serializer serializer = new Serializer();
