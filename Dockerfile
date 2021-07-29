@@ -15,7 +15,7 @@ VOLUME /tmp
 EXPOSE 8083
 
 # The application's jar file
-ARG JAR_FILE=target/market4.0-data-app-0.0.8-SNAPSHOT.jar
+ARG JAR_FILE=target/market4.0-data-app-0.0.9-SNAPSHOT.jar
 
 # Add the application's jar to the container
 ADD ${JAR_FILE} market4.0-data-app.jar
