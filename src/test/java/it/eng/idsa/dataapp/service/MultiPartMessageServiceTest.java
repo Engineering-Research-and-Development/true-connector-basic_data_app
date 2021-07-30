@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +26,7 @@ public class MultiPartMessageServiceTest {
 	
 	@Test
 	public void createArtifactResponseMessage() throws IOException {
-		Message message = service.createArtifactResponseMessage(UtilMessageService.getArtifactRequestMessage());
+		Message message = service.createArtifactResponseMessage(UtilMessageService.getArtifactRequestMessage(URI.create("http://some.artifact.com")));
 		assertNotNull(message);
 		assertTrue(message instanceof ArtifactResponseMessage);
 		serializer.serialize(message);
