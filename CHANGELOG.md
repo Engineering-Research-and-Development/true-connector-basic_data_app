@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.0-SNAPSHOT] - 2021-08-27
+ 
+### Changed
+ - infomodel version has been changed to 4.1.1
+ - data app proxy functionality (see [README.md](/README.md))
+
 ## [0.0.8-SNAPSHOT] - 2021-07-09
 
 ### Added
