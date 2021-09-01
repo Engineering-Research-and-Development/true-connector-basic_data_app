@@ -218,7 +218,8 @@ public class ProxyServiceImpl implements ProxyService {
 		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
 			return UtilMessageService.getContractAgreementMessage();
 		} else if(DescriptionRequestMessage.class.getSimpleName().equals(messageType)) {
-			return UtilMessageService.getDescriptionRequestMessage(URI.create(requestedElement));
+			URI reqEl = requestedElement == null ? null : URI.create(requestedElement);
+			return UtilMessageService.getDescriptionRequestMessage(reqEl);
 		} 
 		return null;
 	}

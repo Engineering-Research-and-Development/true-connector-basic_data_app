@@ -223,3 +223,20 @@ In both cases a GET request is sent to the ECC in order to fetch the Self Descri
 application.ecc.RESTprotocol=http|https
 application.ecc.RESTport=8081|8443
 ```
+
+
+Example for Description RequestMessage:
+
+```
+curl --location --request POST 'https://localhost:8083/proxy' \
+--header 'Content-Type: text/plain' \
+--data-raw '{
+    "multipart": "form",
+    "Forward-To": "https://ecc-provider:8086/data",
+    "messageType":"DescriptionRequestMessage",
+    "requestedElement" : "https://w3id.org/idsa/autogen/textResource/01ccac17-7889-4461-bd30-b3a5aa2242a8"
+}'
+
+```
+
+Remark: requestedElement field can be omitted. In that case, description response will contain whole self description document; otherwise it will contain just the part for requested element.
