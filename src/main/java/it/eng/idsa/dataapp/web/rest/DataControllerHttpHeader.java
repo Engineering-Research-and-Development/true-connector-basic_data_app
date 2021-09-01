@@ -96,10 +96,10 @@ public class DataControllerHttpHeader {
 
 		case "ids:ArtifactRequestMessage":
 			if (httpHeaders.containsKey("IDS-TransferContract")
-					&& !(MultiPartMessageService.DEFAULT_CONTRACT_AGREEMENT
+					&& !(UtilMessageService.TRANSFER_CONTRACT.toString()
 							.equals(httpHeaders.get("IDS-TransferContract").get(0)))
-					&& MultiPartMessageService.DEFAULT_TARGET_ARTIFACT
-					.equals(httpHeaders.get("IDS-RequestedArtifact").get(0))) {
+					&& UtilMessageService.REQUESTED_ARTIFACT.toString()
+						.equals(httpHeaders.get("IDS-RequestedArtifact").get(0))) {
 				responseMessageType = RejectionMessage.class.getSimpleName();
 				rejectionReason = "https://w3id.org/idsa/code/NOT_AUTHORIZED";
 			} else {

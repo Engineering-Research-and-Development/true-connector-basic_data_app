@@ -19,12 +19,6 @@ import de.fraunhofer.iais.eis.Message;
  * Service Interface for managing MultiPartMessage.
  */
 public interface MultiPartMessageService {
-	//check market4.0-data_app_test_BE/src/main/resources/dataFiles/contract_agreement.json for more information
-	static final String DEFAULT_CONTRACT_AGREEMENT = "https://w3id.org/idsa/autogen/contract/restrict-access-interval";
-	static final String DEFAULT_TARGET_ARTIFACT = "http://w3id.org/engrd/connector/artifact/1";
-	static final URI DEFAULT_CONTRACT_AGREEMENT_URI = URI.create(DEFAULT_CONTRACT_AGREEMENT);
-	static final URI DEFAULT_TARGET_ARTIFACT_URI = URI.create(DEFAULT_TARGET_ARTIFACT);
-	
 	String getHeader(String body);
 	String getPayload(String body);
 

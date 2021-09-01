@@ -326,8 +326,9 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	@Override
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
 		if (header.getTransferContract() != null 
-				&& !(DEFAULT_CONTRACT_AGREEMENT_URI.equals(header.getTransferContract())) 
-				&& DEFAULT_TARGET_ARTIFACT_URI.equals(header.getRequestedArtifact())) {
+				&& !(UtilMessageService.TRANSFER_CONTRACT.equals(header.getTransferContract()) 
+						&& UtilMessageService.REQUESTED_ARTIFACT.equals(header.getRequestedArtifact()))) {
+			logger.info("Creating rejection message since transfer contract or requested artifact are not correct");
 			return createRejectionNotAuthorized(header);
 		}
 		return new ArtifactResponseMessageBuilder()
@@ -470,7 +471,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	}
 
     public static String serializeMessage(Object message) throws IOException {
-        return MultipartMessageProcessor.serializeToPlainJson(message);
+        return MultipartMessageProcessor.serializeToJsonLD(message);
     }
 
 }
