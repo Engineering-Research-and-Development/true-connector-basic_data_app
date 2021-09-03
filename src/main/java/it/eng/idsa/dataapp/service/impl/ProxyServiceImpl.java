@@ -32,6 +32,7 @@ import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.ConnectorUnavailableMessage;
 import de.fraunhofer.iais.eis.ConnectorUpdateMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.QueryMessage;
@@ -125,9 +126,19 @@ public class ProxyServiceImpl implements ProxyService {
 		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement());
 		
 		if(requestMessage != null) {
+			String payload = null;
+			if(requestMessage instanceof ContractRequestMessage && proxyRequest.getPayload() == null) {
+				logger.info("Creating ContractRequest for payload using requested artifact");
+				payload = UtilMessageService.getMessageAsString(
+						UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement())));
+			} else {
+				logger.info("Using payload from request");
+				payload = proxyRequest.getPayload();
+			}
+			
 			MultipartMessage mm = new MultipartMessageBuilder()
 					.withHeaderContent(requestMessage)
-					.withPayloadContent(proxyRequest.getPayload())
+					.withPayloadContent(payload)
 					.build();
 			proxyPayload = MultipartMessageProcessor.multipartMessagetoString(mm, false, true);
 			
@@ -180,7 +191,16 @@ public class ProxyServiceImpl implements ProxyService {
 
 		if (requestMessage != null) {
 			map.add("header", UtilMessageService.getMessageAsString(requestMessage));
-			map.add("payload", proxyRequest.getPayload());
+			String payload = null;
+			if(requestMessage instanceof ContractRequestMessage && proxyRequest.getPayload() == null) {
+				logger.info("Creating ContractRequest for payload using requested artifact");
+				payload = UtilMessageService.getMessageAsString(
+						UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement())));
+			} else {
+				logger.info("Using payload from request");
+				payload = proxyRequest.getPayload();
+			}
+			map.add("payload", payload);
 			
 			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
 					eccProperties.getPort(), eccProperties.getFormContext(),
@@ -217,6 +237,8 @@ public class ProxyServiceImpl implements ProxyService {
 							: UtilMessageService.REQUESTED_ARTIFACT);
 		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
 			return UtilMessageService.getContractAgreementMessage();
+		} else if(ContractRequestMessage.class.getSimpleName().equals(messageType)) {
+			return UtilMessageService.getContractRequestMessage();
 		} else if(DescriptionRequestMessage.class.getSimpleName().equals(messageType)) {
 			URI reqEl = requestedElement == null ? null : URI.create(requestedElement);
 			return UtilMessageService.getDescriptionRequestMessage(reqEl);
@@ -239,7 +261,17 @@ public class ProxyServiceImpl implements ProxyService {
 		logger.info("Forwarding header POST request to {}", thirdPartyApi.toString());
 		httpHeaders.addAll(createMessageAsHeader(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement()));
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
-		HttpEntity<String> requestEntity = new HttpEntity<>(proxyRequest.getPayload(), httpHeaders);
+		
+		String payload = null;
+		if(proxyRequest.getMessageType().contains("ContractRequestMessage") && proxyRequest.getPayload() == null) {
+			logger.info("Creating ContractRequest for payload using requested artifact");
+			payload = UtilMessageService.getMessageAsString(
+					UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement())));
+		} else {
+			logger.info("Using payload from request");
+			payload = proxyRequest.getPayload();
+		}
+		HttpEntity<String> requestEntity = new HttpEntity<>(payload, httpHeaders);
 		
 		if (ConnectorUpdateMessage.class.getSimpleName().equals(proxyRequest.getMessageType())) {
 			logger.info("Broker message - ConnectorUpdateMessage");
@@ -277,7 +309,8 @@ public class ProxyServiceImpl implements ProxyService {
 			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + DescriptionRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
 			httpHeaders.add("IDS-RequestedElement", requestedElement);
 		}
-		httpHeaders.add("IDS-ModelVersion", "4.1.1");
+		httpHeaders.add("IDS-ModelVersion", "4.1.0");
+        httpHeaders.add("IDS-TransferContract", UtilMessageService.TRANSFER_CONTRACT.toString());
 		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
 		httpHeaders.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector/");
 		httpHeaders.add("IDS-SenderAgent", "http://sender.agent.com/");

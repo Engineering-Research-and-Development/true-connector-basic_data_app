@@ -23,7 +23,6 @@ import de.fraunhofer.iais.eis.DescriptionResponseMessage;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.util.Util;
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
 
@@ -97,9 +96,9 @@ public class DataControllerHttpHeader {
 		case "ids:ArtifactRequestMessage":
 			if (httpHeaders.containsKey("IDS-TransferContract")
 					&& !(UtilMessageService.TRANSFER_CONTRACT.toString()
-							.equals(httpHeaders.get("IDS-TransferContract").get(0)))
+					.equals(httpHeaders.get("IDS-TransferContract").get(0))
 					&& UtilMessageService.REQUESTED_ARTIFACT.toString()
-						.equals(httpHeaders.get("IDS-RequestedArtifact").get(0))) {
+					.equals(httpHeaders.get("IDS-RequestedArtifact").get(0)))) {
 				responseMessageType = RejectionMessage.class.getSimpleName();
 				rejectionReason = "https://w3id.org/idsa/code/NOT_AUTHORIZED";
 			} else {
