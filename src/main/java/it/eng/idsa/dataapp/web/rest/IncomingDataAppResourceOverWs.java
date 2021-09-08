@@ -50,6 +50,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		String requestMessageMultipart = (String) evt.getNewValue();
+		logger.debug("Received following message over WSS: {}", requestMessageMultipart);
 		Message requestMessage = multiPartMessageService.getMessage(requestMessageMultipart);
 		String requestHeader = multiPartMessageService.getHeader(requestMessageMultipart);
 		String requestedArtifact = null;
