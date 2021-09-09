@@ -7,7 +7,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -34,13 +33,9 @@ public class DataControllerHttpHeader {
 	
 	private MessageUtil messageUtil;
 	
-	private String informationModelVersion;
-	
-	
-	public DataControllerHttpHeader(MessageUtil messageUtil, @Value("${information.model.version}")String informationModelVersion) {
+	public DataControllerHttpHeader(MessageUtil messageUtil) {
 		super();
 		this.messageUtil = messageUtil;
-		this.informationModelVersion = informationModelVersion;
 	}
 
 	@PostMapping(value = "/data")
@@ -125,7 +120,7 @@ public class DataControllerHttpHeader {
 		headers.add("IDS-Issued", formattedDate);
 		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
 		headers.add("IDS-CorrelationMessage", "https://w3id.org/idsa/autogen/"+ responseMessageType +"/"+ UUID.randomUUID().toString());
-		headers.add("IDS-ModelVersion", informationModelVersion);
+		headers.add("IDS-ModelVersion", UtilMessageService.MODEL_VERSION);
 		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"/"+ UUID.randomUUID().toString());
 		headers.add("IDS-SenderAgent", "https://sender.agent.com");
 		
