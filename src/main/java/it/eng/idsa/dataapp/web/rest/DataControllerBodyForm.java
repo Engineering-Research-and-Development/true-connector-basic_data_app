@@ -53,10 +53,10 @@ public class DataControllerBodyForm {
 		String responsePayload = null;
 		if (!headerResponse.contains("ids:rejectionReason")) {
 			responsePayload = messageUtil.createResponsePayload(header);
-		}else {
+		} else {
 			responsePayload = "Rejected message";
 		}
-		if (responsePayload.contains("ids:rejectionReason")) {
+		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
 			headerResponse = responsePayload;
 			responsePayload = "Rejected message";
 		}

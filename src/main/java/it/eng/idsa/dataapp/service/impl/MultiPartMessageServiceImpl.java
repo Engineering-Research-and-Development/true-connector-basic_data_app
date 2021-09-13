@@ -254,7 +254,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 		multipartEntityBuilder = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
 		try {
 			FormBodyPart bodyHeaderPart;
-			ContentBody headerBody = new StringBody(header, ContentType.APPLICATION_JSON);
+			ContentBody headerBody = new StringBody(header, ContentType.create("application/ld+json"));
 			bodyHeaderPart = FormBodyPartBuilder.create("header", headerBody).build();
 			bodyHeaderPart.addField(HTTP.CONTENT_LEN, "" + header.length());
 			multipartEntityBuilder.addPart(bodyHeaderPart);
@@ -354,7 +354,6 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				.build();
 	}
 
-
 	public Message createRejectionMessage(Message header) {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())
@@ -393,8 +392,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				.build();
-	}
-	
+	}	
 
 	public Message createRejectionMessageLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
@@ -417,7 +415,6 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
 				.build();
 	}
-
 
 	public Message createRejectionCommunicationLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
@@ -442,7 +439,6 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 	}
 
     public static String serializeMessage(Object message) throws IOException {
-        return MultipartMessageProcessor.serializeToPlainJson(message);
+        return MultipartMessageProcessor.serializeToJsonLD(message);
     }
-
-}
+} 
