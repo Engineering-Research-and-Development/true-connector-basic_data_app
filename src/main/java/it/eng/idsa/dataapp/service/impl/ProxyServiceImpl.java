@@ -126,7 +126,7 @@ public class ProxyServiceImpl implements ProxyService {
 				.withPayloadContent(proxyRequest.getPayload())
 				.build();
 		
-		String proxyPayload = MultipartMessageProcessor.multipartMessagetoString(mm, false, true);
+		String proxyPayload = MultipartMessageProcessor.multipartMessagetoString(mm, false, Boolean.TRUE);
 		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
 				eccProperties.getPort(), eccProperties.getMixContext(),
 				null, null);
