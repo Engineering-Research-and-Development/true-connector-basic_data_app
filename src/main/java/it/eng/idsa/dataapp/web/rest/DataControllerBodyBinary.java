@@ -69,7 +69,7 @@ public class DataControllerBodyBinary {
 				.withHeaderContent(headerResponse)
 				.withPayloadContent(responsePayload)
 				.build();
-		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
+		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false, Boolean.TRUE);
 		
 		Optional<String> boundary = MultipartMessageProcessor.getMessageBoundaryFromMessage(responseMessageString);
 		String contentType = "multipart/mixed; boundary=" + boundary.orElse("---aaa") + ";charset=UTF-8";
