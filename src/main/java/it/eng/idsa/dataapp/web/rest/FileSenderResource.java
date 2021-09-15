@@ -86,7 +86,7 @@ public class FileSenderResource {
 				new HashMap<>(),
 				null,
 				null);
-		return MultipartMessageProcessor.multipartMessagetoString(multipartMessage, false);
+		return MultipartMessageProcessor.multipartMessagetoString(multipartMessage, false, Boolean.TRUE);
 
 	}
 	
@@ -151,7 +151,7 @@ public class FileSenderResource {
 				new HashMap<>(),
 				null,
 				null);
-		return MultipartMessageProcessor.multipartMessagetoString(multipartMessage, false);
+		return MultipartMessageProcessor.multipartMessagetoString(multipartMessage, false, Boolean.TRUE);
 	}
 	
 	private String saveFileToDisk(String responseMessage, String requestMessage) throws IOException {
