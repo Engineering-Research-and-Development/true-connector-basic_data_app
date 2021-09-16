@@ -1,5 +1,5 @@
 # market4.0-data_app_test_BE
-
+[![License: AGPL](https://img.shields.io/github/license/Engineering-Research-and-Development/true-connector-basic_data_app.svg)](https://opensource.org/licenses/AGPL-3.0)
 
 ## Dedicated endpoint in dataApp
 

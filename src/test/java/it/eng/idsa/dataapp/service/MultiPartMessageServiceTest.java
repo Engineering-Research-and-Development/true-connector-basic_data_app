@@ -18,8 +18,7 @@ import it.eng.idsa.multipart.util.UtilMessageService;
 
 public class MultiPartMessageServiceTest {
 
-	private static final String INFO_MODEL_VERSION = "4.1.1";
-	private MultiPartMessageService service = new MultiPartMessageServiceImpl(INFO_MODEL_VERSION);
+	private MultiPartMessageService service = new MultiPartMessageServiceImpl();
 	// Added serializer since URI fields must be proper URI's not auto-generated
 	private Serializer serializer = new Serializer();
 	

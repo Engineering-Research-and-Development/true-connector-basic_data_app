@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Base64;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import it.eng.idsa.dataapp.service.RecreateFileService;
 
@@ -21,7 +20,6 @@ import it.eng.idsa.dataapp.service.RecreateFileService;
  * Service Implementation for managing RecreateFileService.
  */
 @Service
-@Transactional
 public class RecreateFileServiceImpl implements RecreateFileService {
 	
 	private static final String FILE_PATH = "src\\main\\resources\\received-fiels\\";

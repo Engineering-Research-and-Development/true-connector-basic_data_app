@@ -50,6 +50,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		String requestMessageMultipart = (String) evt.getNewValue();
+		logger.debug("Received following message over WSS: {}", requestMessageMultipart);
 		Message requestMessage = multiPartMessageService.getMessage(requestMessageMultipart);
 		String requestHeader = multiPartMessageService.getHeader(requestMessageMultipart);
 		String requestedArtifact = null;
@@ -74,7 +75,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 				.createContractAgreementMessage((ContractRequestMessage) requestMessage))
 				.withPayloadContent(messageUtil.createResponsePayload(requestMessage))
 				.build();
-		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
+		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false, Boolean.TRUE);
 	}
 
 	private String createDummyResponse(String resquestMessage) {
@@ -86,7 +87,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 					.withHeaderContent(resquestMessage)
 					.withPayloadContent(responsePayload)
 					.build();
-			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false);
+			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false, Boolean.TRUE);
 
 		} catch (Exception e) {
 			logger.error("Error while creating dummy response", e);
@@ -95,7 +96,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 					.withHeaderContent(rejectionMessage)
 					.withPayloadContent(null)
 					.build();
-			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageRejection, false);
+			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageRejection, false, Boolean.TRUE);
 		}
 		return responseMessageString;
 	}
@@ -110,7 +111,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 					.withHeaderContent(responseMessage)
 					.withPayloadContent(responsePayload)
 					.build();
-			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false);
+			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false, Boolean.TRUE);
 
 		} catch (Exception e) {
 			logger.error("Error while reading resource from disk", e);
@@ -122,7 +123,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 					.withHeaderContent(rejectionMessage)
 					.withPayloadContent(payload)
 					.build();
-			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageRejection, false);
+			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessageRejection, false, Boolean.TRUE);
 
 		}
 		return responseMessageString;
