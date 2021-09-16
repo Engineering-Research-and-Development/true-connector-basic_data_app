@@ -14,7 +14,6 @@ import javax.xml.datatype.DatatypeFactory;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -36,6 +35,7 @@ import it.eng.idsa.dataapp.service.RecreateFileService;
 import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
+import it.eng.idsa.multipart.util.UtilMessageService;
 import it.eng.idsa.streamer.WebSocketClientManager;
 import it.eng.idsa.streamer.util.MultiPartMessageServiceUtil;
 import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
@@ -50,12 +50,19 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 public class FileSenderResource {
 	private static final Logger logger = LoggerFactory.getLogger(FileSenderResource.class);
 
-	@Autowired
 	MultiPartMessageServiceImpl multiPartMessageService;
 	
-	@Autowired
 	RecreateFileService recreateFileService;
 	
+	public FileSenderResource(MultiPartMessageServiceImpl multiPartMessageService,
+			RecreateFileService recreateFileService) {
+		super();
+		this.multiPartMessageService = multiPartMessageService;
+		this.recreateFileService = recreateFileService;
+	}
+
+
+
 	@PostMapping("/requireandsavefile")
 	@ResponseBody
 	public String requireAndSaveFile(@RequestHeader("Forward-To-Internal") String forwardToInternal,
@@ -120,7 +127,7 @@ public class FileSenderResource {
 		Message artifactRequestMessage = new ArtifactRequestMessageBuilder()
 				._issued_(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()))
 				._issuerConnector_(URI.create("http://w3id.org/engrd/connector"))
-				._modelVersion_("4.0.0")
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._requestedArtifact_(requestedArtifactURI)
 				.build();
 		Serializer serializer = new Serializer();

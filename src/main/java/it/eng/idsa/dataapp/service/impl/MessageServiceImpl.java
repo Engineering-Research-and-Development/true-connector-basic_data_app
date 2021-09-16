@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.MessageService;
@@ -18,7 +17,6 @@ import it.eng.idsa.dataapp.service.MessageService;
  */
 
 @Service
-@Transactional
 public class MessageServiceImpl implements MessageService {
 	
 	private List<MessageIDS> messages = new ArrayList<>();

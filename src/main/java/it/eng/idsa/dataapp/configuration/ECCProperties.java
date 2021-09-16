@@ -15,6 +15,12 @@ public class ECCProperties {
 	private String formContext;
 	private String headerContext;
 	
+	private String brokerRegisterContext;
+	private String brokerUpdateContext;
+	private String brokerDeleteContext;
+	private String brokerPassivateContext;
+	private String brokerQuerryContext;
+	
 	public String getProtocol() {
 		return protocol;
 	}
@@ -62,6 +68,36 @@ public class ECCProperties {
 	}
 	public void setHeaderContext(String headerContext) {
 		this.headerContext = headerContext;
+	}
+	public String getBrokerRegisterContext() {
+		return brokerRegisterContext;
+	}
+	public void setBrokerRegisterContext(String brokerRegisterContext) {
+		this.brokerRegisterContext = brokerRegisterContext;
+	}
+	public String getBrokerUpdateContext() {
+		return brokerUpdateContext;
+	}
+	public void setBrokerUpdateContext(String brokerUpdateContext) {
+		this.brokerUpdateContext = brokerUpdateContext;
+	}
+	public String getBrokerDeleteContext() {
+		return brokerDeleteContext;
+	}
+	public void setBrokerDeleteContext(String brokerDeleteContext) {
+		this.brokerDeleteContext = brokerDeleteContext;
+	}
+	public String getBrokerPassivateContext() {
+		return brokerPassivateContext;
+	}
+	public void setBrokerPassivateContext(String brokerPassivateContext) {
+		this.brokerPassivateContext = brokerPassivateContext;
+	}
+	public String getBrokerQuerryContext() {
+		return brokerQuerryContext;
+	}
+	public void setBrokerQuerryContext(String brokerQuerryContext) {
+		this.brokerQuerryContext = brokerQuerryContext;
 	}
 	
 }

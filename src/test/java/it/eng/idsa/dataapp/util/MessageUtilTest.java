@@ -76,7 +76,7 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderMessageFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
- 		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(null)));
+ 		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(null)));
 	}
 	
 	//Description request message as String
@@ -90,7 +90,7 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
-		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessage(null))));
+		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessage(null))));
 	}
 	
 	//Description request message in Http Headers
@@ -106,7 +106,7 @@ public class MessageUtilTest {
 	public void testResponsePayloadWithoutRequestedElementInHttpHeadersFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
-		assertThrows(IllegalArgumentException.class, () -> messageUtil.createResponsePayload(headers));
+		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(headers));
 	}
 	
 	//Description request message with requested element

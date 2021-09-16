@@ -81,28 +81,12 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "mixed",
-    "Forward-To": "https://localhost:8890/data",
-	 "message": {
-	  "@context" : {
-		"ids" : "https://w3id.org/idsa/core/"
-	  },
-	  "@type" : "ids:ArtifactRequestMessage",
-	  "@id" : "https://w3id.org/idsa/autogen/artifactRequestMessage/76481a41-8117-4c79-bdf4-9903ef8f825a",
-	  "ids:issued" : {
-		"@value" : "2020-11-25T16:43:27.051+01:00",
-		"@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
-	  },
-	  "ids:modelVersion" : "4.0.0",
-	  "ids:issuerConnector" : {
-		"@id" : "http://w3id.org/engrd/connector/"
-	  },
-	  "ids:requestedArtifact" : {
-	   "@id" : "http://w3id.org/engrd/connector/artifact/1"
-	  }
-	},
-	"payload" : {
+    "Forward-To": "https://localhost:8887/data",
+    "messageType":"ArtifactRequestMessage",
+    "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
-		}
+    }
 }'
 
 ```
@@ -115,28 +99,12 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "form",
-    "Forward-To": "https://localhost:8890/data",
-	 "message": {
-	  "@context" : {
-		"ids" : "https://w3id.org/idsa/core/"
-	  },
-	  "@type" : "ids:ArtifactRequestMessage",
-	  "@id" : "https://w3id.org/idsa/autogen/artifactRequestMessage/76481a41-8117-4c79-bdf4-9903ef8f825a",
-	  "ids:issued" : {
-		"@value" : "2020-11-25T16:43:27.051+01:00",
-		"@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
-	  },
-	  "ids:modelVersion" : "4.0.0",
-	  "ids:issuerConnector" : {
-		"@id" : "http://w3id.org/engrd/connector/"
-	  },
-	  "ids:requestedArtifact" : {
-	   "@id" : "http://w3id.org/engrd/connector/artifact/1"
-	  }
-	},
-	"payload" : {
+    "Forward-To": "https://localhost:8887/data",
+    "messageType":"ArtifactRequestMessage",
+    "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
-		}
+    }
 }'
 
 ```
@@ -149,26 +117,18 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "http-header",
-    "Forward-To": "https://localhost:8890/data",
-	"messageAsHeaders": {
-        "IDS-RequestedArtifact":"http://w3id.org/engrd/connector/artifact/1",
-        "IDS-Messagetype":"ids:ArtifactRequestMessage",
-        "IDS-ModelVersion":"4.0.0",
-        "IDS-Issued":"2021-01-15T13:09:42.306Z",
-        "IDS-Id":"https://w3id.org/idsa/autogen/artifactResponseMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f",
-        "IDS-IssuerConnector":"http://w3id.org/engrd/connector/"
-        },
-	"payload" : {
+    "Forward-To": "https://localhost:8887/data",
+    "messageType":"ArtifactRequestMessage",
+    "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
-		}
+    }
 }'
 
 ```
 For <b>REST flow</b>, multipart field should be set to one of the following values: 'mixed', 'form' or 'http-header'.<br/>
-In case of mixed or form flow, 'message' and 'payload' parts are used to construct request and forward to ECC connector A-endpoint using Forward-To header value.<br />
-In case of http-header flow, messageAsHeaders and payload are used to construct http-header like request and forward it to ECC A-endpoint.
-
-Configuration regarding A-endpoint for data consumer is located in proeprty file:
+Based on multipart type, and messageType, dataApp will create dedicated message, and send request to connector. At the moment, 2 messages are supported - 'ArtifactRequestMessage' and 'ContractAgreementMessage'.
+Configuration regarding A-endpoint for data consumer is located in property file:
 
 ```
 application.ecc.protocol=https
@@ -188,6 +148,73 @@ Payload for this reponse (ContractAgreement) will be read from file, named contr
 you wish to send different ContractAgreement, just modify content of this file.
 This way, we are simulating simple contract negotiation sequence.
 
+# Broker interaction
+
+For broker interaction, example requests are listed below:
+You can choose different multiparts - mixed, form or http-header - this is how will DataApp send request to Execution Core Container.
+
+Flow is following: dataApp will create request, and send it to Execution Core Container, on dedicated endpoints. Those endpoints are configured in property file:
+
+```
+application.ecc.broker-register-context=/selfRegistration/register
+application.ecc.broker-update-context=/selfRegistration/update
+application.ecc.broker-delete-context=/selfRegistration/delete
+application.ecc.broker-passivate-context=/selfRegistration/passivate
+application.ecc.broker-querry-context=/selfRegistration/query
+```
+
+
+NOTE: Broker might support (at the moment) only mixed/form, so double check how connector is configured to send request to destination B-endpoint.
+
+## Register/Update connector to Broker
+
+```
+{
+    "multipart": "http-header",
+    "Forward-To": "https://broker.ids.isst.fraunhofer.de/infrastructure",
+    "messageType":"ConnectorUpdateMessage",
+}
+```
+
+## Unregister/passivate connector to Broker
+
+```
+{
+    "multipart": "http-header",
+    "Forward-To": "https://broker.ids.isst.fraunhofer.de/infrastructure",
+    "messageType":"ConnectorUnavailableMessage",
+}
+```
+
+## Query broker
+
+Payload is used to pass query to the Broker
+
+```
+{
+    "multipart": "http-header",
+    "Forward-To": "https://broker.ids.isst.fraunhofer.de/infrastructure",
+    "messageType":"QueryMessage",
+	 "payload" : "SELECT ?connectorUri WHERE \{ ?connectorUri a ids:BaseConnector . \}"
+}
+
+```
+
+Curl command:
+
+```
+curl --location --request POST 'https://localhost:8083/proxy' \
+--header 'fizz: buzz' \
+--header 'Content-Type: text/plain' \
+--data-raw '{
+    "multipart": "http-header",
+    "Forward-To": "https://ecc-provider:8086/data",
+    "Forward-To-Internal": "wss://ecc-consumer:8887",
+    "messageType":"QueryMessage",
+    "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+	"payload" : "SELECT ?connectorUri WHERE \{ ?connectorUri a ids:BaseConnector . \}"
+}'
+```
 # Description Request/Response Message
 
 When receiving a Description Request Message we are preparing a response by creating a Description Response Message for the header part and putting the whole Self Description(ids:BaseConnector) or requested element from Self Description (ids:Resource) in the payload.
@@ -196,3 +223,20 @@ In both cases a GET request is sent to the ECC in order to fetch the Self Descri
 application.ecc.RESTprotocol=http|https
 application.ecc.RESTport=8081|8443
 ```
+
+
+Example for Description RequestMessage:
+
+```
+curl --location --request POST 'https://localhost:8083/proxy' \
+--header 'Content-Type: text/plain' \
+--data-raw '{
+    "multipart": "form",
+    "Forward-To": "https://ecc-provider:8086/data",
+    "messageType":"DescriptionRequestMessage",
+    "requestedElement" : "https://w3id.org/idsa/autogen/textResource/01ccac17-7889-4461-bd30-b3a5aa2242a8"
+}'
+
+```
+
+Remark: requestedElement field can be omitted. In that case, description response will contain whole self description document; otherwise it will contain just the part for requested element.
