@@ -21,12 +21,13 @@ import org.springframework.web.client.RestTemplate;
 import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.RejectionMessage;
+import de.fraunhofer.iais.eis.RejectionReason;
 import de.fraunhofer.iais.eis.Resource;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.multipart.processor.util.SelfDescriptionUtil;
-import it.eng.idsa.multipart.processor.util.TestUtilMessageService;
+import it.eng.idsa.multipart.util.UtilMessageService;
 
 public class MessageUtilTest {
 	
@@ -58,7 +59,7 @@ public class MessageUtilTest {
 		MockitoAnnotations.initMocks(this);
 		when(eccProperties.getHost()).thenReturn("localhost");
 		when(restTemplate.getForObject(any(), any())).thenReturn(serializer.serialize(SelfDescriptionUtil.getBaseConnector()));
-		when(multiPartMessageService.createRejectionCommunicationLocalIssues(any())).thenReturn(TestUtilMessageService.getRejectionMessage());
+		when(multiPartMessageService.createRejectionCommunicationLocalIssues(any())).thenReturn(UtilMessageService.getRejectionMessage(RejectionReason.NOT_FOUND));
 		dataLakeDirectory = Path.of("/dataLakeDirectory");
 		messageUtil = new MessageUtil(dataLakeDirectory, restTemplate, eccProperties, multiPartMessageService);
 		headers = new HttpHeaders();
@@ -69,28 +70,28 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderMessageSuccessfull() throws IOException {
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(null));
+ 		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null));
 		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
 	}
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderMessageFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
- 		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(null)));
+ 		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null)));
 	}
 	
 	//Description request message as String
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringSuccessfull() throws IOException {
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessage(null)));
+ 		String payload = messageUtil.createResponsePayload(UtilMessageService.getMessageAsString(UtilMessageService.getDescriptionRequestMessage(null)));
 		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
 	}
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
-		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(TestUtilMessageService.getMessageAsString(TestUtilMessageService.getDescriptionRequestMessage(null))));
+		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(UtilMessageService.getMessageAsString(UtilMessageService.getDescriptionRequestMessage(null))));
 	}
 	
 	//Description request message in Http Headers
@@ -114,13 +115,13 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderMessageSuccessfull() throws IOException {
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID));
+ 		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID));
 		assertEquals(EXISTING_REQUESTED_ELEMENT_ID, serializer.deserialize(payload, Resource.class).getId());
 	}
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderMessageFailed() throws IOException {
- 		String payload = messageUtil.createResponsePayload(TestUtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID));
+ 		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID));
 		assertTrue(serializer.deserialize(payload, RejectionMessage.class) instanceof RejectionMessage);
 	}
 	
@@ -128,8 +129,8 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderStringSuccessfull() throws IOException {
-		DescriptionRequestMessage drm = TestUtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID);
-		String drmString = TestUtilMessageService.getMessageAsString(drm);
+		DescriptionRequestMessage drm = UtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID);
+		String drmString = UtilMessageService.getMessageAsString(drm);
 		when(multiPartMessageService.getMessage((Object)drmString)).thenReturn(drm);
  		String payload = messageUtil.createResponsePayload(drmString);
 		assertEquals(EXISTING_REQUESTED_ELEMENT_ID, serializer.deserialize(payload, Resource.class).getId());
@@ -137,8 +138,8 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderStringFailed() throws IOException {
-		DescriptionRequestMessage drm = TestUtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID);
-		String drmString = TestUtilMessageService.getMessageAsString(drm);
+		DescriptionRequestMessage drm = UtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID);
+		String drmString = UtilMessageService.getMessageAsString(drm);
 		when(multiPartMessageService.getMessage((Object)drmString)).thenReturn(drm);
  		String payload = messageUtil.createResponsePayload(drmString);
  		assertTrue(serializer.deserialize(payload, RejectionMessage.class) instanceof RejectionMessage);
