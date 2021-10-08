@@ -214,7 +214,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			/*
 			 * bodyHeaderPart = FormBodyPartBuilder.create() .addField(HTTP.CONTENT_LEN,
 			 * ""+header.length()) .setName("header") .setBody(new StringBody(header))
-			 * ._securityToken_(TestUtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
+			 * ._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
 			 */
 			ContentBody headerBody = new StringBody(header, ContentType.APPLICATION_JSON);
 			bodyHeaderPart = FormBodyPartBuilder.create("header", headerBody).build();
@@ -230,7 +230,7 @@ public class MultiPartMessageServiceImpl implements MultiPartMessageService {
 			/*
 			 * = FormBodyPartBuilder.create() .addField(HTTP.CONTENT_LEN,
 			 * ""+payload.length()) .setName("payload") .setBody(new StringBody(payload))
-			 * ._securityToken_(TestUtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
+			 * ._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
 			 */
 
 
