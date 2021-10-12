@@ -18,4 +18,5 @@ jobs:
         run: mvn package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PACKAGE_REPO_PASSWORD: ${{ secrets.GH_PACKAGE_REPO_PASSWORD }}
     
