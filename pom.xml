@@ -32,17 +32,7 @@
 		</repository> 
 		<repository>
 	        <id>github</id>
-	        <url>https://${GITHUB_TOKEN}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/*</url>
-	        <releases>
-	        	<enabled>true</enabled>
-	        </releases>
-	        <snapshots>
-	        	<enabled>true</enabled>
-	        </snapshots>
-	    </repository>
-	    <repository>
-	        <id>github-wss</id>
-	        <url>https://${GITHUB_TOKEN}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/market4.0-websocket_message_streamer</url>
+			<url>https://${GH_PACKAGE_REPO_PASSWORD}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/*</url>
 	        <releases>
 	        	<enabled>true</enabled>
 	        </releases>
