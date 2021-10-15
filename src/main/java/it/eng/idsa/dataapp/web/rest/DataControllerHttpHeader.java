@@ -55,15 +55,13 @@ public class DataControllerHttpHeader {
 		
 		if (!("ids:RejectionMessage".equals(responseHeaders.get("IDS-Messagetype").get(0)))) {
 			responsePayload = messageUtil.createResponsePayload(httpHeaders);
-		} else {
-			responsePayload = "Rejected message";
 		}
 		
 		if (responsePayload != null && responsePayload.contains("IDS-RejectionReason")) {
 			httpHeaders.put("IDS-Messagetype", Util.asList("ids:RejectionMessage"));
 			httpHeaders.put("IDS-RejectionReason", Util.asList(responsePayload.substring(responsePayload.indexOf(":")+1)));
 			responseHeaders = createResponseMessageHeaders(httpHeaders);
-			responsePayload = "Rejected message";
+			responsePayload = null;
 		}
 
 		return ResponseEntity.ok().header("foo", "bar")

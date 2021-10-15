@@ -58,12 +58,11 @@ public class DataControllerBodyBinary {
 		String responsePayload = null;
 		if (!headerResponse.contains("ids:rejectionReason")) {
 			responsePayload = messageUtil.createResponsePayload(headerMessage);
-		} else {
-			responsePayload = "Rejected message";
-		}
+		} 
+		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
 			headerResponse = responsePayload;
-			responsePayload = "Rejected message";
+			responsePayload = null;
 		}
 		MultipartMessage responseMessage = new MultipartMessageBuilder()
 				.withHeaderContent(headerResponse)
