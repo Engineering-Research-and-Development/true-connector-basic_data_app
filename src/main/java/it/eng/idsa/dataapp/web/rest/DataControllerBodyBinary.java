@@ -2,7 +2,6 @@ package it.eng.idsa.dataapp.web.rest;
 
 import java.util.Optional;
 
-import org.apache.http.entity.mime.MIME;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
