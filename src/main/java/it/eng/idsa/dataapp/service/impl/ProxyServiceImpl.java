@@ -298,17 +298,21 @@ public class ProxyServiceImpl implements ProxyService {
 	private HttpHeaders createMessageAsHeader(String messageType, String requestedArtifact, String requestedElement) {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		if(ArtifactRequestMessage.class.getSimpleName().equals(messageType)) {
-			httpHeaders.add("IDS-Messagetype", "ids:ArtifactRequestMessage");
+			httpHeaders.add("IDS-Messagetype", "ids:" + ArtifactRequestMessage.class.getSimpleName());
 			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + ArtifactRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
 			httpHeaders.add("IDS-RequestedArtifact", requestedArtifact != null ? requestedArtifact : UtilMessageService.REQUESTED_ARTIFACT.toString());
+		} else if(ContractRequestMessage.class.getSimpleName().equals(messageType)) {
+			httpHeaders.add("IDS-Messagetype", "ids:" + ContractRequestMessage.class.getSimpleName());
+			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + ContractRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
 		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
-			httpHeaders.add("IDS-Messagetype", "ids:ContractAgreementMessage");
+			httpHeaders.add("IDS-Messagetype", "ids:" + ContractAgreementMessage.class.getSimpleName());
 			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + ContractAgreementMessage.class.getSimpleName() + "/" + UUID.randomUUID());
 		} else if(DescriptionRequestMessage.class.getSimpleName().equals(messageType)) {
-			httpHeaders.add("IDS-Messagetype", "ids:DescriptionRequestMessage");
+			httpHeaders.add("IDS-Messagetype", "ids:" + DescriptionRequestMessage.class.getSimpleName());
 			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + DescriptionRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
 			httpHeaders.add("IDS-RequestedElement", requestedElement);
 		}
+		
 		httpHeaders.add("IDS-ModelVersion", "4.1.0");
         httpHeaders.add("IDS-TransferContract", UtilMessageService.TRANSFER_CONTRACT.toString());
 		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());

@@ -2,11 +2,11 @@ package it.eng.idsa.dataapp.web.rest;
 
 import java.util.Optional;
 
-import org.apache.http.entity.mime.MIME;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,12 +58,11 @@ public class DataControllerBodyBinary {
 		String responsePayload = null;
 		if (!headerResponse.contains("ids:rejectionReason")) {
 			responsePayload = messageUtil.createResponsePayload(headerMessage);
-		} else {
-			responsePayload = "Rejected message";
-		}
+		} 
+		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
 			headerResponse = responsePayload;
-			responsePayload = "Rejected message";
+			responsePayload = null;
 		}
 		MultipartMessage responseMessage = new MultipartMessageBuilder()
 				.withHeaderContent(headerResponse)
@@ -76,7 +75,7 @@ public class DataControllerBodyBinary {
 
 		return ResponseEntity.ok()
 				.header("foo", "bar")
-				.header(MIME.CONTENT_TYPE, contentType)
+				.contentType(MediaType.parseMediaType(contentType))
 				.body(responseMessageString);
 	}
 }

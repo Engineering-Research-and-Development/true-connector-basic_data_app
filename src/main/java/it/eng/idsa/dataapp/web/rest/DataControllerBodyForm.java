@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -53,12 +54,11 @@ public class DataControllerBodyForm {
 		String responsePayload = null;
 		if (!headerResponse.contains("ids:rejectionReason")) {
 			responsePayload = messageUtil.createResponsePayload(header);
-		} else {
-			responsePayload = "Rejected message";
 		}
+		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
 			headerResponse = responsePayload;
-			responsePayload = "Rejected message";
+			responsePayload = null;
 		}
 
 		// prepare body response - multipart message.
@@ -68,8 +68,9 @@ public class DataControllerBodyForm {
 				null,
 				ContentType.APPLICATION_JSON);
 
-		return ResponseEntity.ok().header("foo", "bar")
-				.header(resultEntity.getContentType().getName(), resultEntity.getContentType().getValue())
+		return ResponseEntity.ok()
+				.header("foo", "bar")
+				.contentType(MediaType.parseMediaType(resultEntity.getContentType().getValue()))
 				.body(resultEntity.getContent().readAllBytes());
 	}
 }
