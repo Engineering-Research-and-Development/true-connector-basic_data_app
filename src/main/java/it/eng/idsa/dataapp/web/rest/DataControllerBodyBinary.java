@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,7 +76,7 @@ public class DataControllerBodyBinary {
 
 		return ResponseEntity.ok()
 				.header("foo", "bar")
-				.header(MIME.CONTENT_TYPE, contentType)
+				.contentType(MediaType.parseMediaType(contentType))
 				.body(responseMessageString);
 	}
 }
