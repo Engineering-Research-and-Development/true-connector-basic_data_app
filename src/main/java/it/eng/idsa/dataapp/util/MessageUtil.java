@@ -1,5 +1,7 @@
 package it.eng.idsa.dataapp.util;
 
+import static de.fraunhofer.iais.eis.util.Util.asList;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,6 +15,15 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.FormBodyPartBuilder;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,18 +35,28 @@ import org.springframework.web.client.RestTemplate;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import de.fraunhofer.iais.eis.ArtifactRequestMessage;
+import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
 import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.ContractAgreementMessageBuilder;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
+import de.fraunhofer.iais.eis.DescriptionResponseMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.MessageProcessedNotificationMessageBuilder;
+import de.fraunhofer.iais.eis.NotificationMessageBuilder;
+import de.fraunhofer.iais.eis.RejectionMessageBuilder;
 import de.fraunhofer.iais.eis.RejectionReason;
 import de.fraunhofer.iais.eis.Resource;
 import de.fraunhofer.iais.eis.ResourceCatalog;
+import de.fraunhofer.iais.eis.ResultMessageBuilder;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
+import de.fraunhofer.iais.eis.util.Util;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
+import it.eng.idsa.multipart.util.DateUtil;
+import it.eng.idsa.multipart.util.UtilMessageService;
 
 @Component
 public class MessageUtil {
@@ -47,16 +68,11 @@ public class MessageUtil {
 	
 	private ECCProperties eccProperties;
 	
-	private MultiPartMessageService multiPartMessageService;
-	
-	
-	
-	public MessageUtil(@Value("${application.dataLakeDirectory}") Path dataLakeDirectory, RestTemplate restTemplate, ECCProperties eccProperties, MultiPartMessageService multiPartMessageService) {
+	public MessageUtil(@Value("${application.dataLakeDirectory}") Path dataLakeDirectory, RestTemplate restTemplate, ECCProperties eccProperties) {
 		super();
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.restTemplate = restTemplate;
 		this.eccProperties = eccProperties;
-		this.multiPartMessageService = multiPartMessageService;
 	}
 
 	public String createResponsePayload(Message requestHeader) {
@@ -72,7 +88,7 @@ public class MessageUtil {
 					return element;
 				} else {
 					try {
-						return MultipartMessageProcessor.serializeToJsonLD(multiPartMessageService.createRejectionCommunicationLocalIssues(drm));
+						return MultipartMessageProcessor.serializeToJsonLD(createRejectionCommunicationLocalIssues(drm));
 					} catch (IOException e) {
 						logger.error("Could not serialize rejection", e);
 					}
@@ -93,13 +109,13 @@ public class MessageUtil {
 			return null;
 		} else if (requestHeader.contains(DescriptionRequestMessage.class.getSimpleName())) {
 			if (requestHeader.contains("ids:requestedElement")) {
-				DescriptionRequestMessage drm = (DescriptionRequestMessage) multiPartMessageService.getMessage((Object) requestHeader);
+				DescriptionRequestMessage drm = (DescriptionRequestMessage) MultipartMessageProcessor.getIDSMessage(requestHeader);
 				String element = getRequestedElement(drm.getRequestedElement(), getSelfDescription());
 				if (StringUtils.isNotBlank(element)) {
 					return element;
 				} else {
 					try {
-						return MultipartMessageProcessor.serializeToJsonLD(multiPartMessageService.createRejectionCommunicationLocalIssues(drm));
+						return MultipartMessageProcessor.serializeToJsonLD(createRejectionCommunicationLocalIssues(drm));
 					} catch (IOException e) {
 						logger.error("Could not serialize rejection", e);
 					}
@@ -209,5 +225,223 @@ public class MessageUtil {
 		}
 		logger.error("Requested element not found.");
 		return null;
+	}
+	
+	    public String getResponseHeader(String header) {
+		    Message message = null;
+	        if(null == header || header.isEmpty() || "null".equalsIgnoreCase(header)) {
+	            message = new NotificationMessageBuilder()._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
+	        } else {
+	            message = MultipartMessageProcessor.getIDSMessage(header);
+	        }
+	        return getResponseHeader(message);
+	    }
+
+	    public String getResponseHeader(Message header) {
+	        String output = null;
+	        try {
+	            if(null == header || null == header.getId() || header.getId().toString().isEmpty())
+	                header = new NotificationMessageBuilder()._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
+	            if (header instanceof ArtifactRequestMessage){
+	                output = MultipartMessageProcessor.serializeToJsonLD(createArtifactResponseMessage((ArtifactRequestMessage) header));
+	            } else if (header instanceof ContractRequestMessage) {
+	            	 output = MultipartMessageProcessor.serializeToJsonLD(createContractAgreementMessage((ContractRequestMessage) header));
+				} else if (header instanceof ContractAgreementMessage) {
+	           	 	output = MultipartMessageProcessor.serializeToJsonLD(createProcessNotificationMessage((ContractAgreementMessage) header));
+				} else if (header instanceof DescriptionRequestMessage) {
+	           	 	output = MultipartMessageProcessor.serializeToJsonLD(createDescriptionResponseMessage((DescriptionRequestMessage) header));
+				} else {
+	                output = MultipartMessageProcessor.serializeToJsonLD(createResultMessage(header));
+	            }
+	        } catch (IOException e) {
+				logger.error("Error while processing response headers", e);
+			}
+			return output;
+	    }
+	
+	public Message createResultMessage(Message header) {
+		return new ResultMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._senderAgent_(whoIAmEngRDProvider())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				.build();
+	}
+
+	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
+		if (header.getTransferContract() != null 
+				&& !(UtilMessageService.TRANSFER_CONTRACT.equals(header.getTransferContract()) 
+						&& UtilMessageService.REQUESTED_ARTIFACT.equals(header.getRequestedArtifact()))) {
+			logger.info("Creating rejection message since transfer contract or requested artifact are not correct");
+			return createRejectionNotAuthorized(header);
+		}
+		return new ArtifactResponseMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._senderAgent_(whoIAmEngRDProvider())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				.build();
+	}
+	
+	public Message createContractAgreementMessage(ContractRequestMessage header) {
+		return new ContractAgreementMessageBuilder()
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._transferContract_(header.getTransferContract())
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._issued_(DateUtil.now())
+				._issuerConnector_(whoIAmEngRDProvider())
+				._senderAgent_(whoIAmEngRDProvider())
+				._recipientConnector_(Util.asList(header != null ? header.getIssuerConnector() : whoIAm()))
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+	
+	private Message createDescriptionResponseMessage(DescriptionRequestMessage header) {
+		return new DescriptionResponseMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+
+	public Message createRejectionMessage(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+
+	public Message createRejectionToken(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+
+	private URI whoIAm() {
+		return URI.create("auto-generated");
+	}
+	
+	private URI whoIAmEngRDProvider() {
+		return URI.create("https://w3id.org/engrd/connector/provider");
+	}
+	
+	private Message createProcessNotificationMessage(ContractAgreementMessage header) {
+		return new MessageProcessedNotificationMessageBuilder()
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._issuerConnector_(whoIAmEngRDProvider())
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}	
+
+	public Message createRejectionMessageLocalIssues(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+
+	public Message createRejectionTokenLocalIssues(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+
+	public Message createRejectionCommunicationLocalIssues(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._rejectionReason_(RejectionReason.NOT_FOUND)
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+	
+	public Message createRejectionNotAuthorized(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._rejectionReason_(RejectionReason.NOT_AUTHORIZED)
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+	
+	public HttpEntity createMultipartMessageForm(String header, String payload, String frowardTo, ContentType ctPayload) {
+		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
+		multipartEntityBuilder = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
+		try {
+			FormBodyPart bodyHeaderPart;
+			ContentBody headerBody = new StringBody(header, ContentType.create("application/ld+json"));
+			bodyHeaderPart = FormBodyPartBuilder.create("header", headerBody).build();
+			bodyHeaderPart.addField(HTTP.CONTENT_LEN, "" + header.length());
+			multipartEntityBuilder.addPart(bodyHeaderPart);
+
+			FormBodyPart bodyPayloadPart = null;
+			if (payload != null) {
+				ContentBody payloadBody = new StringBody(payload, ctPayload);
+				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
+				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
+				multipartEntityBuilder.addPart(bodyPayloadPart);
+			}
+
+			FormBodyPart headerForwardTo = null;
+			if (frowardTo != null) {
+				ContentBody forwardToBody = new StringBody(frowardTo, ContentType.DEFAULT_TEXT);
+				headerForwardTo = FormBodyPartBuilder.create("forwardTo", forwardToBody).build();
+				headerForwardTo.addField(HTTP.CONTENT_LEN, "" + frowardTo.length());
+				multipartEntityBuilder.addPart(headerForwardTo);
+			}
+
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+		return multipartEntityBuilder.build();
 	}
 }

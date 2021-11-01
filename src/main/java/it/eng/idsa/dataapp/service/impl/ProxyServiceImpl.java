@@ -40,7 +40,6 @@ import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.service.ProxyService;
 import it.eng.idsa.dataapp.service.RecreateFileService;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
@@ -49,7 +48,6 @@ import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
 import it.eng.idsa.streamer.WebSocketClientManager;
-import it.eng.idsa.streamer.util.MultiPartMessageServiceUtil;
 import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 @Service
@@ -67,16 +65,13 @@ public class ProxyServiceImpl implements ProxyService {
 
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
-	private MultiPartMessageService multiPartMessageService;
 	private RecreateFileService recreateFileService;
 	private String dataLakeDirectory;
 	
-	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties,
-			MultiPartMessageService multiPartMessageService, RecreateFileService recreateFileService,
+	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties, RecreateFileService recreateFileService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
-		this.multiPartMessageService = multiPartMessageService;
 		this.recreateFileService = recreateFileService;
 		this.dataLakeDirectory = dataLakeDirectory;
 	}
@@ -380,11 +375,11 @@ public class ProxyServiceImpl implements ProxyService {
 	
 	// TODO should we move this method to separate class?
 	private String saveFileToDisk(String responseMessage, Message requestMessage) throws IOException {
-		Message responseMsg = multiPartMessageService.getMessage(responseMessage);
+		Message responseMsg = MultipartMessageProcessor.parseMultipartMessage(responseMessage).getHeaderContent();
 
 		String requestedArtifact = null;
 		if (requestMessage instanceof ArtifactRequestMessage && responseMsg instanceof ArtifactResponseMessage) {
-			String payload = MultiPartMessageServiceUtil.getPayload(responseMessage);
+			String payload = MultipartMessageProcessor.parseMultipartMessage(responseMessage).getPayloadContent();
 			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
 			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);

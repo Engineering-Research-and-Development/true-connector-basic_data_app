@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
@@ -27,12 +26,9 @@ public class DataControllerBodyBinary {
 
 	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyBinary.class);
 	
-	private MultiPartMessageService multiPartMessageService;
 	private MessageUtil messageUtil;
 	
-	public DataControllerBodyBinary(MultiPartMessageService multiPartMessageService,
-			MessageUtil messageUtil) {
-		this.multiPartMessageService = multiPartMessageService;
+	public DataControllerBodyBinary(MessageUtil messageUtil) {
 		this.messageUtil = messageUtil;
 	}
 	
@@ -54,7 +50,7 @@ public class DataControllerBodyBinary {
 			logger.info("Payload is empty");
 		}
 
-		String headerResponse = multiPartMessageService.getResponseHeader(headerMessage);
+		String headerResponse = messageUtil.getResponseHeader(headerMessage);
 		String responsePayload = null;
 		if (!headerResponse.contains("ids:rejectionReason")) {
 			responsePayload = messageUtil.createResponsePayload(headerMessage);

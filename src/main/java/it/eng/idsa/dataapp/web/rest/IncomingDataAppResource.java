@@ -20,7 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import it.eng.idsa.dataapp.domain.MessageIDS;
 import it.eng.idsa.dataapp.service.impl.MessageServiceImpl;
-import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
+import it.eng.idsa.multipart.domain.MultipartMessage;
+import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
 
 /**
@@ -44,9 +45,6 @@ public class IncomingDataAppResource {
 	private static final Logger logger = LoggerFactory.getLogger(IncomingDataAppResource.class);
 
 	@Autowired
-	private MultiPartMessageServiceImpl multiPartMessageServiceImpl;
-
-	@Autowired
 	private MessageServiceImpl messageServiceImpl;
 	
 	/*
@@ -62,8 +60,9 @@ public class IncomingDataAppResource {
 	@PostMapping("/dataAppIncomingMessageReceiver")
 	public ResponseEntity<?> postMessageReceiver(@RequestBody String data){
 		logger.info("Enter to the end-point: dataAppIncomingMessage Receiver side");
-		String header=multiPartMessageServiceImpl.getHeader(data);
-		String payload=multiPartMessageServiceImpl.getPayload(data);
+		MultipartMessage receivedMessage = MultipartMessageProcessor.parseMultipartMessage(data);
+		String header = receivedMessage.getHeaderContentString();
+		String payload = receivedMessage.getPayloadContent();
 		messageServiceImpl.setMessage("", header.toString(), payload.toString());
 		logger.info("message="+data);
 		return ResponseEntity.ok().build();
@@ -84,8 +83,9 @@ public class IncomingDataAppResource {
 	public ResponseEntity<?> postMessageSender(@RequestBody String data){
 		logger.info("Enter to the end-point: dataAppIncomingMessage Sender side");
 
-		String header=multiPartMessageServiceImpl.getHeader(data);
-		String payload=multiPartMessageServiceImpl.getPayload(data);
+		MultipartMessage receivedMessage = MultipartMessageProcessor.parseMultipartMessage(data);
+		String header = receivedMessage.getHeaderContentString();
+		String payload = receivedMessage.getPayloadContent();
 		messageServiceImpl.setMessage("", header.toString(), payload.toString());
 
 		logger.info("message="+data);

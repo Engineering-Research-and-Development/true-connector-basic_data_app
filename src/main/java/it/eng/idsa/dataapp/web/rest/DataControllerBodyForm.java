@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.util.MessageUtil;
 
 @RestController
@@ -23,13 +22,10 @@ import it.eng.idsa.dataapp.util.MessageUtil;
 public class DataControllerBodyForm {
 	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyForm.class);
 
-	private MultiPartMessageService multiPartMessageService;
 	private MessageUtil messageUtil;
 	
-	public DataControllerBodyForm(MultiPartMessageService multiPartMessageService,
-			MessageUtil messageUtil) {
-		this.multiPartMessageService= multiPartMessageService;
-		this.messageUtil = messageUtil;
+	public DataControllerBodyForm(MessageUtil messageUtil) {
+		this.messageUtil= messageUtil;
     }
 
 	@PostMapping(value = "/data")
@@ -50,7 +46,7 @@ public class DataControllerBodyForm {
 			logger.info("Payload is empty");
 		}
 		
-		String headerResponse = multiPartMessageService.getResponseHeader(header);
+		String headerResponse = messageUtil.getResponseHeader(header);
 		String responsePayload = null;
 		if (!headerResponse.contains("ids:rejectionReason")) {
 			responsePayload = messageUtil.createResponsePayload(header);
@@ -62,7 +58,7 @@ public class DataControllerBodyForm {
 		}
 
 		// prepare body response - multipart message.
-		HttpEntity resultEntity = multiPartMessageService.createMultipartMessageForm(
+		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
 				headerResponse,
 				responsePayload,
 				null,
