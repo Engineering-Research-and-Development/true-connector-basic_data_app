@@ -41,7 +41,6 @@
 			</snapshots>
 		</repository>
 	</repositories>
-
 	<distributionManagement>
 		<repository>
 			<id>github</id>
@@ -265,9 +264,13 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>apodrating.MainKt</mainClass>
+							<mainClass>it.eng.idsa.dataapp.ApplicationDataApp</mainClass>
 							<classpathPrefix>dependency-jars/</classpathPrefix>
+							<useUniqueVersions>false</useUniqueVersions>
 						</manifest>
+						<manifestEntries>
+							<Class-Path>. /config/ /data/ /cert/</Class-Path>
+						</manifestEntries>
 					</archive>
 				</configuration>
 			</plugin>
