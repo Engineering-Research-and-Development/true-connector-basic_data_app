@@ -375,11 +375,12 @@ public class ProxyServiceImpl implements ProxyService {
 	
 	// TODO should we move this method to separate class?
 	private String saveFileToDisk(String responseMessage, Message requestMessage) throws IOException {
-		Message responseMsg = MultipartMessageProcessor.parseMultipartMessage(responseMessage).getHeaderContent();
+		MultipartMessage response = MultipartMessageProcessor.parseMultipartMessage(responseMessage);
+		Message responseMsg = response.getHeaderContent();
 
 		String requestedArtifact = null;
 		if (requestMessage instanceof ArtifactRequestMessage && responseMsg instanceof ArtifactResponseMessage) {
-			String payload = MultipartMessageProcessor.parseMultipartMessage(responseMessage).getPayloadContent();
+			String payload = response.getPayloadContent();
 			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
 			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
