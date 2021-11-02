@@ -109,7 +109,7 @@ public class MessageUtil {
 			return null;
 		} else if (requestHeader.contains(DescriptionRequestMessage.class.getSimpleName())) {
 			if (requestHeader.contains("ids:requestedElement")) {
-				DescriptionRequestMessage drm = (DescriptionRequestMessage) MultipartMessageProcessor.getIDSMessage(requestHeader);
+				DescriptionRequestMessage drm = (DescriptionRequestMessage) MultipartMessageProcessor.getMessage(requestHeader);
 				String element = getRequestedElement(drm.getRequestedElement(), getSelfDescription());
 				if (StringUtils.isNotBlank(element)) {
 					return element;
@@ -232,7 +232,7 @@ public class MessageUtil {
 	        if(null == header || header.isEmpty() || "null".equalsIgnoreCase(header)) {
 	            message = new NotificationMessageBuilder()._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
 	        } else {
-	            message = MultipartMessageProcessor.getIDSMessage(header);
+	            message = MultipartMessageProcessor.getMessage(header);
 	        }
 	        return getResponseHeader(message);
 	    }
