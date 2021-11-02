@@ -209,7 +209,6 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayload_StringArtifactRequestMessage(){
 		String payload = messageUtil.createResponsePayload(UtilMessageService.getMessageAsString(UtilMessageService.getArtifactRequestMessage()));
-		System.out.println(UtilMessageService.getMessageAsString(UtilMessageService.getArtifactRequestMessage()));
 		assertEquals(johnDoePayload(), payload);
 	}
 	
