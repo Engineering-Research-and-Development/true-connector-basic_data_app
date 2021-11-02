@@ -1,21 +1,13 @@
 package it.eng.idsa.dataapp.web.rest;
 
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,11 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.ProxyService;
-import it.eng.idsa.dataapp.util.MessageUtil;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 @RestController
 public class ProxyController {
@@ -36,9 +23,6 @@ public class ProxyController {
 
 	private ProxyService proxyService;
 	
-	@Autowired
-	private MessageUtil messageUtil;
-
 	public ProxyController(ProxyService proxyService) {
 		this.proxyService = proxyService;
 	}
@@ -87,43 +71,5 @@ public class ProxyController {
 					"', '" + ProxyRequest.MULTIPART_FORM + "', '" + ProxyRequest.MULTIPART_HEADER + "'", 
 					HttpStatus.BAD_REQUEST);
 		}
-	}
-	
-	
-	@PostMapping("/proxyfile")
-	public Response proxyfile() throws Exception {
-
-//		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
-//				"poruka",
-//				readFile(),
-//				null,
-//				ContentType.APPLICATION_OCTET_STREAM);
-				
-		
-		File file = new File("C:\\Users\\david.jovanovic\\Desktop\\logs.txt");
-		
-		OkHttpClient client = new OkHttpClient().newBuilder()
-
-				.build();
-
-		okhttp3.RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
-
-				.addFormDataPart("payload", "C:\\Users\\david.jovanovic\\Desktop\\logs.txt",
-
-						okhttp3.RequestBody.create(okhttp3.MediaType.parse("application/octet-stream"),
-
-								file))
-				.build();
-
-		Request request = new Request.Builder()
-
-				.url("http://localhost:8887/incoming-data-app/multipartMessageBodyFormData")
-
-				.method("POST", body)
-
-				.build();
-
-				Response response = client.newCall(request).execute();
-				return response;
 	}
 }

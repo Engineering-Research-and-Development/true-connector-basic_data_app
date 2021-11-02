@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.3-SNAPSHOT] - 2021-11-02
+ 
+### Changed
+ - moved logic from MultiPartMessageService to MultipartMessageProcessor
+ 
+### Removed
+ - removed MultiPartMessageService
+
 ## [0.1.2-SNAPSHOT] - 2021-10-15
  
 ### Changed
