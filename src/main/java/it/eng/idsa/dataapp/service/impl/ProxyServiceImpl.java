@@ -109,11 +109,6 @@ public class ProxyServiceImpl implements ProxyService {
 	public ResponseEntity<String> proxyMultipartMix(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
 		
-		if(StringUtils.isEmpty(proxyRequest.getMessageType())) {
-			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message type part in body is mandatory for " 
-					+ proxyRequest.getMultipart() + " flow");
-		}
 		URI thirdPartyApi = null;
 		String proxyPayload = null;
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
@@ -170,12 +165,6 @@ public class ProxyServiceImpl implements ProxyService {
 	@Override
 	public ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
-		
-		if(StringUtils.isEmpty(proxyRequest.getMessageType())) {
-			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message part in body is mandatory for " 
-					+ proxyRequest.getMultipart() + " flow");
-		}
 		
 		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement());
 		URI thirdPartyApi = null;
@@ -248,11 +237,6 @@ public class ProxyServiceImpl implements ProxyService {
 				eccProperties.getPort(), eccProperties.getHeaderContext(),
 				null, null);
 
-		if(StringUtils.isBlank(proxyRequest.getMessageType())) {
-			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(MESSAGE_TYPE + " in body is mandatory for " 
-					+ proxyRequest.getMultipart() + " flow");
-		}
 		logger.info("Forwarding header POST request to {}", thirdPartyApi.toString());
 		httpHeaders.addAll(createMessageAsHeader(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement()));
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());

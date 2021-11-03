@@ -48,6 +48,12 @@ public class ProxyController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Multipart field not found in request, mandatory for the flow");
 		}
 		
+		if(StringUtils.isBlank(proxyRequest.getMessageType())) {
+			logger.error("Missing messageType part in the request");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message type part in body is mandatory for " 
+					+ proxyRequest.getMultipart() + " flow");
+		}
+		
 		switch (proxyRequest.getMultipart()) {
 		case ProxyRequest.MULTIPART_MIXED:
 			logger.info("Forwarding request using {}", ProxyRequest.MULTIPART_MIXED);
