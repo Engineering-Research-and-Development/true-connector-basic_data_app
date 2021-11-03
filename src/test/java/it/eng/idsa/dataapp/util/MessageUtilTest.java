@@ -93,14 +93,14 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringSuccessfull() throws IOException {
- 		String payload = messageUtil.createResponsePayload(UtilMessageService.getMessageAsString(UtilMessageService.getDescriptionRequestMessage(null)));
+ 		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null));
 		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
 	}
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringFailed() {
 		when(restTemplate.getForObject(any(), any())).thenReturn(null);
-		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(UtilMessageService.getMessageAsString(UtilMessageService.getDescriptionRequestMessage(null))));
+		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null)));
 	}
 	
 	//Description request message in Http Headers
@@ -139,16 +139,14 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderStringSuccessfull() throws IOException {
 		DescriptionRequestMessage drm = UtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID);
-		String drmString = UtilMessageService.getMessageAsString(drm);
- 		String payload = messageUtil.createResponsePayload(drmString);
+ 		String payload = messageUtil.createResponsePayload(drm);
 		assertEquals(EXISTING_REQUESTED_ELEMENT_ID, serializer.deserialize(payload, Resource.class).getId());
 	}
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderStringFailed() throws IOException {
 		DescriptionRequestMessage drm = UtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID);
-		String drmString = UtilMessageService.getMessageAsString(drm);
- 		String payload = messageUtil.createResponsePayload(drmString);
+ 		String payload = messageUtil.createResponsePayload(drm);
  		assertTrue(serializer.deserialize(payload, RejectionMessage.class) instanceof RejectionMessage);
 	}
 	
@@ -180,7 +178,7 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayload_StringContractRequestMessage() throws IOException {
-		String payload = messageUtil.createResponsePayload(UtilMessageService.getMessageAsString(UtilMessageService.getContractRequestMessage()));
+		String payload = messageUtil.createResponsePayload(UtilMessageService.getContractRequestMessage());
 		assertTrue(serializer.deserialize(payload, ContractAgreement.class) instanceof ContractAgreement);
 	}
 	
@@ -194,7 +192,7 @@ public class MessageUtilTest {
 
 	@Test
 	public void testResponsePayload_StringContractAgreementMessage(){
-		String payload = messageUtil.createResponsePayload(UtilMessageService.getMessageAsString(UtilMessageService.getContractAgreementMessage()));
+		String payload = messageUtil.createResponsePayload(UtilMessageService.getContractAgreementMessage());
 		assertNull(payload);;
 	}
 	
@@ -208,7 +206,7 @@ public class MessageUtilTest {
 
 	@Test
 	public void testResponsePayload_StringArtifactRequestMessage(){
-		String payload = messageUtil.createResponsePayload(UtilMessageService.getMessageAsString(UtilMessageService.getArtifactRequestMessage()));
+		String payload = messageUtil.createResponsePayload(UtilMessageService.getArtifactRequestMessage());
 		assertEquals(johnDoePayload(), payload);
 	}
 	

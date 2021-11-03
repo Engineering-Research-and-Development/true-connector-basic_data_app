@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.RejectionMessage;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
@@ -49,15 +51,17 @@ public class DataControllerBodyBinary {
 		} else {
 			logger.info("Payload is empty");
 		}
+		
+		Message message = MultipartMessageProcessor.getMessage(headerMessage);
 
-		String headerResponse = messageUtil.getResponseHeader(headerMessage);
+		Message headerResponse = messageUtil.getResponseHeader(message);
 		String responsePayload = null;
-		if (!headerResponse.contains("ids:rejectionReason")) {
-			responsePayload = messageUtil.createResponsePayload(headerMessage);
+		if (!(headerResponse instanceof RejectionMessage)) {
+			responsePayload = messageUtil.createResponsePayload(message);
 		} 
 		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
-			headerResponse = responsePayload;
+			headerResponse = MultipartMessageProcessor.getMessage(responsePayload);
 			responsePayload = null;
 		}
 		MultipartMessage responseMessage = new MultipartMessageBuilder()

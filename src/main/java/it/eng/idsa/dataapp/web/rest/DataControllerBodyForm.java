@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.RejectionMessage;
 import it.eng.idsa.dataapp.util.MessageUtil;
+import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
 @RestController
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "form")
@@ -45,21 +48,22 @@ public class DataControllerBodyForm {
 		} else {
 			logger.info("Payload is empty");
 		}
-		
-		String headerResponse = messageUtil.getResponseHeader(header);
+		Message message = MultipartMessageProcessor.getMessage(header);
+
+		Message headerResponse = messageUtil.getResponseHeader(message);
 		String responsePayload = null;
-		if (!headerResponse.contains("ids:rejectionReason")) {
-			responsePayload = messageUtil.createResponsePayload(header);
+		if (!(headerResponse instanceof RejectionMessage)) {
+			responsePayload = messageUtil.createResponsePayload(message);
 		}
 		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
-			headerResponse = responsePayload;
+			headerResponse = MultipartMessageProcessor.getMessage(responsePayload);
 			responsePayload = null;
 		}
 
 		// prepare body response - multipart message.
 		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
-				headerResponse,
+				MultipartMessageProcessor.serializeToJsonLD(headerResponse),
 				responsePayload,
 				null,
 				ContentType.APPLICATION_JSON);

@@ -102,33 +102,6 @@ public class MessageUtil {
 		}
 	}
 	
-	public String createResponsePayload(String requestHeader) {
-		if (requestHeader.contains(ContractRequestMessage.class.getSimpleName())) {
-			return createContractAgreement(dataLakeDirectory);
-		} else if (requestHeader.contains(ContractAgreementMessage.class.getSimpleName())) {
-			return null;
-		} else if (requestHeader.contains(DescriptionRequestMessage.class.getSimpleName())) {
-			if (requestHeader.contains("ids:requestedElement")) {
-				DescriptionRequestMessage drm = (DescriptionRequestMessage) MultipartMessageProcessor.getMessage(requestHeader);
-				String element = getRequestedElement(drm.getRequestedElement(), getSelfDescription());
-				if (StringUtils.isNotBlank(element)) {
-					return element;
-				} else {
-					try {
-						return MultipartMessageProcessor.serializeToJsonLD(createRejectionCommunicationLocalIssues(drm));
-					} catch (IOException e) {
-						logger.error("Could not serialize rejection", e);
-					}
-					return null;
-				}
-			} else {
-				return getSelfDescriptionAsString();
-			}
-		} else {
-			return createResponsePayload();
-		}
-	}
-	
 	public String createResponsePayload(HttpHeaders httpHeaders) {
 		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
 		if (requestMessageType.contains(ContractRequestMessage.class.getSimpleName())) {
@@ -227,37 +200,26 @@ public class MessageUtil {
 		return null;
 	}
 	
-	    public String getResponseHeader(String header) {
-		    Message message = null;
-	        if(null == header || header.isEmpty() || "null".equalsIgnoreCase(header)) {
-	            message = new NotificationMessageBuilder()._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
-	        } else {
-	            message = MultipartMessageProcessor.getMessage(header);
-	        }
-	        return getResponseHeader(message);
-	    }
-
-	    public String getResponseHeader(Message header) {
-	        String output = null;
-	        try {
-	            if(null == header || null == header.getId() || header.getId().toString().isEmpty())
-	                header = new NotificationMessageBuilder()._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider()).build();
-	            if (header instanceof ArtifactRequestMessage){
-	                output = MultipartMessageProcessor.serializeToJsonLD(createArtifactResponseMessage((ArtifactRequestMessage) header));
-	            } else if (header instanceof ContractRequestMessage) {
-	            	 output = MultipartMessageProcessor.serializeToJsonLD(createContractAgreementMessage((ContractRequestMessage) header));
-				} else if (header instanceof ContractAgreementMessage) {
-	           	 	output = MultipartMessageProcessor.serializeToJsonLD(createProcessNotificationMessage((ContractAgreementMessage) header));
-				} else if (header instanceof DescriptionRequestMessage) {
-	           	 	output = MultipartMessageProcessor.serializeToJsonLD(createDescriptionResponseMessage((DescriptionRequestMessage) header));
-				} else {
-	                output = MultipartMessageProcessor.serializeToJsonLD(createResultMessage(header));
-	            }
-	        } catch (IOException e) {
-				logger.error("Error while processing response headers", e);
-			}
-			return output;
-	    }
+	public Message getResponseHeader(Message header) {
+		Message output = null;
+		if (null == header || null == header.getId() || header.getId().toString().isEmpty())
+			header = new NotificationMessageBuilder()
+			._securityToken_(UtilMessageService.getDynamicAttributeToken())
+			._senderAgent_(whoIAmEngRDProvider())
+			.build();
+		if (header instanceof ArtifactRequestMessage) {
+			output = createArtifactResponseMessage((ArtifactRequestMessage) header);
+		} else if (header instanceof ContractRequestMessage) {
+			output = createContractAgreementMessage((ContractRequestMessage) header);
+		} else if (header instanceof ContractAgreementMessage) {
+			output = createProcessNotificationMessage((ContractAgreementMessage) header);
+		} else if (header instanceof DescriptionRequestMessage) {
+			output = createDescriptionResponseMessage((DescriptionRequestMessage) header);
+		} else {
+			output = createResultMessage(header);
+		}
+		return output;
+	}
 	
 	public Message createResultMessage(Message header) {
 		return new ResultMessageBuilder()

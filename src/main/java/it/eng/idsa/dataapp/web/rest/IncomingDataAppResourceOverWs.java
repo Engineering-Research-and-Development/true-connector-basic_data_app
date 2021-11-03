@@ -101,7 +101,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 		String responseMessageString = null;
 		try {
 			String responsePayload = readFile(requestedArtifact);
-			String responseMessage = messageUtil.getResponseHeader(requestMessage);
+			Message responseMessage = messageUtil.getResponseHeader(requestMessage);
 			// prepare multipart message.
 			MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
 					.withHeaderContent(responseMessage)
