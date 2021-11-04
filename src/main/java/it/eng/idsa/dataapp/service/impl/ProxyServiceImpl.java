@@ -40,7 +40,6 @@ import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.service.ProxyService;
 import it.eng.idsa.dataapp.service.RecreateFileService;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
@@ -49,7 +48,6 @@ import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
 import it.eng.idsa.streamer.WebSocketClientManager;
-import it.eng.idsa.streamer.util.MultiPartMessageServiceUtil;
 import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 @Service
@@ -67,16 +65,13 @@ public class ProxyServiceImpl implements ProxyService {
 
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
-	private MultiPartMessageService multiPartMessageService;
 	private RecreateFileService recreateFileService;
 	private String dataLakeDirectory;
 	
-	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties,
-			MultiPartMessageService multiPartMessageService, RecreateFileService recreateFileService,
+	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties, RecreateFileService recreateFileService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
-		this.multiPartMessageService = multiPartMessageService;
 		this.recreateFileService = recreateFileService;
 		this.dataLakeDirectory = dataLakeDirectory;
 	}
@@ -114,11 +109,6 @@ public class ProxyServiceImpl implements ProxyService {
 	public ResponseEntity<String> proxyMultipartMix(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
 		
-		if(StringUtils.isEmpty(proxyRequest.getMessageType())) {
-			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message type part in body is mandatory for " 
-					+ proxyRequest.getMultipart() + " flow");
-		}
 		URI thirdPartyApi = null;
 		String proxyPayload = null;
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
@@ -175,12 +165,6 @@ public class ProxyServiceImpl implements ProxyService {
 	@Override
 	public ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
-		
-		if(StringUtils.isEmpty(proxyRequest.getMessageType())) {
-			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message part in body is mandatory for " 
-					+ proxyRequest.getMultipart() + " flow");
-		}
 		
 		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement());
 		URI thirdPartyApi = null;
@@ -253,11 +237,6 @@ public class ProxyServiceImpl implements ProxyService {
 				eccProperties.getPort(), eccProperties.getHeaderContext(),
 				null, null);
 
-		if(StringUtils.isBlank(proxyRequest.getMessageType())) {
-			logger.error("Missing '{}' part in the request", MESSAGE_TYPE);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(MESSAGE_TYPE + " in body is mandatory for " 
-					+ proxyRequest.getMultipart() + " flow");
-		}
 		logger.info("Forwarding header POST request to {}", thirdPartyApi.toString());
 		httpHeaders.addAll(createMessageAsHeader(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement()));
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
@@ -380,11 +359,12 @@ public class ProxyServiceImpl implements ProxyService {
 	
 	// TODO should we move this method to separate class?
 	private String saveFileToDisk(String responseMessage, Message requestMessage) throws IOException {
-		Message responseMsg = multiPartMessageService.getMessage(responseMessage);
+		MultipartMessage response = MultipartMessageProcessor.parseMultipartMessage(responseMessage);
+		Message responseMsg = response.getHeaderContent();
 
 		String requestedArtifact = null;
 		if (requestMessage instanceof ArtifactRequestMessage && responseMsg instanceof ArtifactResponseMessage) {
-			String payload = MultiPartMessageServiceUtil.getPayload(responseMessage);
+			String payload = response.getPayloadContent();
 			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
 			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
