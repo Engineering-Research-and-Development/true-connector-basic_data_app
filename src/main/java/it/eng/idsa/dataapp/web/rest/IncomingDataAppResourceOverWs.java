@@ -23,7 +23,6 @@ import com.google.gson.GsonBuilder;
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.Message;
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
@@ -42,17 +41,14 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 	private Path dataLakeDirectory;
 
 	@Autowired
-	private MultiPartMessageService multiPartMessageService;
-	
-	@Autowired
 	private MessageUtil messageUtil;
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		String requestMessageMultipart = (String) evt.getNewValue();
 		logger.debug("Received following message over WSS: {}", requestMessageMultipart);
-		Message requestMessage = multiPartMessageService.getMessage(requestMessageMultipart);
-		String requestHeader = multiPartMessageService.getHeader(requestMessageMultipart);
+		MultipartMessage receivedMessage = MultipartMessageProcessor.parseMultipartMessage(requestMessageMultipart);
+		Message requestMessage = receivedMessage.getHeaderContent();
 		String requestedArtifact = null;
 		String response = null;
 		if (requestMessage instanceof ArtifactRequestMessage) {
@@ -64,34 +60,34 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 		} else if (requestMessage instanceof ContractRequestMessage) {
 			response = contractAgreementResponse(requestMessage);
 		} else {
-			response = createDummyResponse(requestHeader);
+			response = createDummyResponse(receivedMessage);
 		}
 		WebSocketServerManager.getMessageWebSocketResponse().sendResponse(response);
 	}
 
 	private String contractAgreementResponse(Message requestMessage) {
 		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
-				.withHeaderContent(multiPartMessageService
+				.withHeaderContent(messageUtil
 				.createContractAgreementMessage((ContractRequestMessage) requestMessage))
 				.withPayloadContent(messageUtil.createResponsePayload(requestMessage))
 				.build();
 		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false, Boolean.TRUE);
 	}
 
-	private String createDummyResponse(String resquestMessage) {
+	private String createDummyResponse(MultipartMessage receivedMessage) {
 		String responseMessageString = null;
 		try {
 			String responsePayload = createResponsePayload();
 			// prepare multipart message.
 			MultipartMessage responseMessage = new MultipartMessageBuilder()
-					.withHeaderContent(resquestMessage)
+					.withHeaderContent(receivedMessage.getHeaderContentString())
 					.withPayloadContent(responsePayload)
 					.build();
 			responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false, Boolean.TRUE);
 
 		} catch (Exception e) {
 			logger.error("Error while creating dummy response", e);
-			Message rejectionMessage = multiPartMessageService.createRejectionMessageLocalIssues(multiPartMessageService.getMessage(resquestMessage));
+			Message rejectionMessage = messageUtil.createRejectionMessageLocalIssues(receivedMessage.getHeaderContent());
 			MultipartMessage responseMessageRejection = new MultipartMessageBuilder()
 					.withHeaderContent(rejectionMessage)
 					.withPayloadContent(null)
@@ -105,7 +101,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 		String responseMessageString = null;
 		try {
 			String responsePayload = readFile(requestedArtifact);
-			String responseMessage = multiPartMessageService.getResponseHeader(requestMessage);
+			Message responseMessage = messageUtil.getResponseHeader(requestMessage);
 			// prepare multipart message.
 			MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
 					.withHeaderContent(responseMessage)
@@ -115,7 +111,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 
 		} catch (Exception e) {
 			logger.error("Error while reading resource from disk", e);
-			Message rejectionMessage = multiPartMessageService.createRejectionCommunicationLocalIssues(requestMessage);
+			Message rejectionMessage = messageUtil.createRejectionCommunicationLocalIssues(requestMessage);
 			String payload = "{\r\n" + 
 					"	\"reason\" : \"Resource '" + e.getMessage()  + "' not found\"\r\n" + 
 					"}";

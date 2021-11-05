@@ -2,11 +2,11 @@ package it.eng.idsa.dataapp.web.rest;
 
 import java.util.Optional;
 
-import org.apache.http.entity.mime.MIME;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import it.eng.idsa.dataapp.service.MultiPartMessageService;
+import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.RejectionMessage;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
@@ -27,12 +28,9 @@ public class DataControllerBodyBinary {
 
 	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyBinary.class);
 	
-	private MultiPartMessageService multiPartMessageService;
 	private MessageUtil messageUtil;
 	
-	public DataControllerBodyBinary(MultiPartMessageService multiPartMessageService,
-			MessageUtil messageUtil) {
-		this.multiPartMessageService = multiPartMessageService;
+	public DataControllerBodyBinary(MessageUtil messageUtil) {
 		this.messageUtil = messageUtil;
 	}
 	
@@ -53,17 +51,18 @@ public class DataControllerBodyBinary {
 		} else {
 			logger.info("Payload is empty");
 		}
+		
+		Message message = MultipartMessageProcessor.getMessage(headerMessage);
 
-		String headerResponse = multiPartMessageService.getResponseHeader(headerMessage);
+		Message headerResponse = messageUtil.getResponseHeader(message);
 		String responsePayload = null;
-		if (!headerResponse.contains("ids:rejectionReason")) {
-			responsePayload = messageUtil.createResponsePayload(headerMessage);
-		} else {
-			responsePayload = "Rejected message";
-		}
+		if (!(headerResponse instanceof RejectionMessage)) {
+			responsePayload = messageUtil.createResponsePayload(message);
+		} 
+		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
-			headerResponse = responsePayload;
-			responsePayload = "Rejected message";
+			headerResponse = MultipartMessageProcessor.getMessage(responsePayload);
+			responsePayload = null;
 		}
 		MultipartMessage responseMessage = new MultipartMessageBuilder()
 				.withHeaderContent(headerResponse)
@@ -76,7 +75,7 @@ public class DataControllerBodyBinary {
 
 		return ResponseEntity.ok()
 				.header("foo", "bar")
-				.header(MIME.CONTENT_TYPE, contentType)
+				.contentType(MediaType.parseMediaType(contentType))
 				.body(responseMessageString);
 	}
 }

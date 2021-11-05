@@ -1,6 +1,29 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.4-SNAPSHOT] - 2021-11-05
+ 
+### Changed
+ - improved docker creation
+ 
+## [0.1.3-SNAPSHOT] - 2021-11-02
+ 
+### Changed
+ - moved logic from MultiPartMessageService to MultipartMessageProcessor
+ 
+### Removed
+ - removed MultiPartMessageService
+
+## [0.1.2-SNAPSHOT] - 2021-10-15
+ 
+### Changed
+ - minor exception and exception handling changes
+
+## [0.1.1-SNAPSHOT] - 2021-10-08
+ 
+### Changed
+ - TestUtilMessageService now everywhere replaced with UtilMessageService
+
 ## [0.1.0-SNAPSHOT] - 2021-09-16
  
 ### Changed

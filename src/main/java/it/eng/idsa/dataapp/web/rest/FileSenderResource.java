@@ -32,12 +32,11 @@ import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ResponseMessage;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.service.RecreateFileService;
-import it.eng.idsa.dataapp.service.impl.MultiPartMessageServiceImpl;
+import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.UtilMessageService;
 import it.eng.idsa.streamer.WebSocketClientManager;
-import it.eng.idsa.streamer.util.MultiPartMessageServiceUtil;
 import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 /**
@@ -50,14 +49,14 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 public class FileSenderResource {
 	private static final Logger logger = LoggerFactory.getLogger(FileSenderResource.class);
 
-	MultiPartMessageServiceImpl multiPartMessageService;
+	MessageUtil messageUtil;
 	
 	RecreateFileService recreateFileService;
 	
-	public FileSenderResource(MultiPartMessageServiceImpl multiPartMessageService,
+	public FileSenderResource(MessageUtil messageUtil,
 			RecreateFileService recreateFileService) {
 		super();
-		this.multiPartMessageService = multiPartMessageService;
+		this.messageUtil = messageUtil;
 		this.recreateFileService = recreateFileService;
 	}
 
@@ -80,7 +79,7 @@ public class FileSenderResource {
 		MultipartMessage multipartMessage = new MultipartMessage(
 				new HashMap<>(), 
 				new HashMap<>(),
-				multiPartMessageService.getMessage(responseMessage),
+				MultipartMessageProcessor.parseMultipartMessage(responseMessage).getHeaderContent(),
 				new HashMap<>(), 
 				payload, 
 				new HashMap<>(),
@@ -135,7 +134,7 @@ public class FileSenderResource {
 		FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
 		String responseMessage = WebSocketClientManager.getMessageWebSocketSender()
 				.sendMultipartMessageWebSocketOverHttps(requestMessage, payload, forwardToInternal);
-
+		
 		String fileNameSaved = saveFileToDisk(responseMessage, artifactRequestMessage);
 
 		String payloadResponse = null;
@@ -145,7 +144,7 @@ public class FileSenderResource {
 		MultipartMessage multipartMessage = new MultipartMessage(
 				new HashMap<>(), 
 				new HashMap<>(),
-				multiPartMessageService.getMessage(responseMessage),
+				MultipartMessageProcessor.parseMultipartMessage(responseMessage).getHeaderContent(),
 				new HashMap<>(), 
 				payloadResponse, 
 				new HashMap<>(),
@@ -155,10 +154,12 @@ public class FileSenderResource {
 	}
 	
 	private String saveFileToDisk(String responseMessage, String requestMessage) throws IOException {
-		Message requestMsg = multiPartMessageService.getMessage(requestMessage);
-		Message responseMsg = multiPartMessageService.getMessage(responseMessage);
-		logger.info("Response message: {} ", MultipartMessageProcessor.serializeToJsonLD(responseMsg));
-		String payload = MultiPartMessageServiceUtil.getPayload(responseMessage);
+		MultipartMessage request = MultipartMessageProcessor.parseMultipartMessage(requestMessage);
+		MultipartMessage response = MultipartMessageProcessor.parseMultipartMessage(responseMessage);
+		Message requestMsg = request.getHeaderContent();
+		Message responseMsg = response.getHeaderContent();;
+		logger.info("Response message: {} ", response.getHeaderContentString());
+		String payload = response.getPayloadContent();
 		logger.debug("Response payload: {} ", payload);
 
 		String requestedArtifact = null;
@@ -175,11 +176,12 @@ public class FileSenderResource {
 	}
 	
 	private String saveFileToDisk(String responseMessage, Message requestMessage) throws IOException {
-		Message responseMsg = multiPartMessageService.getMessage(responseMessage);
+		MultipartMessage response = MultipartMessageProcessor.parseMultipartMessage(responseMessage);
+		Message responseMsg = response.getHeaderContent();
 
 		String requestedArtifact = null;
 		if (requestMessage instanceof ArtifactRequestMessage && responseMsg instanceof ArtifactResponseMessage) {
-			String payload = MultiPartMessageServiceUtil.getPayload(responseMessage);
+			String payload = response.getPayloadContent();
 			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
 			// get resource from URI http://w3id.org/engrd/connector/artifact/ + requestedArtifact
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);

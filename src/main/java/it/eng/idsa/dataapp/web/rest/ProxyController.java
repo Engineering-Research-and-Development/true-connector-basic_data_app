@@ -1,5 +1,6 @@
 package it.eng.idsa.dataapp.web.rest;
 
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ public class ProxyController {
 	private static final Logger logger = LoggerFactory.getLogger(ProxyController.class);
 
 	private ProxyService proxyService;
-
+	
 	public ProxyController(ProxyService proxyService) {
 		this.proxyService = proxyService;
 	}
@@ -45,6 +46,12 @@ public class ProxyController {
 		logger.debug("Parsed proxy request: " + proxyRequest);
 		if(StringUtils.isEmpty(proxyRequest.getMultipart())) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Multipart field not found in request, mandatory for the flow");
+		}
+		
+		if(StringUtils.isBlank(proxyRequest.getMessageType())) {
+			logger.error("Missing messageType part in the request");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message type part in body is mandatory for " 
+					+ proxyRequest.getMultipart() + " flow");
 		}
 		
 		switch (proxyRequest.getMultipart()) {
