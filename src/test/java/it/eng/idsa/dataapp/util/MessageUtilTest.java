@@ -11,11 +11,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,9 +20,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.ContractAgreement;
@@ -35,7 +27,6 @@ import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionMessage;
-import de.fraunhofer.iais.eis.Resource;
 import de.fraunhofer.iais.eis.ResultMessage;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
@@ -58,6 +49,7 @@ public class MessageUtilTest {
 	private HttpHeaders headers;
 	
 	private Serializer serializer = new Serializer();
+	private Connector baseConnector;
 	
 	private static final String IDS_MESSAGE_TYPE = "IDS-MessageType";
 	private static final String IDS_REQUESTED_ELEMENT = "IDS-RequestedElement";
@@ -68,7 +60,9 @@ public class MessageUtilTest {
 	public void init() throws RestClientException, IOException {
 		MockitoAnnotations.initMocks(this);
 		when(eccProperties.getHost()).thenReturn("localhost");
-		when(restTemplate.getForObject(any(), any())).thenReturn(serializer.serialize(SelfDescriptionUtil.getBaseConnector()));
+		baseConnector = SelfDescriptionUtil.getBaseConnector();
+		String selfDescriptionAsString = serializer.serialize(baseConnector);
+		when(restTemplate.getForObject(any(), any())).thenReturn(selfDescriptionAsString);
 		dataLakeDirectory = Path.of("src", "test", "resources");
 		messageUtil = new MessageUtil(dataLakeDirectory, restTemplate, eccProperties);
 		headers = new HttpHeaders();
@@ -80,7 +74,7 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderMessageSuccessfull() throws IOException {
  		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null));
-		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
+ 		assertTrue(payload.contains(baseConnector.getId().toString()));
 	}
 	
 	@Test
@@ -94,7 +88,7 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringSuccessfull() throws IOException {
  		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null));
-		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
+ 		assertTrue(payload.contains(baseConnector.getId().toString()));
 	}
 	
 	@Test
@@ -109,7 +103,7 @@ public class MessageUtilTest {
 	public void testResponsePayloadWithoutRequestedElementInHttpHeadersSuccessfull() throws IOException {
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
  		String payload = messageUtil.createResponsePayload(headers);
-		assertEquals(SelfDescriptionUtil.getBaseConnector().getId(), serializer.deserialize(payload, Connector.class).getId());
+ 		assertTrue(payload.contains(baseConnector.getId().toString()));
 	}
 	
 	@Test
@@ -123,15 +117,9 @@ public class MessageUtilTest {
 	//Description request message as Java Object
 	
 	@Test
-	public void testResponsePayloadWithRequestedElementInHeaderMessageSuccessfull() throws IOException {
- 		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID));
-		assertEquals(EXISTING_REQUESTED_ELEMENT_ID, serializer.deserialize(payload, Resource.class).getId());
-	}
-	
-	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderMessageFailed() throws IOException {
  		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID));
-		assertTrue(serializer.deserialize(payload, RejectionMessage.class) instanceof RejectionMessage);
+		assertTrue(payload.contains(RejectionMessage.class.getSimpleName()));
 	}
 	
 	//Description request message as String
@@ -140,14 +128,14 @@ public class MessageUtilTest {
 	public void testResponsePayloadWithRequestedElementInHeaderStringSuccessfull() throws IOException {
 		DescriptionRequestMessage drm = UtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID);
  		String payload = messageUtil.createResponsePayload(drm);
-		assertEquals(EXISTING_REQUESTED_ELEMENT_ID, serializer.deserialize(payload, Resource.class).getId());
+ 		assertTrue(payload.contains(EXISTING_REQUESTED_ELEMENT_ID.toString()));
 	}
 	
 	@Test
 	public void testResponsePayloadWithRequestedElementInHeaderStringFailed() throws IOException {
 		DescriptionRequestMessage drm = UtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID);
  		String payload = messageUtil.createResponsePayload(drm);
- 		assertTrue(serializer.deserialize(payload, RejectionMessage.class) instanceof RejectionMessage);
+ 		assertTrue(payload.contains(RejectionMessage.class.getSimpleName()));
 	}
 	
 	//Description request message in Http Headers
@@ -157,7 +145,7 @@ public class MessageUtilTest {
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
 		headers.add(IDS_REQUESTED_ELEMENT, EXISTING_REQUESTED_ELEMENT_ID.toString());
  		String payload = messageUtil.createResponsePayload(headers);
-		assertEquals(EXISTING_REQUESTED_ELEMENT_ID, serializer.deserialize(payload, Resource.class).getId());
+ 		assertTrue(payload.contains(EXISTING_REQUESTED_ELEMENT_ID.toString()));
 	}
 	
 	@Test
@@ -173,13 +161,13 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayload_IDSContractRequestMessage() throws IOException {
 		String payload = messageUtil.createResponsePayload(UtilMessageService.getContractRequestMessage());
-		assertTrue(serializer.deserialize(payload, ContractAgreement.class) instanceof ContractAgreement);
+		assertTrue(payload.contains(ContractAgreement.class.getSimpleName()));
 	}
 	
 	@Test
 	public void testResponsePayload_StringContractRequestMessage() throws IOException {
 		String payload = messageUtil.createResponsePayload(UtilMessageService.getContractRequestMessage());
-		assertTrue(serializer.deserialize(payload, ContractAgreement.class) instanceof ContractAgreement);
+		assertTrue(payload.contains(ContractAgreement.class.getSimpleName()));
 	}
 	
 	//Response for ContractAgreementMessage
@@ -201,16 +189,11 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayload_IDSArtifactRequestMessage(){
 		String payload = messageUtil.createResponsePayload(UtilMessageService.getArtifactRequestMessage());
-		assertEquals(johnDoePayload(), payload);
+		assertTrue(payload.contains("John"));
+		assertTrue(payload.contains("Doe"));
+		assertTrue(payload.contains("591  Franklin Street, Pennsylvania"));
 	}
 
-	@Test
-	public void testResponsePayload_StringArtifactRequestMessage(){
-		String payload = messageUtil.createResponsePayload(UtilMessageService.getArtifactRequestMessage());
-		assertEquals(johnDoePayload(), payload);
-	}
-	
-		
 	@Test
 	public void createArtifactResponseMessage() throws IOException {
 		// provide default ArtifactRequestMessage so it does not fail on check for
@@ -235,20 +218,5 @@ public class MessageUtilTest {
 		assertNotNull(message);
 		assertTrue(message instanceof ResultMessage);
 		serializer.serialize(message);
-	}
-	
-	private String johnDoePayload() {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		String formattedDate = dateFormat.format(date);
-
-		Map<String, String> jsonObject = new HashMap<>();
-		jsonObject.put("firstName", "John");
-		jsonObject.put("lastName", "Doe");
-		jsonObject.put("dateOfBirth", formattedDate);
-		jsonObject.put("address", "591  Franklin Street, Pennsylvania");
-		jsonObject.put("checksum", "ABC123 " + formattedDate);
-		Gson gson = new GsonBuilder().create();
-		return gson.toJson(jsonObject);
 	}
 }
