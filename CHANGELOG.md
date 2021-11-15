@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.4-SNAPSHOT] - 2021-11-05
+ 
+### Changed
+ - improved docker creation
+ 
 ## [0.1.3-SNAPSHOT] - 2021-11-02
  
 ### Changed

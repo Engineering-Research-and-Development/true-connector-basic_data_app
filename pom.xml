@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>it.eng.idsa</groupId>
 	<artifactId>market4.0-data-app</artifactId>
-	<version>0.1.3-SNAPSHOT</version>
+	<version>0.1.5-SNAPSHOT</version>
 	<name>market4.0-data-app</name>
 	<description>The project for market4.0-data-app</description>
 
@@ -20,36 +20,35 @@
 		<tomcat.version>9.0.27</tomcat.version>
 		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
 		<information.model.version>4.1.1</information.model.version>
-      	<multipart.message.processor.version>1.0.12-SNAPSHOT</multipart.message.processor.version>
+		<multipart.message.processor.version>1.0.12-SNAPSHOT</multipart.message.processor.version>
 		<websocket.message.streamer.version>1.0.14-SNAPSHOT</websocket.message.streamer.version>
 	</properties>
-	
- 	<repositories> 
-		<repository> 
-			<id>snapshots</id> 
-			<name>maven-snapshots</name> 
-			<url>https://maven.iais.fraunhofer.de/artifactory/eis-ids-public</url> 
-		</repository> 
+
+	<repositories>
 		<repository>
-	        <id>github</id>
+			<id>snapshots</id>
+			<name>maven-snapshots</name>
+			<url>https://maven.iais.fraunhofer.de/artifactory/eis-ids-public</url>
+		</repository>
+		<repository>
+			<id>github</id>
 			<url>https://${GH_PACKAGE_REPO_PASSWORD}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/*</url>
-	        <releases>
-	        	<enabled>true</enabled>
-	        </releases>
-	        <snapshots>
-	        	<enabled>true</enabled>
-	        </snapshots>
-	    </repository>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
 	</repositories>
-	
 	<distributionManagement>
-	    <repository>
-	      <id>github</id>
-	      <name>GitHub Packages</name>
-	      <url>https://maven.pkg.github.com/Engineering-Research-and-Development/market4.0-data_app_test_BE</url>
-	    </repository>
-  	</distributionManagement>
-	
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/Engineering-Research-and-Development/market4.0-data_app_test_BE</url>
+		</repository>
+	</distributionManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -62,10 +61,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.springframework.boot</groupId> -->
-<!-- 			<artifactId>spring-boot-starter-data-jpa</artifactId> -->
-<!-- 		</dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>org.springframework.boot</groupId> -->
+		<!-- <artifactId>spring-boot-starter-data-jpa</artifactId> -->
+		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -93,7 +92,7 @@
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>2.9.2</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
@@ -105,10 +104,10 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-            <artifactId>logback-classic</artifactId>
-            <groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<groupId>ch.qos.logback</groupId>
 		</dependency>
-		
+
 		<!-- H2 database -->
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -116,17 +115,17 @@
 		</dependency>
 
 		<!-- Fraunhofer -->
-		 <dependency>
-            <groupId>de.fraunhofer.iais.eis.ids.infomodel</groupId>
-            <artifactId>java</artifactId>
-            <version>${information.model.version}</version>
-        </dependency>
 		<dependency>
-		    <groupId>de.fraunhofer.iais.eis.ids.infomodel</groupId>
-		    <artifactId>validation-serialization-provider</artifactId>
-		    <version>${information.model.version}</version>
+			<groupId>de.fraunhofer.iais.eis.ids.infomodel</groupId>
+			<artifactId>java</artifactId>
+			<version>${information.model.version}</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>de.fraunhofer.iais.eis.ids.infomodel</groupId>
+			<artifactId>validation-serialization-provider</artifactId>
+			<version>${information.model.version}</version>
+		</dependency>
+
 		<!-- it.eng.idsa -->
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
@@ -138,13 +137,13 @@
 					<artifactId>multipart-message-processor</artifactId>
 				</exclusion>
 				<exclusion>
-		            <artifactId>logback-classic</artifactId>
-		            <groupId>ch.qos.logback</groupId>
-	          	</exclusion>
-	          	<exclusion>
-	                <artifactId>slf4j-simple</artifactId>
-	                <groupId>org.slf4j</groupId>
-              	</exclusion>
+					<artifactId>logback-classic</artifactId>
+					<groupId>ch.qos.logback</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>slf4j-simple</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -153,23 +152,23 @@
 			<version>${multipart.message.processor.version}</version>
 			<exclusions>
 				<exclusion>
-		            <artifactId>logback-classic</artifactId>
-		            <groupId>ch.qos.logback</groupId>
-		          </exclusion>
-		          <exclusion>
-		                <artifactId>slf4j-simple</artifactId>
-		                <groupId>org.slf4j</groupId>
-		            </exclusion>
+					<artifactId>logback-classic</artifactId>
+					<groupId>ch.qos.logback</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>slf4j-simple</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
 			</exclusions>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
 			<artifactId>multipart-message-processor</artifactId>
 			<version>${multipart.message.processor.version}</version>
 			<classifier>tests</classifier>
-		    <type>test-jar</type>
-		    <scope>test</scope>
+			<type>test-jar</type>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -180,12 +179,12 @@
 		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
-			</dependency>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpmime</artifactId>
-			</dependency>
+		</dependency>
 
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
@@ -253,6 +252,41 @@
 						<goals>
 							<goal>build-info</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<finalName>application</finalName>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>it.eng.idsa.dataapp.ApplicationDataApp</mainClass>
+							<classpathPrefix>dependency-jars/</classpathPrefix>
+							<useUniqueVersions>false</useUniqueVersions>
+						</manifest>
+						<manifestEntries>
+							<Class-Path>. /config/ /data/ /cert/</Class-Path>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/dependency-jars/</outputDirectory>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

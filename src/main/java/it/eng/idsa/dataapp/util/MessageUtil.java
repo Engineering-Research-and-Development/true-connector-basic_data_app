@@ -68,6 +68,12 @@ public class MessageUtil {
 	
 	private ECCProperties eccProperties;
 	
+	private static Serializer serializer;
+	
+	static {
+		serializer = new Serializer();
+	}
+	
 	public MessageUtil(@Value("${application.dataLakeDirectory}") Path dataLakeDirectory, RestTemplate restTemplate, ECCProperties eccProperties) {
 		super();
 		this.dataLakeDirectory = dataLakeDirectory;
@@ -162,7 +168,7 @@ public class MessageUtil {
 			String selfDescription = restTemplate.getForObject(eccURI, String.class);
 			logger.info("Deserializing self description.");
 			logger.debug("Self description content: {}{}", System.lineSeparator(), selfDescription);
-			return new Serializer().deserialize(selfDescription, Connector.class);
+			return serializer.deserialize(selfDescription, Connector.class);
 		} catch (URISyntaxException e) {
 			logger.error("Could not create URI for Self Description request.", e);
 			return null;
