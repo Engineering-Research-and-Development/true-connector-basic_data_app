@@ -1,6 +1,8 @@
 package it.eng.idsa.dataapp.web.rest;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionMessage;
@@ -35,7 +38,7 @@ public class DataControllerBodyForm {
 	public ResponseEntity<?> routerForm(@RequestHeader HttpHeaders httpHeaders,
 			@RequestParam(value = "header") String header,
 			@RequestHeader(value = "Response-Type", required = false) String responseType,
-			@RequestParam(value = "payload", required = false) String payload)
+			@RequestParam(value = "payload", required = false) Object payload)
 			throws UnsupportedOperationException, IOException {
 
 		logger.info("Multipart/form request");
@@ -44,10 +47,20 @@ public class DataControllerBodyForm {
 		logger.info("header" + header);
 		logger.info("headers=" + httpHeaders);
 		if (payload != null) {
-			logger.info("payload lenght = " + payload.length());
+			logger.info("payload lenght = " + payload.toString().length());
 		} else {
 			logger.info("Payload is empty");
 		}
+		
+		
+		if (payload instanceof MultipartFile) {
+			MultipartFile file = (MultipartFile) payload;
+			try (FileOutputStream fos = new FileOutputStream(file.getOriginalFilename())) {
+				byte[] decoder = Base64.getDecoder().decode(file.getBytes());
+				fos.write(decoder);
+			}
+		}
+		
 		Message message = MultipartMessageProcessor.getMessage(header);
 
 		Message headerResponse = messageUtil.getResponseHeader(message);
