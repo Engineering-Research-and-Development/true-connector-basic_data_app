@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.5-SNAPSHOT] - 2021-11-16
+ 
+### Added
+ - now supporting file sending over multipart/form
+
 ## [0.1.4-SNAPSHOT] - 2021-11-05
  
 ### Changed
