@@ -34,6 +34,17 @@ public class DataControllerBodyForm {
 		this.messageUtil= messageUtil;
     }
 
+	
+	/**
+	 * 
+	 * @param httpHeaders
+	 * @param header
+	 * @param responseType
+	 * @param payload Could be MultipartFile or plain String
+	 * @return
+	 * @throws UnsupportedOperationException
+	 * @throws IOException
+	 */
 	@PostMapping(value = "/data")
 	public ResponseEntity<?> routerForm(@RequestHeader HttpHeaders httpHeaders,
 			@RequestParam(value = "header") String header,
