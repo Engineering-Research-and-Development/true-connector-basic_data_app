@@ -65,7 +65,7 @@ public class MessageUtil {
 	private Path dataLakeDirectory;
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
-	private boolean encodePayload;
+	private Boolean encodePayload;
 	
 	private static Serializer serializer;
 	static {
@@ -75,7 +75,7 @@ public class MessageUtil {
 	public MessageUtil(@Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
 			RestTemplate restTemplate, 
 			ECCProperties eccProperties,
-			@Value("${application.encodePayload:false}") boolean encodePayload) {
+			@Value("#{new Boolean('${application.isEnabledUsageControl:false}')}") Boolean encodePayload) {
 		super();
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.restTemplate = restTemplate;
