@@ -52,6 +52,8 @@ import it.eng.idsa.streamer.websocket.receiver.server.FileRecreatorBeanExecutor;
 
 @Service
 public class ProxyServiceImpl implements ProxyService {
+	private static final Logger logger = LoggerFactory.getLogger(ProxyService.class);
+
 	private static final String MULTIPART = "multipart";
 	private static final String PAYLOAD = "payload";
 	private static final String REQUESTED_ARTIFACT = "requestedArtifact";
@@ -59,9 +61,6 @@ public class ProxyServiceImpl implements ProxyService {
 	private static final String FORWARD_TO_INTERNAL = "Forward-To-Internal";
 	private static final String MESSAGE_TYPE = "messageType";
 	private static final String REQUESTED_ELEMENT = "requestedElement";
-
-
-	private static final Logger logger = LoggerFactory.getLogger(ProxyService.class);
 
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
@@ -213,23 +212,7 @@ public class ProxyServiceImpl implements ProxyService {
 		logResponse(resp);
 		return resp;
 	}
-
-	private Message createRequestMessage(String messageType, String requestedArtifact, String requestedElement) {
-		if(ArtifactRequestMessage.class.getSimpleName().equals(messageType)) {
-			return UtilMessageService.getArtifactRequestMessage(requestedArtifact != null 
-					? URI.create(requestedArtifact) 
-							: UtilMessageService.REQUESTED_ARTIFACT);
-		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
-			return UtilMessageService.getContractAgreementMessage();
-		} else if(ContractRequestMessage.class.getSimpleName().equals(messageType)) {
-			return UtilMessageService.getContractRequestMessage();
-		} else if(DescriptionRequestMessage.class.getSimpleName().equals(messageType)) {
-			URI reqEl = requestedElement == null ? null : URI.create(requestedElement);
-			return UtilMessageService.getDescriptionRequestMessage(reqEl);
-		} 
-		return null;
-	}
-
+	
 	@Override
 	public ResponseEntity<String> proxyHttpHeader(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
@@ -272,6 +255,22 @@ public class ProxyServiceImpl implements ProxyService {
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
 		logResponse(resp);
 		return resp;
+	}
+
+	private Message createRequestMessage(String messageType, String requestedArtifact, String requestedElement) {
+		if(ArtifactRequestMessage.class.getSimpleName().equals(messageType)) {
+			return UtilMessageService.getArtifactRequestMessage(requestedArtifact != null 
+					? URI.create(requestedArtifact) 
+							: UtilMessageService.REQUESTED_ARTIFACT);
+		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
+			return UtilMessageService.getContractAgreementMessage();
+		} else if(ContractRequestMessage.class.getSimpleName().equals(messageType)) {
+			return UtilMessageService.getContractRequestMessage();
+		} else if(DescriptionRequestMessage.class.getSimpleName().equals(messageType)) {
+			URI reqEl = requestedElement == null ? null : URI.create(requestedElement);
+			return UtilMessageService.getDescriptionRequestMessage(reqEl);
+		} 
+		return null;
 	}
 
 	private HttpHeaders createMessageAsHeader(String messageType, String requestedArtifact, String requestedElement) {

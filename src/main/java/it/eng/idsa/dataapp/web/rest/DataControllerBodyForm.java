@@ -33,7 +33,6 @@ public class DataControllerBodyForm {
 	public DataControllerBodyForm(MessageUtil messageUtil) {
 		this.messageUtil= messageUtil;
     }
-
 	
 	/**
 	 * 
@@ -63,7 +62,6 @@ public class DataControllerBodyForm {
 			logger.info("Payload is empty");
 		}
 		
-		
 		if (payload instanceof MultipartFile) {
 			MultipartFile file = (MultipartFile) payload;
 			try (FileOutputStream fos = new FileOutputStream(file.getOriginalFilename())) {
@@ -91,7 +89,7 @@ public class DataControllerBodyForm {
 				responsePayload,
 				null,
 				ContentType.APPLICATION_JSON);
-
+		
 		return ResponseEntity.ok()
 				.header("foo", "bar")
 				.contentType(MediaType.parseMediaType(resultEntity.getContentType().getValue()))

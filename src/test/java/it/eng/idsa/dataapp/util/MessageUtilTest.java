@@ -64,7 +64,7 @@ public class MessageUtilTest {
 		String selfDescriptionAsString = serializer.serialize(baseConnector);
 		when(restTemplate.getForObject(any(), any())).thenReturn(selfDescriptionAsString);
 		dataLakeDirectory = Path.of("src", "test", "resources");
-		messageUtil = new MessageUtil(dataLakeDirectory, restTemplate, eccProperties);
+		messageUtil = new MessageUtil(dataLakeDirectory, restTemplate, eccProperties, false);
 		headers = new HttpHeaders();
 	}
 	

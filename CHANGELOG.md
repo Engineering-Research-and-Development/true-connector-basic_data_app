@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.6-SNAPSHOT] - 2021-12-02
+ 
+### Added
+ - added logic to Base64 encode and decode payload
+ - new MMP library - removed extra line in payload part
+ 
 ## [0.1.5-SNAPSHOT] - 2021-11-16
  
 ### Added

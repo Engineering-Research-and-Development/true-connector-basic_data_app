@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +20,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.FormBodyPart;
 import org.apache.http.entity.mime.FormBodyPartBuilder;
-import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ContentBody;
 import org.apache.http.entity.mime.content.StringBody;
@@ -63,22 +63,24 @@ public class MessageUtil {
 	private static final Logger logger = LoggerFactory.getLogger(MessageUtil.class);
 	
 	private Path dataLakeDirectory;
-	
 	private RestTemplate restTemplate;
-	
 	private ECCProperties eccProperties;
+	private boolean encodePayload;
 	
 	private static Serializer serializer;
-	
 	static {
 		serializer = new Serializer();
 	}
 	
-	public MessageUtil(@Value("${application.dataLakeDirectory}") Path dataLakeDirectory, RestTemplate restTemplate, ECCProperties eccProperties) {
+	public MessageUtil(@Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
+			RestTemplate restTemplate, 
+			ECCProperties eccProperties,
+			@Value("${application.encodePayload:false}") boolean encodePayload) {
 		super();
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.restTemplate = restTemplate;
 		this.eccProperties = eccProperties;
+		this.encodePayload = encodePayload;
 	}
 
 	public String createResponsePayload(Message requestHeader) {
@@ -144,6 +146,10 @@ public class MessageUtil {
 		jsonObject.put("address", "591  Franklin Street, Pennsylvania");
 		jsonObject.put("checksum", "ABC123 " + formattedDate);
 		Gson gson = new GsonBuilder().create();
+		if(encodePayload) {
+			logger.info("Encoding payload");
+			return Base64.getEncoder().encodeToString(gson.toJson(jsonObject).getBytes());
+		}
 		return gson.toJson(jsonObject);
 	}
 	
@@ -382,8 +388,8 @@ public class MessageUtil {
 	}
 	
 	public HttpEntity createMultipartMessageForm(String header, String payload, String frowardTo, ContentType ctPayload) {
-		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
-		multipartEntityBuilder = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
+		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create()
+				.setStrictMode();
 		try {
 			FormBodyPart bodyHeaderPart;
 			ContentBody headerBody = new StringBody(header, ContentType.create("application/ld+json"));
