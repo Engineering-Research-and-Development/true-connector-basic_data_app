@@ -75,7 +75,7 @@ public class MessageUtil {
 	public MessageUtil(@Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
 			RestTemplate restTemplate, 
 			ECCProperties eccProperties,
-			@Value("#{new Boolean('${application.isEnabledUsageControl:false}')}") Boolean encodePayload) {
+			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
 		super();
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.restTemplate = restTemplate;
