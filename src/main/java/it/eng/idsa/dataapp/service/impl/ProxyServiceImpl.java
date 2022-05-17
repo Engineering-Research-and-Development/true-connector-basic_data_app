@@ -61,6 +61,7 @@ public class ProxyServiceImpl implements ProxyService {
 	private static final String FORWARD_TO_INTERNAL = "Forward-To-Internal";
 	private static final String MESSAGE_TYPE = "messageType";
 	private static final String REQUESTED_ELEMENT = "requestedElement";
+	private static final String TRANSFER_CONTRACT = "transferContract";
 
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
@@ -88,6 +89,7 @@ public class ProxyServiceImpl implements ProxyService {
 			String requestedArtifact = (String) jsonObject.get(REQUESTED_ARTIFACT);
 			String messageType = (String) jsonObject.get(MESSAGE_TYPE);
 			String requestedElement = (String) jsonObject.get(REQUESTED_ELEMENT);
+			String transferContract = (String) jsonObject.get(TRANSFER_CONTRACT);
 			
 			String payload = null;
 			if(jsonObject.get(PAYLOAD) instanceof String) {
@@ -97,7 +99,7 @@ public class ProxyServiceImpl implements ProxyService {
 				payload =  partJson != null ? partJson.toJSONString().replace("\\/","/") : null;
 			}
 			
-			return new ProxyRequest(multipart, forwardTo, forwardToInternal, payload, requestedArtifact, messageType, requestedElement);
+			return new ProxyRequest(multipart, forwardTo, forwardToInternal, payload, requestedArtifact, messageType, requestedElement, transferContract);
 		} catch (ParseException e) {
 			logger.error("Error parsing payoad", e);
 		}
@@ -112,7 +114,10 @@ public class ProxyServiceImpl implements ProxyService {
 		String proxyPayload = null;
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
 
-		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement());
+		Message requestMessage = createRequestMessage(proxyRequest);
+		if(logger.isDebugEnabled()) {
+			logger.debug("Created request message {}", UtilMessageService.getMessageAsString(requestMessage));
+		}
 		
 		if(requestMessage != null) {
 			String payload = null;
@@ -165,7 +170,10 @@ public class ProxyServiceImpl implements ProxyService {
 	public ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException {
 		
-		Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement());
+		Message requestMessage = createRequestMessage(proxyRequest);
+		if(logger.isDebugEnabled()) {
+			logger.debug("Created request message {}", UtilMessageService.getMessageAsString(requestMessage));
+		}
 		URI thirdPartyApi = null;
 		HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = null;
 		LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
@@ -221,7 +229,7 @@ public class ProxyServiceImpl implements ProxyService {
 				null, null);
 
 		logger.info("Forwarding header POST request to {}", thirdPartyApi.toString());
-		httpHeaders.addAll(createMessageAsHeader(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement()));
+		httpHeaders.addAll(createMessageAsHeader(proxyRequest));
 		httpHeaders.add(FORWARD_TO, proxyRequest.getForwardTo());
 		
 		String payload = null;
@@ -257,28 +265,50 @@ public class ProxyServiceImpl implements ProxyService {
 		return resp;
 	}
 
-	private Message createRequestMessage(String messageType, String requestedArtifact, String requestedElement) {
+	private Message createRequestMessage(ProxyRequest proxyRequest) {
+		String messageType = proxyRequest.getMessageType();
 		if(ArtifactRequestMessage.class.getSimpleName().equals(messageType)) {
-			return UtilMessageService.getArtifactRequestMessage(requestedArtifact != null 
-					? URI.create(requestedArtifact) 
-							: UtilMessageService.REQUESTED_ARTIFACT);
+			if(StringUtils.isNoneBlank(proxyRequest.getTransferContract())) {
+				logger.info("Creating ArtifactRequest message transfer contract from request");
+				return getArtifactRequestMessageWithTransferContract(proxyRequest.getRequestedArtifact(), 
+						proxyRequest.getTransferContract());
+			} else {
+				logger.info("Creating ArtifactRequest message with default transfer contract");
+				return UtilMessageService.getArtifactRequestMessage(proxyRequest.getRequestedArtifact() != null 
+						? URI.create(proxyRequest.getRequestedArtifact()) 
+								: UtilMessageService.REQUESTED_ARTIFACT);
+			}
+			
 		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
 			return UtilMessageService.getContractAgreementMessage();
 		} else if(ContractRequestMessage.class.getSimpleName().equals(messageType)) {
 			return UtilMessageService.getContractRequestMessage();
 		} else if(DescriptionRequestMessage.class.getSimpleName().equals(messageType)) {
-			URI reqEl = requestedElement == null ? null : URI.create(requestedElement);
+			URI reqEl = proxyRequest.getRequestedElement() == null ? null : URI.create(proxyRequest.getRequestedElement());
 			return UtilMessageService.getDescriptionRequestMessage(reqEl);
 		} 
 		return null;
 	}
+	
+	private Message getArtifactRequestMessageWithTransferContract(String requestedArtifact, String transferContract) {
+		return new ArtifactRequestMessageBuilder()
+				._issued_(UtilMessageService.ISSUED)
+				._transferContract_(URI.create(transferContract))
+				._issuerConnector_(UtilMessageService.ISSUER_CONNECTOR)
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._requestedArtifact_(URI.create(requestedArtifact))
+				._senderAgent_(UtilMessageService.SENDER_AGENT)
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				.build();
+	}
 
-	private HttpHeaders createMessageAsHeader(String messageType, String requestedArtifact, String requestedElement) {
+	private HttpHeaders createMessageAsHeader(ProxyRequest proxyRequest) {
+		String messageType = proxyRequest.getMessageType();
 		HttpHeaders httpHeaders = new HttpHeaders();
 		if(ArtifactRequestMessage.class.getSimpleName().equals(messageType)) {
 			httpHeaders.add("IDS-Messagetype", "ids:" + ArtifactRequestMessage.class.getSimpleName());
 			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + ArtifactRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
-			httpHeaders.add("IDS-RequestedArtifact", requestedArtifact != null ? requestedArtifact : UtilMessageService.REQUESTED_ARTIFACT.toString());
+			httpHeaders.add("IDS-RequestedArtifact", proxyRequest.getRequestedArtifact() != null ? proxyRequest.getRequestedArtifact() : UtilMessageService.REQUESTED_ARTIFACT.toString());
 		} else if(ContractRequestMessage.class.getSimpleName().equals(messageType)) {
 			httpHeaders.add("IDS-Messagetype", "ids:" + ContractRequestMessage.class.getSimpleName());
 			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + ContractRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
@@ -288,11 +318,13 @@ public class ProxyServiceImpl implements ProxyService {
 		} else if(DescriptionRequestMessage.class.getSimpleName().equals(messageType)) {
 			httpHeaders.add("IDS-Messagetype", "ids:" + DescriptionRequestMessage.class.getSimpleName());
 			httpHeaders.add("IDS-Id", "https://w3id.org/idsa/autogen/" + DescriptionRequestMessage.class.getSimpleName() + "/" + UUID.randomUUID());
-			httpHeaders.add("IDS-RequestedElement", requestedElement);
+			httpHeaders.add("IDS-RequestedElement", proxyRequest.getRequestedElement());
 		}
 		
-		httpHeaders.add("IDS-ModelVersion", "4.1.0");
-        httpHeaders.add("IDS-TransferContract", UtilMessageService.TRANSFER_CONTRACT.toString());
+		httpHeaders.add("IDS-ModelVersion", UtilMessageService.MODEL_VERSION);
+		if(StringUtils.isNoneBlank(proxyRequest.getTransferContract())) {
+			httpHeaders.add("IDS-TransferContract", proxyRequest.getTransferContract() != null ? proxyRequest.getTransferContract() : UtilMessageService.TRANSFER_CONTRACT.toString());
+		}
 		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
 		httpHeaders.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector/");
 		httpHeaders.add("IDS-SenderAgent", "http://sender.agent.com/");
@@ -390,7 +422,7 @@ public class ProxyServiceImpl implements ProxyService {
 		FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
 		String responseMessage = null;
 		try {
-			Message requestMessage = createRequestMessage(proxyRequest.getMessageType(), proxyRequest.getRequestedArtifact(), proxyRequest.getRequestedElement());
+			Message requestMessage = createRequestMessage(proxyRequest);
 			responseMessage = WebSocketClientManager.getMessageWebSocketSender()
 					.sendMultipartMessageWebSocketOverHttps(UtilMessageService.getMessageAsString(requestMessage), 
 							proxyRequest.getPayload(), forwardToInternal);

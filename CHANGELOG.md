@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.7-SNAPSHOT] - 2022-05-17
+ 
+### Added
+ - added transfer contract optional field in proxy request; this will be used in contract negotiation sequence
+ 
 ## [0.1.6-SNAPSHOT] - 2021-12-02
  
 ### Added
