@@ -54,7 +54,7 @@ public class DataControllerHttpHeader {
 		String responsePayload = null;
 		
 		if (!("ids:RejectionMessage".equals(responseHeaders.get("IDS-Messagetype").get(0)))) {
-			responsePayload = messageUtil.createResponsePayload(httpHeaders);
+			responsePayload = messageUtil.createResponsePayload(httpHeaders, payload);
 		}
 		
 		if (responsePayload != null && responsePayload.contains("IDS-RejectionReason")) {

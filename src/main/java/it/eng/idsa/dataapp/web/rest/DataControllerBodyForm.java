@@ -75,7 +75,7 @@ public class DataControllerBodyForm {
 		Message headerResponse = messageUtil.getResponseHeader(message);
 		String responsePayload = null;
 		if (!(headerResponse instanceof RejectionMessage)) {
-			responsePayload = messageUtil.createResponsePayload(message);
+			responsePayload = messageUtil.createResponsePayload(message, payload.toString());
 		}
 		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {

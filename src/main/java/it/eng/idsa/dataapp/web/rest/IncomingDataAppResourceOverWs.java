@@ -58,18 +58,18 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 			logger.info("About to get file from " + requestedArtifact);
 			response = readRequestedArtifact(requestMessage, requestedArtifact);
 		} else if (requestMessage instanceof ContractRequestMessage) {
-			response = contractAgreementResponse(requestMessage);
+			response = contractAgreementResponse(requestMessage, receivedMessage.getPayloadContent());
 		} else {
 			response = createDummyResponse(receivedMessage);
 		}
 		WebSocketServerManager.getMessageWebSocketResponse().sendResponse(response);
 	}
 
-	private String contractAgreementResponse(Message requestMessage) {
+	private String contractAgreementResponse(Message requestMessage, String payload) {
 		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
 				.withHeaderContent(messageUtil
 				.createContractAgreementMessage((ContractRequestMessage) requestMessage))
-				.withPayloadContent(messageUtil.createResponsePayload(requestMessage))
+				.withPayloadContent(messageUtil.createResponsePayload(requestMessage, payload))
 				.build();
 		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false, Boolean.TRUE);
 	}

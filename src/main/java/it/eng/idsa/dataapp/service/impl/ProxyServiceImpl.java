@@ -124,12 +124,15 @@ public class ProxyServiceImpl implements ProxyService {
 			if(requestMessage instanceof ContractRequestMessage && proxyRequest.getPayload() == null) {
 				logger.info("Creating ContractRequest for payload using requested artifact");
 				payload = UtilMessageService.getMessageAsString(
-						UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement())));
+						UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement()),
+								URI.create("http://permission.id")));
 			} else {
 				logger.info("Using payload from request");
 				payload = proxyRequest.getPayload();
 			}
-			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Created payload {}", payload);
+			}
 			MultipartMessage mm = new MultipartMessageBuilder()
 					.withHeaderContent(requestMessage)
 					.withPayloadContent(payload)
@@ -186,13 +189,16 @@ public class ProxyServiceImpl implements ProxyService {
 			if(requestMessage instanceof ContractRequestMessage && proxyRequest.getPayload() == null) {
 				logger.info("Creating ContractRequest for payload using requested artifact");
 				payload = UtilMessageService.getMessageAsString(
-						UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement())));
+						UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement()),
+								URI.create("http://permission.id")));
 			} else {
 				logger.info("Using payload from request");
 				payload = proxyRequest.getPayload();
 			}
 			map.add("payload", payload);
-			
+			if(logger.isDebugEnabled()) {
+				logger.debug("Created payload {}", payload);
+			}
 			thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), 
 					eccProperties.getPort(), eccProperties.getFormContext(),
 					null, null);
@@ -236,7 +242,8 @@ public class ProxyServiceImpl implements ProxyService {
 		if(proxyRequest.getMessageType().contains("ContractRequestMessage") && proxyRequest.getPayload() == null) {
 			logger.info("Creating ContractRequest for payload using requested artifact");
 			payload = UtilMessageService.getMessageAsString(
-					UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement())));
+					UtilMessageService.getContractRequest(URI.create(proxyRequest.getRequestedElement()),
+							URI.create("http://permission.id")));
 		} else {
 			logger.info("Using payload from request");
 			payload = proxyRequest.getPayload();
