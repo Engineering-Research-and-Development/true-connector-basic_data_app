@@ -164,7 +164,10 @@ public class MessageUtil {
 					contractRequest.getPermission().get(0).getId(), 
 					contractRequest.getPermission().get(0).getTarget());
 			List<Permission> permissions = new ArrayList<>();
-			
+			if(co == null) {
+				logger.info("Could not find contract offer that match with request - permissionId and target");
+				return null;
+			}
 			for(Permission p: co.getPermission()) {
 				if(p.getId().equals(contractRequest.getPermission().get(0).getId()) 
 						&& p.getTarget().equals(contractRequest.getPermission().get(0).getTarget())) {
