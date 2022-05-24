@@ -157,6 +157,16 @@ application.ecc.RESTprotocol=
 application.ecc.RESTport=
 ```
 
+For demo purposes, following property
+
+```
+application.contract.negotiation.demo=true
+
+```
+
+Can be left as is, but in production case, it should be set to false (which will send ProcessNotificationMessage upon receiving ContractRequestMessage, which will disable automatic acceptance of contract agreement.
+User can also modify code in dataApp, to externalize decision for accepting or declining contract offers.
+
 # Broker interaction
 
 For broker interaction, example requests are listed below:

@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
  
 ### Added
  - added transfer contract optional field in proxy request; this will be used in contract negotiation sequence
+ - Created logic to fetch self description from connector and search contract offer for permission and target and create contract agreement
+ - new property to configure default acceptance for contract offer - application.contract.negotiation.demo
  
 ## [0.1.6-SNAPSHOT] - 2021-12-02
  
