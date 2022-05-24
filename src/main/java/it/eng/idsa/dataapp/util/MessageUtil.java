@@ -69,6 +69,7 @@ public class MessageUtil {
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
 	private Boolean encodePayload;
+	private Boolean contractNegotiationDemo;
 	
 	private static Serializer serializer;
 	static {
@@ -77,7 +78,8 @@ public class MessageUtil {
 	
 	public MessageUtil(RestTemplate restTemplate, 
 			ECCProperties eccProperties,
-			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
+			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
+			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo) {
 		super();
 		this.restTemplate = restTemplate;
 		this.eccProperties = eccProperties;
@@ -261,9 +263,15 @@ public class MessageUtil {
 		if (header instanceof ArtifactRequestMessage) {
 			output = createArtifactResponseMessage((ArtifactRequestMessage) header);
 		} else if (header instanceof ContractRequestMessage) {
-			output = createContractAgreementMessage((ContractRequestMessage) header);
+			if(contractNegotiationDemo) {
+				logger.info("Returning default contract agreement");
+				output = createContractAgreementMessage((ContractRequestMessage) header);
+			} else {
+				logger.info("Creating processed notification, contract agreement needs evaluation");
+				output= createProcessNotificationMessage(null);
+			}
 		} else if (header instanceof ContractAgreementMessage) {
-			output = createProcessNotificationMessage((ContractAgreementMessage) header);
+			output = createProcessNotificationMessage(header);
 		} else if (header instanceof DescriptionRequestMessage) {
 			output = createDescriptionResponseMessage((DescriptionRequestMessage) header);
 		} else {
@@ -362,7 +370,7 @@ public class MessageUtil {
 		return URI.create("https://w3id.org/engrd/connector/provider");
 	}
 	
-	private Message createProcessNotificationMessage(ContractAgreementMessage header) {
+	private Message createProcessNotificationMessage(Message header) {
 		return new MessageProcessedNotificationMessageBuilder()
 				._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
