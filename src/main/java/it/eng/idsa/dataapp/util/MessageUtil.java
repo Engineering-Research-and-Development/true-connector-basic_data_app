@@ -207,7 +207,7 @@ public class MessageUtil {
 				for (ContractOffer co : resource.getContractOffer()) {
 					for (Permission p : co.getPermission()) {
 						if (p.getId().equals(permission) && p.getTarget().equals(target)) {
-							System.out.println("Found permission");
+							logger.info("Found permission");
 							return co;
 						}
 					}
