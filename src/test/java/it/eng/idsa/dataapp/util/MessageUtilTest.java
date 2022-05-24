@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -64,6 +65,8 @@ public class MessageUtilTest {
 		String selfDescriptionAsString = serializer.serialize(baseConnector);
 		when(restTemplate.getForObject(any(), any())).thenReturn(selfDescriptionAsString);
 		messageUtil = new MessageUtil(restTemplate, eccProperties, false, true);
+		//not most elegant way without setting default value
+		ReflectionTestUtils.setField(messageUtil, "contractNegotiationDemo", true);
 		headers = new HttpHeaders();
 	}
 	

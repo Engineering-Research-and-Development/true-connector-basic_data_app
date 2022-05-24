@@ -88,7 +88,18 @@ public class MessageUtil {
 	
 	public String createResponsePayload(Message requestHeader, String payload) {
 		if (requestHeader instanceof ContractRequestMessage) {
-			return createContractAgreement(requestHeader, payload);
+			if (contractNegotiationDemo) {
+				logger.info("Returning default contract agreement");
+				return createContractAgreement(requestHeader, payload);
+			} else {
+				logger.info("Creating processed notification, contract agreement needs evaluation");
+				try {
+					return MultipartMessageProcessor.serializeToJsonLD(createProcessNotificationMessage(requestHeader));
+				} catch (IOException e) {
+					logger.error("Error while creating message", e);
+				}
+				return null;
+			}
 		} else if (requestHeader instanceof ContractAgreementMessage) {
 			return null;
 		} else if (requestHeader instanceof DescriptionRequestMessage) {
