@@ -84,6 +84,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
     "Forward-To": "https://localhost:8887/data",
     "messageType":"ArtifactRequestMessage",
     "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+    "transferContract": "https://w3id.org/idsa/autogen/contract/6a8e32ff-71bc-49e9-80b5-087126c0d7b0",
 	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
     }
@@ -102,6 +103,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
     "Forward-To": "https://localhost:8887/data",
     "messageType":"ArtifactRequestMessage",
     "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+    "transferContract": "https://w3id.org/idsa/autogen/contract/6a8e32ff-71bc-49e9-80b5-087126c0d7b0",
 	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
     }
@@ -120,6 +122,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
     "Forward-To": "https://localhost:8887/data",
     "messageType":"ArtifactRequestMessage",
     "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+    "transferContract": "https://w3id.org/idsa/autogen/contract/6a8e32ff-71bc-49e9-80b5-087126c0d7b0",
 	 "payload" : {
 		"catalog.offers.0.resourceEndpoints.path":"/pet2"
     }
@@ -144,9 +147,25 @@ Following properties are used to construct A-endpoint URL, http or https.
 # Contract Negotiation - simple flow
 
 DataApp will send ContractAgreementMessage once *ids:ContractRequestMessage* message is received as input message.</br>
-Payload for this reponse (ContractAgreement) will be read from file, named contract_agreement.json. This file is located in *dataLakeDirectory*. If
-you wish to send different ContractAgreement, just modify content of this file.
-This way, we are simulating simple contract negotiation sequence.
+Payload for this response (ContractAgreement) will be fetch from Execution Core Container.
+
+Following properties are used to create URL for Self Description request:
+
+```
+application.ecc.host=
+application.ecc.RESTprotocol=
+application.ecc.RESTport=
+```
+
+For demo purposes, following property
+
+```
+application.contract.negotiation.demo=true
+
+```
+
+Can be left as is, but in production case, it should be set to false (which will send ProcessNotificationMessage upon receiving ContractRequestMessage, which will disable automatic acceptance of contract agreement.
+User can also modify code in dataApp, to externalize decision for accepting or declining contract offers.
 
 # Broker interaction
 
@@ -212,6 +231,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
     "Forward-To-Internal": "wss://ecc-consumer:8887",
     "messageType":"QueryMessage",
     "requestedArtifact": "http://w3id.org/engrd/connector/artifact/test1.csv",
+    "transferContract": "https://w3id.org/idsa/autogen/contract/6a8e32ff-71bc-49e9-80b5-087126c0d7b0",
 	"payload" : "SELECT ?connectorUri WHERE \{ ?connectorUri a ids:BaseConnector . \}"
 }'
 ```

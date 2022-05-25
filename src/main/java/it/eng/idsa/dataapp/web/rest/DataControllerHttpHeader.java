@@ -54,8 +54,13 @@ public class DataControllerHttpHeader {
 		String responsePayload = null;
 		
 		if (!("ids:RejectionMessage".equals(responseHeaders.get("IDS-Messagetype").get(0)))) {
-			responsePayload = messageUtil.createResponsePayload(httpHeaders);
+			responsePayload = messageUtil.createResponsePayload(httpHeaders, payload);
 		}
+		if(responsePayload == null && 
+				"ids:ContractRequestMessage".equals(responseHeaders.get("IDS-Messagetype").get(0))) {
+			logger.info("Creating rejection message since contract agreement was not found");
+			responseHeaders = createResponseMessageHeaders(httpHeaders, "NOT-FOUND");
+		}	
 		
 		if (responsePayload != null && responsePayload.contains("IDS-RejectionReason")) {
 			responseHeaders = createResponseMessageHeaders(httpHeaders, responsePayload.substring(responsePayload.indexOf(":")+1));

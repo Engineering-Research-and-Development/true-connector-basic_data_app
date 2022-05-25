@@ -1,0 +1,175 @@
+{
+  "@context" : {
+    "ids" : "https://w3id.org/idsa/core/",
+    "idsc" : "https://w3id.org/idsa/code/"
+  },
+  "@type" : "ids:BaseConnector",
+  "@id" : "https://w3id.org/engrd/connector/",
+  "ids:description" : [ {
+    "@value" : "Sender Connector description",
+    "@type" : "http://www.w3.org/2001/XMLSchema#string"
+  } ],
+  "ids:curator" : {
+    "@id" : "http://sender.curatorURI.com"
+  },
+  "ids:title" : [ {
+    "@value" : "Sender Connector title",
+    "@type" : "http://www.w3.org/2001/XMLSchema#string"
+  } ],
+  "ids:maintainer" : {
+    "@id" : "http://sender.maintainerURI.com"
+  },
+  "ids:resourceCatalog" : [ {
+    "@type" : "ids:ResourceCatalog",
+    "@id" : "https://w3id.org/idsa/autogen/resourceCatalog/cd91b19f-64b7-4927-bc5d-45e0982b9a71",
+    "ids:offeredResource" : [ {
+      "@type" : "ids:TextResource",
+      "@id" : "https://w3id.org/idsa/autogen/textResource/2fe40d0b-6721-4e7e-82b1-4870ecf1407b",
+      "ids:language" : [ {
+        "@id" : "https://w3id.org/idsa/code/EN"
+      }, {
+        "@id" : "https://w3id.org/idsa/code/IT"
+      } ],
+      "ids:version" : "1.0.0",
+      "ids:created" : {
+        "@value" : "2022-05-18T11:03:11.139Z",
+        "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+      },
+      "ids:description" : [ {
+        "@value" : "Default resource description",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:keyword" : [ {
+        "@value" : "Engineering Ingegneria Informatica SpA",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      }, {
+        "@value" : "TRUEConnector",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:contentType" : {
+        "@id" : "https://w3id.org/idsa/code/SCHEMA_DEFINITION"
+      },
+      "ids:theme" : [ ],
+      "ids:title" : [ {
+        "@value" : "Default resource",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:representation" : [ {
+        "@type" : "ids:TextRepresentation",
+        "@id" : "https://w3id.org/idsa/autogen/textRepresentation/16e33c55-597e-4487-af34-8b5729a4fd5f",
+        "ids:instance" : [ {
+          "@type" : "ids:Artifact",
+          "@id" : "http://w3id.org/engrd/connector/artifact/1",
+          "ids:creationDate" : {
+            "@value" : "2022-05-18T11:03:11.041Z",
+            "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+          }
+        } ],
+        "ids:language" : {
+          "@id" : "https://w3id.org/idsa/code/EN"
+        },
+        "ids:created" : {
+          "@value" : "2022-05-18T11:03:11.209Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        }
+      } ],
+      "ids:contractOffer" : [ {
+        "@type" : "ids:ContractOffer",
+        "@id" : "https://w3id.org/idsa/autogen/contractOffer/2a6904bb-ec66-4da4-871d-f76b23a3ebb9",
+        "ids:permission" : [ {
+          "@type" : "ids:Permission",
+          "@id" : "https://w3id.org/idsa/autogen/permission/e57018e7-34de-49fb-8ca9-a0a80abbac37",
+          "ids:target" : {
+            "@id" : "http://w3id.org/engrd/connector/artifact/1"
+          },
+          "ids:description" : [ ],
+          "ids:action" : [ {
+            "@id" : "https://w3id.org/idsa/code/USE"
+          } ],
+          "ids:title" : [ ],
+          "ids:assigner" : [ {
+            "@id" : "https://assigner.com"
+          } ],
+          "ids:assignee" : [ {
+            "@id" : "https://assignee.com"
+          } ],
+          "ids:constraint" : [ {
+            "@type" : "ids:Constraint",
+            "@id" : "https://w3id.org/idsa/autogen/constraint/4580cc53-ab2f-42ba-9313-b581ed4cbc8c",
+            "ids:rightOperand" : {
+              "@value" : "2022-05-11T11:03:11Z",
+              "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+            },
+            "ids:leftOperand" : {
+              "@id" : "https://w3id.org/idsa/code/POLICY_EVALUATION_TIME"
+            },
+            "ids:operator" : {
+              "@id" : "https://w3id.org/idsa/code/AFTER"
+            }
+          }, {
+            "@type" : "ids:Constraint",
+            "@id" : "https://w3id.org/idsa/autogen/constraint/3032d444-835e-46ee-a098-cdf6c910ccaf",
+            "ids:rightOperand" : {
+              "@value" : "2022-06-18T11:03:11Z",
+              "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+            },
+            "ids:leftOperand" : {
+              "@id" : "https://w3id.org/idsa/code/POLICY_EVALUATION_TIME"
+            },
+            "ids:operator" : {
+              "@id" : "https://w3id.org/idsa/code/BEFORE"
+            }
+          } ],
+          "ids:preDuty" : [ ],
+          "ids:postDuty" : [ ]
+        } ],
+        "ids:provider" : {
+          "@id" : "https://provider.com"
+        },
+        "ids:consumer" : {
+          "@id" : "https://consumer.com"
+        },
+        "ids:contractStart" : {
+          "@value" : "2022-05-18T11:03:11.190Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        },
+        "ids:contractDate" : {
+          "@value" : "2022-05-18T11:03:11.192Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        },
+        "ids:prohibition" : [ ],
+        "ids:obligation" : [ ]
+      } ],
+      "ids:modified" : {
+        "@value" : "2022-05-18T11:03:11.139Z",
+        "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+      },
+      "ids:resourcePart" : [ ],
+      "ids:paymentModality" : [ ],
+      "ids:sample" : [ ],
+      "ids:contentPart" : [ ],
+      "ids:spatialCoverage" : [ ],
+      "ids:resourceEndpoint" : [ ],
+      "ids:defaultRepresentation" : [ ],
+      "ids:temporalCoverage" : [ ]
+    } ],
+    "ids:requestedResource" : [ ]
+  } ],
+  "ids:hasAgent" : [ ],
+  "ids:securityProfile" : {
+    "@id" : "https://w3id.org/idsa/code/BASE_SECURITY_PROFILE"
+  },
+  "ids:hasEndpoint" : [ ],
+  "ids:extendedGuarantee" : [ ],
+  "ids:outboundModelVersion" : "4.1.0",
+  "ids:hasDefaultEndpoint" : {
+    "@type" : "ids:ConnectorEndpoint",
+    "@id" : "https://192.168.0.12:8443/",
+    "ids:accessURL" : {
+      "@id" : "https://192.168.0.12:8443/"
+    },
+    "ids:endpointInformation" : [ ],
+    "ids:endpointDocumentation" : [ ]
+  },
+  "ids:inboundModelVersion" : [ "4.1.0" ]
+}

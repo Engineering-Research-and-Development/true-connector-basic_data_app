@@ -5,16 +5,15 @@ import static de.fraunhofer.iais.eis.util.Util.asList;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -38,14 +37,19 @@ import com.google.gson.GsonBuilder;
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
 import de.fraunhofer.iais.eis.Connector;
+import de.fraunhofer.iais.eis.ContractAgreement;
+import de.fraunhofer.iais.eis.ContractAgreementBuilder;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessageBuilder;
+import de.fraunhofer.iais.eis.ContractOffer;
+import de.fraunhofer.iais.eis.ContractRequest;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionResponseMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.MessageProcessedNotificationMessageBuilder;
 import de.fraunhofer.iais.eis.NotificationMessageBuilder;
+import de.fraunhofer.iais.eis.Permission;
 import de.fraunhofer.iais.eis.RejectionMessageBuilder;
 import de.fraunhofer.iais.eis.RejectionReason;
 import de.fraunhofer.iais.eis.Resource;
@@ -62,30 +66,40 @@ import it.eng.idsa.multipart.util.UtilMessageService;
 public class MessageUtil {
 	private static final Logger logger = LoggerFactory.getLogger(MessageUtil.class);
 	
-	private Path dataLakeDirectory;
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
 	private Boolean encodePayload;
+	private Boolean contractNegotiationDemo;
 	
 	private static Serializer serializer;
 	static {
 		serializer = new Serializer();
 	}
 	
-	public MessageUtil(@Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
-			RestTemplate restTemplate, 
+	public MessageUtil(RestTemplate restTemplate, 
 			ECCProperties eccProperties,
-			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
+			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
+			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo) {
 		super();
-		this.dataLakeDirectory = dataLakeDirectory;
 		this.restTemplate = restTemplate;
 		this.eccProperties = eccProperties;
 		this.encodePayload = encodePayload;
 	}
-
-	public String createResponsePayload(Message requestHeader) {
+	
+	public String createResponsePayload(Message requestHeader, String payload) {
 		if (requestHeader instanceof ContractRequestMessage) {
-			return createContractAgreement(dataLakeDirectory);
+			if (contractNegotiationDemo) {
+				logger.info("Returning default contract agreement");
+				return createContractAgreement(requestHeader, payload);
+			} else {
+				logger.info("Creating processed notification, contract agreement needs evaluation");
+				try {
+					return MultipartMessageProcessor.serializeToJsonLD(createProcessNotificationMessage(requestHeader));
+				} catch (IOException e) {
+					logger.error("Error while creating message", e);
+				}
+				return null;
+			}
 		} else if (requestHeader instanceof ContractAgreementMessage) {
 			return null;
 		} else if (requestHeader instanceof DescriptionRequestMessage) {
@@ -110,10 +124,11 @@ public class MessageUtil {
 		}
 	}
 	
-	public String createResponsePayload(HttpHeaders httpHeaders) {
+	public String createResponsePayload(HttpHeaders httpHeaders, String payload) {
 		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
 		if (requestMessageType.contains(ContractRequestMessage.class.getSimpleName())) {
-			return createContractAgreement(dataLakeDirectory);
+			//header message is not used (at the moment) so we can pass null here for first parameter
+			return createContractAgreement(null, payload);
 		} else if (requestMessageType.contains(ContractAgreementMessage.class.getSimpleName())) {
 			return null;
 		} else if (requestMessageType.contains(DescriptionRequestMessage.class.getSimpleName())) {
@@ -153,16 +168,53 @@ public class MessageUtil {
 		return gson.toJson(jsonObject);
 	}
 	
-	private String createContractAgreement(Path dataLakeDirectory) {
-		String contractAgreement = null;
-		byte[] bytes;
+	private String createContractAgreement(Message requestMessage, String payload) {
 		try {
-			bytes = Files.readAllBytes(dataLakeDirectory.resolve("contract_agreement.json"));
-			contractAgreement = IOUtils.toString(bytes, "UTF8");
+			Connector connector = getSelfDescription();
+			ContractRequest contractRequest = serializer.deserialize(payload, ContractRequest.class);
+
+			ContractOffer co = getPermissionAndTarget(connector, 
+					contractRequest.getPermission().get(0).getId(), 
+					contractRequest.getPermission().get(0).getTarget());
+			List<Permission> permissions = new ArrayList<>();
+			if(co == null) {
+				logger.info("Could not find contract offer that match with request - permissionId and target");
+				return null;
+			}
+			for(Permission p: co.getPermission()) {
+				if(p.getId().equals(contractRequest.getPermission().get(0).getId()) 
+						&& p.getTarget().equals(contractRequest.getPermission().get(0).getTarget())) {
+					permissions.add(p);
+				}
+			}
+			ContractAgreement ca = new ContractAgreementBuilder()
+					._permission_(permissions)
+					._contractStart_(co.getContractStart())
+					._consumer_(co.getConsumer())
+					._provider_(co.getProvider())
+					.build();
+		
+			return MultipartMessageProcessor.serializeToJsonLD(ca);
 		} catch (IOException e) {
-			logger.error("Error while reading contract agreement file from dataLakeDirectory {}", e);
+			logger.error("Error while creating contract agreement", e);
 		}
-		return contractAgreement;
+		return null;
+	}
+	
+	private ContractOffer getPermissionAndTarget(Connector connector, URI permission, URI target) {
+		for (ResourceCatalog resourceCatalog : connector.getResourceCatalog()) {
+			for (Resource resource : resourceCatalog.getOfferedResource()) {
+				for (ContractOffer co : resource.getContractOffer()) {
+					for (Permission p : co.getPermission()) {
+						if (p.getId().equals(permission) && p.getTarget().equals(target)) {
+							logger.info("Found permission");
+							return co;
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 	
 	private Connector getSelfDescription() {
@@ -222,9 +274,15 @@ public class MessageUtil {
 		if (header instanceof ArtifactRequestMessage) {
 			output = createArtifactResponseMessage((ArtifactRequestMessage) header);
 		} else if (header instanceof ContractRequestMessage) {
-			output = createContractAgreementMessage((ContractRequestMessage) header);
+			if(contractNegotiationDemo) {
+				logger.info("Returning default contract agreement");
+				output = createContractAgreementMessage((ContractRequestMessage) header);
+			} else {
+				logger.info("Creating processed notification, contract agreement needs evaluation");
+				output= createProcessNotificationMessage(null);
+			}
 		} else if (header instanceof ContractAgreementMessage) {
-			output = createProcessNotificationMessage((ContractAgreementMessage) header);
+			output = createProcessNotificationMessage(header);
 		} else if (header instanceof DescriptionRequestMessage) {
 			output = createDescriptionResponseMessage((DescriptionRequestMessage) header);
 		} else {
@@ -323,7 +381,7 @@ public class MessageUtil {
 		return URI.create("https://w3id.org/engrd/connector/provider");
 	}
 	
-	private Message createProcessNotificationMessage(ContractAgreementMessage header) {
+	private Message createProcessNotificationMessage(Message header) {
 		return new MessageProcessedNotificationMessageBuilder()
 				._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
