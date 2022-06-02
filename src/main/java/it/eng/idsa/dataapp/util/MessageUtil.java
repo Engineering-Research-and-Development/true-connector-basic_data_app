@@ -84,6 +84,7 @@ public class MessageUtil {
 		this.restTemplate = restTemplate;
 		this.eccProperties = eccProperties;
 		this.encodePayload = encodePayload;
+		this.contractNegotiationDemo = contractNegotiationDemo;
 	}
 	
 	public String createResponsePayload(Message requestHeader, String payload) {
