@@ -21,10 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionMessage;
-import de.fraunhofer.iais.eis.RejectionReason;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
-import it.eng.idsa.multipart.util.UtilMessageService;
 
 @RestController
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "form")
@@ -78,11 +76,12 @@ public class DataControllerBodyForm {
 		Message headerResponse = messageUtil.getResponseHeader(message);
 		String responsePayload = null;
 		if (!(headerResponse instanceof RejectionMessage)) {
-			responsePayload = messageUtil.createResponsePayload(message, payload.toString());
+			responsePayload = messageUtil.createResponsePayload(message, payload != null ? payload.toString() : null);
 		}
 		if(responsePayload == null && message instanceof ContractRequestMessage) {
 			logger.info("Creating rejection message since contract agreement was not found");
-			headerResponse = UtilMessageService.getRejectionMessage(RejectionReason.NOT_FOUND);
+//			headerResponse = UtilMessageService.getRejectionMessage(RejectionReason.NOT_FOUND);
+			headerResponse = messageUtil.createRejectionCommunicationLocalIssues(message);
 		}		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
 			headerResponse = MultipartMessageProcessor.getMessage(responsePayload);

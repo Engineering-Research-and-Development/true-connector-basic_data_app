@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.8-SNAPSHOT] - 2022-06-16
+ 
+### Added
+
+ - new property to configure issuer connector, will be used in provider and consumer configuration
+ 
+### Changed
+ - updated logic for setting request and response messages with correct issuerConnector; in request flow - from property file, in response flow - from request message
+
 ## [0.1.7-SNAPSHOT] - 2022-05-17
  
 ### Added

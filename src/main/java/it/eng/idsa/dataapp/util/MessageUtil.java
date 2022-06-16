@@ -70,6 +70,7 @@ public class MessageUtil {
 	private ECCProperties eccProperties;
 	private Boolean encodePayload;
 	private Boolean contractNegotiationDemo;
+	private String issueConnector;
 	
 	private static Serializer serializer;
 	static {
@@ -79,12 +80,14 @@ public class MessageUtil {
 	public MessageUtil(RestTemplate restTemplate, 
 			ECCProperties eccProperties,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
-			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo) {
+			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
+			@Value("${application.ecc.issuer.connector}") String issuerConnector) {
 		super();
 		this.restTemplate = restTemplate;
 		this.eccProperties = eccProperties;
 		this.encodePayload = encodePayload;
 		this.contractNegotiationDemo = contractNegotiationDemo;
+		this.issueConnector = issuerConnector;
 	}
 	
 	public String createResponsePayload(Message requestHeader, String payload) {
@@ -191,8 +194,9 @@ public class MessageUtil {
 			ContractAgreement ca = new ContractAgreementBuilder()
 					._permission_(permissions)
 					._contractStart_(co.getContractStart())
-					._consumer_(co.getConsumer())
-					._provider_(co.getProvider())
+					._contractDate_(co.getContractDate())
+					._consumer_(requestMessage.getIssuerConnector())
+					._provider_(URI.create(issueConnector))
 					.build();
 		
 			return MultipartMessageProcessor.serializeToJsonLD(ca);
@@ -379,7 +383,7 @@ public class MessageUtil {
 	}
 	
 	private URI whoIAmEngRDProvider() {
-		return URI.create("https://w3id.org/engrd/connector/provider");
+		return URI.create(issueConnector);
 	}
 	
 	private Message createProcessNotificationMessage(Message header) {

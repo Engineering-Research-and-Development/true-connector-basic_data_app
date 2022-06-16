@@ -51,13 +51,14 @@ public class ProxyServiceTest {
 	private ProxyRequest proxyRequest;
 	@Mock
 	private ResponseEntity<String> response;
-	private String dataLakeDirectory ;
+	private String dataLakeDirectory;
+	private String issuerConnector = "http://w3id.org/engrd/connector/";
 	
 	@BeforeEach
 	public void init() {
 		MockitoAnnotations.initMocks(this);
 		when(restTemplateBuilder.build()).thenReturn(restTemplate);
-		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, dataLakeDirectory);
+		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, dataLakeDirectory, issuerConnector);
 		messageType = ArtifactRequestMessage.class.getSimpleName();
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");

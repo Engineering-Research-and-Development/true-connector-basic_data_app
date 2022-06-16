@@ -19,11 +19,9 @@ import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import it.eng.idsa.dataapp.util.MessageUtil;
-import de.fraunhofer.iais.eis.RejectionReason;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
-import it.eng.idsa.multipart.util.UtilMessageService;
 
 @Controller
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "mixed")
@@ -65,7 +63,8 @@ public class DataControllerBodyBinary {
 		} 
 		if(responsePayload == null && message instanceof ContractRequestMessage) {
 			logger.info("Creating rejection message since contract agreement was not found");
-			headerResponse = UtilMessageService.getRejectionMessage(RejectionReason.NOT_FOUND);
+			headerResponse = messageUtil.createRejectionCommunicationLocalIssues(message);
+//					.getRejectionMessage(RejectionReason.NOT_FOUND);
 		}	
 		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
