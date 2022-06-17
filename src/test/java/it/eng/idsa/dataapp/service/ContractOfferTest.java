@@ -26,7 +26,7 @@ public class ContractOfferTest {
 
 	public ContractOffer getPermissionAndTarget(Connector connector, URI permission, URI target) {
 		for (ResourceCatalog resourceCatalog : connector.getResourceCatalog()) {
-			for (Resource resource : resourceCatalog.getOfferedResource()) {
+			for (Resource resource : resourceCatalog.getOfferedResourceAsObject()) {
 				for (ContractOffer co : resource.getContractOffer()) {
 					for (Permission p : co.getPermission()) {
 						if (p.getId().equals(permission) && p.getTarget().equals(target)) {

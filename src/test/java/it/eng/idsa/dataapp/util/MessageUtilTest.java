@@ -61,7 +61,7 @@ public class MessageUtilTest {
 		when(eccProperties.getRESTprotocol()).thenReturn("http");
 		when(eccProperties.getRESTport()).thenReturn(1234);
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
-		EXISTING_REQUESTED_ELEMENT_ID = baseConnector.getResourceCatalog().get(0).getOfferedResource().get(0).getId();
+		EXISTING_REQUESTED_ELEMENT_ID = baseConnector.getResourceCatalog().get(0).getOfferedResourceAsObject().get(0).getId();
 		String selfDescriptionAsString = serializer.serialize(baseConnector);
 		when(restTemplate.getForObject(any(), any())).thenReturn(selfDescriptionAsString);
 		messageUtil = new MessageUtil(restTemplate, eccProperties, false, true);
@@ -162,7 +162,7 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayload_IDSContractRequestMessage() throws IOException {
-		URI permissionId = baseConnector.getResourceCatalog().get(0).getOfferedResource().get(0).getContractOffer().get(0).getPermission().get(0).getId();
+		URI permissionId = baseConnector.getResourceCatalog().get(0).getOfferedResourceAsObject().get(0).getContractOffer().get(0).getPermission().get(0).getId();
 		String payload = messageUtil.createResponsePayload(UtilMessageService.getContractRequestMessage(), 
 				UtilMessageService.getMessageAsString(UtilMessageService.getContractRequest(
 						UtilMessageService.REQUESTED_ARTIFACT, permissionId)));
@@ -171,7 +171,7 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayload_StringContractRequestMessage() throws IOException {
-		URI permissionId = baseConnector.getResourceCatalog().get(0).getOfferedResource().get(0).getContractOffer().get(0).getPermission().get(0).getId();
+		URI permissionId = baseConnector.getResourceCatalog().get(0).getOfferedResourceAsObject().get(0).getContractOffer().get(0).getPermission().get(0).getId();
 		String payload = messageUtil.createResponsePayload(UtilMessageService.getContractRequestMessage(),
 				UtilMessageService.getMessageAsString(UtilMessageService.getContractRequest(UtilMessageService.REQUESTED_ARTIFACT, permissionId)));
 		assertTrue(payload.contains(ContractAgreement.class.getSimpleName()));

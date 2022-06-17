@@ -204,7 +204,7 @@ public class MessageUtil {
 	
 	private ContractOffer getPermissionAndTarget(Connector connector, URI permission, URI target) {
 		for (ResourceCatalog resourceCatalog : connector.getResourceCatalog()) {
-			for (Resource resource : resourceCatalog.getOfferedResource()) {
+			for (Resource resource : resourceCatalog.getOfferedResourceAsObject()) {
 				for (ContractOffer co : resource.getContractOffer()) {
 					for (Permission p : co.getPermission()) {
 						if (p.getId().equals(permission) && p.getTarget().equals(target)) {
@@ -251,7 +251,7 @@ public class MessageUtil {
 	
 	private String getRequestedElement(URI requestedElement, Connector connector) {
 		for (ResourceCatalog catalog : connector.getResourceCatalog()) {
-			for (Resource offeredResource : catalog.getOfferedResource()) {
+			for (Resource offeredResource : catalog.getOfferedResourceAsObject()) {
 				if (requestedElement.equals(offeredResource.getId())) {
 					try {
 						return MultipartMessageProcessor.serializeToJsonLD(offeredResource);

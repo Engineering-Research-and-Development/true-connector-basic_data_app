@@ -105,6 +105,16 @@
             },
             "ids:operator" : {
               "@id" : "https://w3id.org/idsa/code/AFTER"
+            },
+            "ids:pipEndpoint": {
+              "@type": "ids:PIP",
+              "@id": "https://w3id.org/idsa/autogen/pIP/04d8762e-e573-4d6a-a7cb-21cbe7336560",
+              "ids:interfaceDescription": {
+                "@id": "https://pip.com/policy_inteface_description"
+              },
+              "ids:endpointURI": {
+                "@id": "https://pip.com/policy_evaluation_time"
+              }
             }
           }, {
             "@type" : "ids:Constraint",
@@ -118,6 +128,16 @@
             },
             "ids:operator" : {
               "@id" : "https://w3id.org/idsa/code/BEFORE"
+            },
+            "ids:pipEndpoint": {
+              "@type": "ids:PIP",
+              "@id": "https://w3id.org/idsa/autogen/pIP/04d8762e-e573-4d6a-a7cb-21cbe7336560",
+              "ids:interfaceDescription": {
+                "@id": "https://pip.com/policy_inteface_description"
+              },
+              "ids:endpointURI": {
+                "@id": "https://pip.com/policy_evaluation_time"
+              }
             }
           } ],
           "ids:preDuty" : [ ],
