@@ -297,7 +297,7 @@ public class ProxyServiceImpl implements ProxyService {
 			return new ContractAgreementMessageBuilder()
 						._modelVersion_(UtilMessageService.MODEL_VERSION)
 //						._transferContract_(URI.create("http://transferedContract"))
-//						._correlationMessage_(URI.create("http://correlationMessage"))
+						._correlationMessage_(URI.create("http://correlationMessage"))
 						._issued_(UtilMessageService.ISSUED)
 						._issuerConnector_(URI.create(issueConnector))
 						._securityToken_(UtilMessageService.getDynamicAttributeToken())

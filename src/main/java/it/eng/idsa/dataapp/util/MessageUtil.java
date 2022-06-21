@@ -309,12 +309,12 @@ public class MessageUtil {
 	}
 
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
-		if (header.getTransferContract() != null 
-				&& !(UtilMessageService.TRANSFER_CONTRACT.equals(header.getTransferContract()) 
-						&& UtilMessageService.REQUESTED_ARTIFACT.equals(header.getRequestedArtifact()))) {
-			logger.info("Creating rejection message since transfer contract or requested artifact are not correct");
-			return createRejectionNotAuthorized(header);
-		}
+//		if (header.getTransferContract() != null 
+//				&& !(UtilMessageService.TRANSFER_CONTRACT.equals(header.getTransferContract()) 
+//						&& UtilMessageService.REQUESTED_ARTIFACT.equals(header.getRequestedArtifact()))) {
+//			logger.info("Creating rejection message since transfer contract or requested artifact are not correct");
+//			return createRejectionNotAuthorized(header);
+//		}
 		return new ArtifactResponseMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
