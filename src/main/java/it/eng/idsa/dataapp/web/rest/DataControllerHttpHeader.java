@@ -137,10 +137,10 @@ public class DataControllerHttpHeader {
 		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"/"+ UUID.randomUUID().toString());
 		headers.add("IDS-SenderAgent", "https://sender.agent.com");
 		
-		headers.add("IDS-SecurityToken-Type", "ids:DynamicAttributeToken");
-		headers.add("IDS-SecurityToken-Id", "https://w3id.org/idsa/autogen/" + UUID.randomUUID());
-		headers.add("IDS-SecurityToken-TokenFormat", TokenFormat.JWT.getId().toString());
-		headers.add("IDS-SecurityToken-TokenValue", UtilMessageService.TOKEN_VALUE);
+		headers.add("IDS-Token-Type", "ids:DynamicAttributeToken");
+		headers.add("IDS-Token-Id", "https://w3id.org/idsa/autogen/" + UUID.randomUUID());
+		headers.add("IDS-Token-TokenFormat", TokenFormat.JWT.getId().toString());
+		headers.add("IDS-Token-TokenValue", UtilMessageService.TOKEN_VALUE);
 		if (StringUtils.isNotEmpty(rejectionReason)) {
 			headers.add("IDS-RejectionReason", rejectionReason);
 		}

@@ -336,10 +336,10 @@ public class ProxyServiceImpl implements ProxyService {
 		httpHeaders.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector/");
 		httpHeaders.add("IDS-SenderAgent", "http://sender.agent.com/");
 		
-		httpHeaders.add("IDS-SecurityToken-Type", "ids:DynamicAttributeToken");
-		httpHeaders.add("IDS-SecurityToken-Id", "https://w3id.org/idsa/autogen/" + UUID.randomUUID());
-		httpHeaders.add("IDS-SecurityToken-TokenFormat", TokenFormat.JWT.getId().toString());
-		httpHeaders.add("IDS-SecurityToken-TokenValue", UtilMessageService.TOKEN_VALUE);
+		httpHeaders.add("IDS-Token-Type", "ids:DynamicAttributeToken");
+		httpHeaders.add("IDS-Token-Id", "https://w3id.org/idsa/autogen/" + UUID.randomUUID());
+		httpHeaders.add("IDS-Token-TokenFormat", TokenFormat.JWT.getId().toString());
+		httpHeaders.add("IDS-Token-TokenValue", UtilMessageService.TOKEN_VALUE);
 		
 		return httpHeaders;
 	}
