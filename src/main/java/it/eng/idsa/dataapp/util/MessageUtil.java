@@ -315,10 +315,12 @@ public class MessageUtil {
 //			logger.info("Creating rejection message since transfer contract or requested artifact are not correct");
 //			return createRejectionNotAuthorized(header);
 //		}
+		// Need to set transferCotract from original message, it will be used in policy enforcement
 		return new ArtifactResponseMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._transferContract_(header.getTransferContract())
 				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())

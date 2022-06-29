@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
+import java.util.Base64;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -72,15 +73,18 @@ public class ProxyServiceImpl implements ProxyService {
 	private RecreateFileService recreateFileService;
 	private String dataLakeDirectory;
 	private String issueConnector;
+	private Boolean encodePayload;
 	
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties, RecreateFileService recreateFileService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory,
-			@Value("${application.ecc.issuer.connector}") String issuerConnector) {
+			@Value("${application.ecc.issuer.connector}") String issuerConnector,
+			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.recreateFileService = recreateFileService;
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.issueConnector = issuerConnector;
+		this.encodePayload = encodePayload;
 	}
 	
 	@Override
@@ -230,7 +234,7 @@ public class ProxyServiceImpl implements ProxyService {
 		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
 		requestEntity = new HttpEntity<>(map, httpHeaders);
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logResponse(resp);
+		logMultipartResponse(resp);
 		return resp;
 	}
 	
@@ -420,7 +424,23 @@ public class ProxyServiceImpl implements ProxyService {
 	private void logResponse(ResponseEntity<String> resp) {
 		logger.info("Response received with status code {}", resp.getStatusCode());
 		logger.info("Response headers\n{}", resp.getHeaders());
-		logger.info("Response body\n{}", resp.getBody());
+		if(encodePayload && resp.getHeaders().get("IDS-Messagetype").get(0).equals("ArtifactResponseMessage")) {
+			logger.info("Response payload decoded \n{}", new String(Base64.getDecoder().decode(resp.getBody())));
+		} else {
+			logger.info("Response payload\n{}", resp.getBody());
+		}
+	}
+	
+	private void logMultipartResponse(ResponseEntity<String> resp) {
+		logger.info("Response received with status code {}", resp.getStatusCode());
+		logger.info("Response headers\n{}", resp.getHeaders());
+		MultipartMessage mm = MultipartMessageProcessor.parseMultipartMessage(resp.getBody());
+		logger.info("Response header part\n{}", mm.getHeaderContentString());
+		if(encodePayload && mm.getHeaderContent() instanceof ArtifactResponseMessage) {
+			logger.info("Response payload decoded \n{}", new String(Base64.getDecoder().decode(mm.getPayloadContent())));
+		} else {
+			logger.info("Response payload\n{}", mm.getPayloadContent());
+		}
 	}
 	
 	

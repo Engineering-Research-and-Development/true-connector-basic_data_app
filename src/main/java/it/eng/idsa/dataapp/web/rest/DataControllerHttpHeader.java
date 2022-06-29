@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.DescriptionResponseMessage;
-import de.fraunhofer.iais.eis.RejectionMessage;
 import de.fraunhofer.iais.eis.TokenFormat;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
@@ -32,10 +32,13 @@ public class DataControllerHttpHeader {
 	private static final Logger logger = LoggerFactory.getLogger(DataControllerHttpHeader.class);
 	
 	private MessageUtil messageUtil;
+	private String issueConnector;
 	
-	public DataControllerHttpHeader(MessageUtil messageUtil) {
+	public DataControllerHttpHeader(MessageUtil messageUtil,
+			@Value("${application.ecc.issuer.connector}") String issuerConnector) {
 		super();
 		this.messageUtil = messageUtil;
+		this.issueConnector = issuerConnector;
 	}
 
 	@PostMapping(value = "/data")
@@ -103,16 +106,17 @@ public class DataControllerHttpHeader {
 			break;
 
 		case "ids:ArtifactRequestMessage":
-			if (httpHeaders.containsKey("IDS-TransferContract")
-					&& !(UtilMessageService.TRANSFER_CONTRACT.toString()
-					.equals(httpHeaders.get("IDS-TransferContract").get(0))
-					&& UtilMessageService.REQUESTED_ARTIFACT.toString()
-					.equals(httpHeaders.get("IDS-RequestedArtifact").get(0)))) {
-				responseMessageType = RejectionMessage.class.getSimpleName();
-				rejectionReason = "https://w3id.org/idsa/code/NOT_AUTHORIZED";
-			} else {
-				responseMessageType = ArtifactResponseMessage.class.getSimpleName();
-			}
+//			if (httpHeaders.containsKey("IDS-TransferContract")
+//					&& !(UtilMessageService.TRANSFER_CONTRACT.toString()
+//					.equals(httpHeaders.get("IDS-TransferContract").get(0))
+//					&& UtilMessageService.REQUESTED_ARTIFACT.toString()
+//					.equals(httpHeaders.get("IDS-RequestedArtifact").get(0)))) {
+//				responseMessageType = RejectionMessage.class.getSimpleName();
+//				rejectionReason = "https://w3id.org/idsa/code/NOT_AUTHORIZED";
+//			} else {
+//			}
+			responseMessageType = ArtifactResponseMessage.class.getSimpleName();
+			headers.add("IDS-TransferContract", httpHeaders.getFirst("IDS-TransferContract"));
 			break;
 			
 		case "ids:DescriptionRequestMessage":
@@ -131,7 +135,7 @@ public class DataControllerHttpHeader {
 			headers.add("IDS-Messagetype", "ids:" + responseMessageType);
 		}
 		headers.add("IDS-Issued", formattedDate);
-		headers.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector");
+		headers.add("IDS-IssuerConnector", issueConnector);
 		headers.add("IDS-CorrelationMessage", httpHeaders.getFirst("IDS-Id"));
 		headers.add("IDS-ModelVersion", UtilMessageService.MODEL_VERSION);
 		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"/"+ UUID.randomUUID().toString());
