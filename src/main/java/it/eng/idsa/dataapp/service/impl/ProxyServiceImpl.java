@@ -176,7 +176,7 @@ public class ProxyServiceImpl implements ProxyService {
 		
 		HttpEntity<String> requestEntity = new HttpEntity<String>(proxyPayload, httpHeaders);
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logResponse(resp);
+		logMultipartResponse(resp);
 		return resp;
 	}
 
@@ -368,6 +368,8 @@ public class ProxyServiceImpl implements ProxyService {
 		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
 		httpHeaders.add("IDS-IssuerConnector", issueConnector);
 		httpHeaders.add("IDS-SenderAgent", issueConnector);
+		httpHeaders.add("IDS-CorrelationMessage", "http://correlationMessage");
+
 		
 		httpHeaders.add("IDS-SecurityToken-Type", "ids:DynamicAttributeToken");
 		httpHeaders.add("IDS-SecurityToken-Id", "https://w3id.org/idsa/autogen/" + UUID.randomUUID());

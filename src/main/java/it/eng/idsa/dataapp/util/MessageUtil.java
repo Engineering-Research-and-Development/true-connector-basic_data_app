@@ -94,7 +94,7 @@ public class MessageUtil {
 		if (requestHeader instanceof ContractRequestMessage) {
 			if (contractNegotiationDemo) {
 				logger.info("Returning default contract agreement");
-				return createContractAgreement(requestHeader, payload);
+				return createContractAgreement(requestHeader.getIssuerConnector(), payload);
 			} else {
 				logger.info("Creating processed notification, contract agreement needs evaluation");
 				try {
@@ -132,7 +132,7 @@ public class MessageUtil {
 		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
 		if (requestMessageType.contains(ContractRequestMessage.class.getSimpleName())) {
 			//header message is not used (at the moment) so we can pass null here for first parameter
-			return createContractAgreement(null, payload);
+			return createContractAgreement(URI.create(httpHeaders.get("IDS-IssuerConnector").get(0)), payload);
 		} else if (requestMessageType.contains(ContractAgreementMessage.class.getSimpleName())) {
 			return null;
 		} else if (requestMessageType.contains(DescriptionRequestMessage.class.getSimpleName())) {
@@ -172,7 +172,7 @@ public class MessageUtil {
 		return gson.toJson(jsonObject);
 	}
 	
-	private String createContractAgreement(Message requestMessage, String payload) {
+	private String createContractAgreement(URI consumerURI, String payload) {
 		try {
 			Connector connector = getSelfDescription();
 			ContractRequest contractRequest = serializer.deserialize(payload, ContractRequest.class);
@@ -195,7 +195,7 @@ public class MessageUtil {
 					._permission_(permissions)
 					._contractStart_(co.getContractStart())
 					._contractDate_(co.getContractDate())
-					._consumer_(requestMessage.getIssuerConnector())
+					._consumer_(consumerURI)
 					._provider_(URI.create(issueConnector))
 					.build();
 		

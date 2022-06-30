@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.DescriptionResponseMessage;
+import de.fraunhofer.iais.eis.MessageProcessedNotificationMessage;
 import de.fraunhofer.iais.eis.TokenFormat;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
@@ -121,6 +122,10 @@ public class DataControllerHttpHeader {
 			
 		case "ids:DescriptionRequestMessage":
 			responseMessageType = DescriptionResponseMessage.class.getSimpleName();
+			break;
+			
+		case "ids:ContractAgreementMessage":
+			responseMessageType = MessageProcessedNotificationMessage.class.getSimpleName();
 			break;
 			
 		case "ids:RejectionMessage":
