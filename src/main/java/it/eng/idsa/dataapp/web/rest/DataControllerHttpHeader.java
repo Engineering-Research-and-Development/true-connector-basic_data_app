@@ -34,12 +34,15 @@ public class DataControllerHttpHeader {
 	
 	private MessageUtil messageUtil;
 	private String issueConnector;
+	private Boolean encodePayload;
 	
 	public DataControllerHttpHeader(MessageUtil messageUtil,
-			@Value("${application.ecc.issuer.connector}") String issuerConnector) {
+			@Value("${application.ecc.issuer.connector}") String issuerConnector,
+			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
 		super();
 		this.messageUtil = messageUtil;
 		this.issueConnector = issuerConnector;
+		this.encodePayload = encodePayload;
 	}
 
 	@PostMapping(value = "/data")
@@ -50,6 +53,7 @@ public class DataControllerHttpHeader {
 		logger.info("headers=" + httpHeaders);
 		if (payload != null) {
 			logger.info("payload lenght = " + payload.length());
+			logger.debug("payload=" + payload);
 		} else {
 			logger.info("Payload is empty");
 		}
@@ -80,7 +84,7 @@ public class DataControllerHttpHeader {
 		if (!("ids:RejectionMessage".equals(responseHeaders.get("IDS-Messagetype").get(0)))) {
 			response = ResponseEntity.ok()
 					.headers(responseHeaders)
-					.contentType(MediaType.APPLICATION_JSON)
+					.contentType(encodePayload == true ? MediaType.TEXT_PLAIN : MediaType.APPLICATION_JSON)
 					.body(responsePayload);
 		}
 		

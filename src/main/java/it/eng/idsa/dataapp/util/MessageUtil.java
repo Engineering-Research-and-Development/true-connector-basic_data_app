@@ -452,7 +452,7 @@ public class MessageUtil {
 				.build();
 	}
 	
-	public HttpEntity createMultipartMessageForm(String header, String payload, String frowardTo, ContentType ctPayload) {
+	public HttpEntity createMultipartMessageForm(String header, String payload) {
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create()
 				.setStrictMode();
 		try {
@@ -464,22 +464,14 @@ public class MessageUtil {
 
 			FormBodyPart bodyPayloadPart = null;
 			if (payload != null) {
-				ContentBody payloadBody = new StringBody(payload, ctPayload);
+				ContentBody payloadBody = new StringBody(payload, encodePayload == true ? ContentType.TEXT_PLAIN : ContentType.APPLICATION_JSON);
 				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
 				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
 				multipartEntityBuilder.addPart(bodyPayloadPart);
 			}
 
-			FormBodyPart headerForwardTo = null;
-			if (frowardTo != null) {
-				ContentBody forwardToBody = new StringBody(frowardTo, ContentType.DEFAULT_TEXT);
-				headerForwardTo = FormBodyPartBuilder.create("forwardTo", forwardToBody).build();
-				headerForwardTo.addField(HTTP.CONTENT_LEN, "" + frowardTo.length());
-				multipartEntityBuilder.addPart(headerForwardTo);
-			}
-
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.error("Error while creating response ", e);
 		}
 		return multipartEntityBuilder.build();
 	}
