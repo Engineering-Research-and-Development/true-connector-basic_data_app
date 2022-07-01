@@ -1,7 +1,8 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import java.util.Optional;
+import java.io.IOException;
 
+import org.apache.http.HttpEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,14 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestPart;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
+import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import it.eng.idsa.dataapp.util.MessageUtil;
-import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
-import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
 @Controller
@@ -39,7 +36,7 @@ public class DataControllerBodyBinary {
 	public ResponseEntity<?> routerBinary(@RequestHeader HttpHeaders httpHeaders,
 			@RequestPart(value = "header") String headerMessage,
 			@RequestHeader(value = "Response-Type", required = false) String responseType,
-			@RequestPart(value = "payload", required = false) String payload) throws JsonProcessingException {
+			@RequestPart(value = "payload", required = false) String payload) throws IOException {
 
 		logger.info("Multipart/mixed request");
 
@@ -71,18 +68,15 @@ public class DataControllerBodyBinary {
 			headerResponse = MultipartMessageProcessor.getMessage(responsePayload);
 			responsePayload = null;
 		}
-		MultipartMessage responseMessage = new MultipartMessageBuilder()
-				.withHeaderContent(headerResponse)
-				.withPayloadContent(responsePayload)
-				.build();
-		String responseMessageString = MultipartMessageProcessor.multipartMessagetoString(responseMessage, false, Boolean.TRUE);
-		
-		Optional<String> boundary = MultipartMessageProcessor.getMessageBoundaryFromMessage(responseMessageString);
-		String contentType = "multipart/mixed; boundary=" + boundary.orElse("---aaa") + ";charset=UTF-8";
 
+		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
+				MultipartMessageProcessor.serializeToJsonLD(headerResponse),
+				responsePayload);
+		String contentType = resultEntity.getContentType().getValue();
+		contentType = contentType.replace("multipart/form-data", "multipart/mixed");
 		return ResponseEntity.ok()
 				.header("foo", "bar")
 				.contentType(MediaType.parseMediaType(contentType))
-				.body(responseMessageString);
+				.body(resultEntity.getContent().readAllBytes());
 	}
 }
