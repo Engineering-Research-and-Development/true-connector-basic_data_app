@@ -5,6 +5,8 @@ import static de.fraunhofer.iais.eis.util.Util.asList;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -71,6 +74,8 @@ public class MessageUtil {
 	private Boolean encodePayload;
 	private Boolean contractNegotiationDemo;
 	private String issueConnector;
+	private String usageControlVersion;
+	private Path dataLakeDirectory;
 	
 	private static Serializer serializer;
 	static {
@@ -81,20 +86,29 @@ public class MessageUtil {
 			ECCProperties eccProperties,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
 			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
-			@Value("${application.ecc.issuer.connector}") String issuerConnector) {
+			@Value("${application.ecc.issuer.connector}") String issuerConnector,
+			@Value("${application.usageControlVersion}") String usageControlVersion,
+			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory) {
 		super();
 		this.restTemplate = restTemplate;
 		this.eccProperties = eccProperties;
 		this.encodePayload = encodePayload;
 		this.contractNegotiationDemo = contractNegotiationDemo;
 		this.issueConnector = issuerConnector;
+		this.usageControlVersion = usageControlVersion;
+		this.dataLakeDirectory = dataLakeDirectory;
 	}
 	
 	public String createResponsePayload(Message requestHeader, String payload) {
 		if (requestHeader instanceof ContractRequestMessage) {
 			if (contractNegotiationDemo) {
 				logger.info("Returning default contract agreement");
-				return createContractAgreement(requestHeader.getIssuerConnector(), payload);
+				if (StringUtils.equals("platoon", usageControlVersion)) {
+					return createContractAgreementPlatoon(requestHeader.getIssuerConnector(), payload);
+				}
+				if (StringUtils.equals("mydata", usageControlVersion)) {
+					return createContractAgreementMyData();
+				}
 			} else {
 				logger.info("Creating processed notification, contract agreement needs evaluation");
 				try {
@@ -123,16 +137,28 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
-		} else {
-			return createResponsePayload();
 		}
+			return createResponsePayload();
 	}
 	
+	private String createContractAgreementMyData() {
+	        String contractAgreement = null;
+	        byte[] bytes;
+	        try {
+	            bytes = Files.readAllBytes(dataLakeDirectory.resolve("contract_agreement.json"));
+	            contractAgreement = IOUtils.toString(bytes, "UTF8");
+	        } catch (IOException e) {
+				logger.error("Error while reading contract agreement file from dataLakeDirectory {}", e);
+			}
+			return contractAgreement;
+	            
+	}
+
 	public String createResponsePayload(HttpHeaders httpHeaders, String payload) {
 		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
 		if (requestMessageType.contains(ContractRequestMessage.class.getSimpleName())) {
 			//header message is not used (at the moment) so we can pass null here for first parameter
-			return createContractAgreement(URI.create(httpHeaders.get("IDS-IssuerConnector").get(0)), payload);
+			return createContractAgreementPlatoon(URI.create(httpHeaders.get("IDS-IssuerConnector").get(0)), payload);
 		} else if (requestMessageType.contains(ContractAgreementMessage.class.getSimpleName())) {
 			return null;
 		} else if (requestMessageType.contains(DescriptionRequestMessage.class.getSimpleName())) {
@@ -172,7 +198,7 @@ public class MessageUtil {
 		return gson.toJson(jsonObject);
 	}
 	
-	private String createContractAgreement(URI consumerURI, String payload) {
+	private String createContractAgreementPlatoon(URI consumerURI, String payload) {
 		try {
 			Connector connector = getSelfDescription();
 			ContractRequest contractRequest = serializer.deserialize(payload, ContractRequest.class);
@@ -309,12 +335,6 @@ public class MessageUtil {
 	}
 
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
-//		if (header.getTransferContract() != null 
-//				&& !(UtilMessageService.TRANSFER_CONTRACT.equals(header.getTransferContract()) 
-//						&& UtilMessageService.REQUESTED_ARTIFACT.equals(header.getRequestedArtifact()))) {
-//			logger.info("Creating rejection message since transfer contract or requested artifact are not correct");
-//			return createRejectionNotAuthorized(header);
-//		}
 		// Need to set transferCotract from original message, it will be used in policy enforcement
 		return new ArtifactResponseMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())

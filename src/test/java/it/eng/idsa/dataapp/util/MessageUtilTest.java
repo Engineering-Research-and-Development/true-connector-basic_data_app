@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ public class MessageUtilTest {
 		EXISTING_REQUESTED_ELEMENT_ID = baseConnector.getResourceCatalog().get(0).getOfferedResource().get(0).getId();
 		String selfDescriptionAsString = serializer.serialize(baseConnector);
 		when(restTemplate.getForObject(any(), any())).thenReturn(selfDescriptionAsString);
-		messageUtil = new MessageUtil(restTemplate, eccProperties, false, true, issuerConnector);
+		messageUtil = new MessageUtil(restTemplate, eccProperties, false, true, issuerConnector, "platoon", Path.of("."));
 		//not most elegant way without setting default value
 		ReflectionTestUtils.setField(messageUtil, "contractNegotiationDemo", true);
 		headers = new HttpHeaders();
