@@ -6,7 +6,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 
  - new property to configure issuer connector, will be used in provider and consumer configuration
+ - new property to configure usage control version - application.usageControlVersion
  - added 2 profile property files, so that dataApp can run in 2 instances, one for Consumer and other for Provider connector
+ - reverted logic that reads policy from filesystem needed for MyData Usage Control
  
 ### Changed
  - updated logic for setting request and response messages with correct issuerConnector; in request flow - from property file, in response flow - from request message
