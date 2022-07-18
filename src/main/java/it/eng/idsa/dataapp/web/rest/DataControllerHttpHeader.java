@@ -111,15 +111,6 @@ public class DataControllerHttpHeader {
 			break;
 
 		case "ids:ArtifactRequestMessage":
-//			if (httpHeaders.containsKey("IDS-TransferContract")
-//					&& !(UtilMessageService.TRANSFER_CONTRACT.toString()
-//					.equals(httpHeaders.get("IDS-TransferContract").get(0))
-//					&& UtilMessageService.REQUESTED_ARTIFACT.toString()
-//					.equals(httpHeaders.get("IDS-RequestedArtifact").get(0)))) {
-//				responseMessageType = RejectionMessage.class.getSimpleName();
-//				rejectionReason = "https://w3id.org/idsa/code/NOT_AUTHORIZED";
-//			} else {
-//			}
 			responseMessageType = ArtifactResponseMessage.class.getSimpleName();
 			headers.add("IDS-TransferContract", httpHeaders.getFirst("IDS-TransferContract"));
 			break;
