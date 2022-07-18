@@ -12,7 +12,7 @@ LABEL maintainer="gabriele.deluca@eng.it"
 # RUN yum install -y whois
 
 # Add a volume pointing to /tmp
-VOLUME /tmp 
+#VOLUME /tmp 
 
 # Make port 8083 available to the world outside this container
 EXPOSE 8083

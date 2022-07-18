@@ -5,6 +5,8 @@ import static de.fraunhofer.iais.eis.util.Util.asList;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -70,6 +73,9 @@ public class MessageUtil {
 	private ECCProperties eccProperties;
 	private Boolean encodePayload;
 	private Boolean contractNegotiationDemo;
+	private String issueConnector;
+	private String usageControlVersion;
+	private Path dataLakeDirectory;
 	
 	private static Serializer serializer;
 	static {
@@ -79,19 +85,30 @@ public class MessageUtil {
 	public MessageUtil(RestTemplate restTemplate, 
 			ECCProperties eccProperties,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
-			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo) {
+			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
+			@Value("${application.ecc.issuer.connector}") String issuerConnector,
+			@Value("${application.usageControlVersion}") String usageControlVersion,
+			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory) {
 		super();
 		this.restTemplate = restTemplate;
 		this.eccProperties = eccProperties;
 		this.encodePayload = encodePayload;
 		this.contractNegotiationDemo = contractNegotiationDemo;
+		this.issueConnector = issuerConnector;
+		this.usageControlVersion = usageControlVersion;
+		this.dataLakeDirectory = dataLakeDirectory;
 	}
 	
 	public String createResponsePayload(Message requestHeader, String payload) {
 		if (requestHeader instanceof ContractRequestMessage) {
 			if (contractNegotiationDemo) {
 				logger.info("Returning default contract agreement");
-				return createContractAgreement(requestHeader, payload);
+				if (StringUtils.equals("platoon", usageControlVersion)) {
+					return createContractAgreementPlatoon(requestHeader.getIssuerConnector(), payload);
+				}
+				if (StringUtils.equals("mydata", usageControlVersion)) {
+					return createContractAgreementMyData();
+				}
 			} else {
 				logger.info("Creating processed notification, contract agreement needs evaluation");
 				try {
@@ -120,16 +137,28 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
-		} else {
-			return createResponsePayload();
 		}
+			return createResponsePayload();
 	}
 	
+	private String createContractAgreementMyData() {
+	        String contractAgreement = null;
+	        byte[] bytes;
+	        try {
+	            bytes = Files.readAllBytes(dataLakeDirectory.resolve("contract_agreement.json"));
+	            contractAgreement = IOUtils.toString(bytes, "UTF8");
+	        } catch (IOException e) {
+				logger.error("Error while reading contract agreement file from dataLakeDirectory {}", e);
+			}
+			return contractAgreement;
+	            
+	}
+
 	public String createResponsePayload(HttpHeaders httpHeaders, String payload) {
 		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
 		if (requestMessageType.contains(ContractRequestMessage.class.getSimpleName())) {
 			//header message is not used (at the moment) so we can pass null here for first parameter
-			return createContractAgreement(null, payload);
+			return createContractAgreementPlatoon(URI.create(httpHeaders.get("IDS-IssuerConnector").get(0)), payload);
 		} else if (requestMessageType.contains(ContractAgreementMessage.class.getSimpleName())) {
 			return null;
 		} else if (requestMessageType.contains(DescriptionRequestMessage.class.getSimpleName())) {
@@ -169,7 +198,7 @@ public class MessageUtil {
 		return gson.toJson(jsonObject);
 	}
 	
-	private String createContractAgreement(Message requestMessage, String payload) {
+	private String createContractAgreementPlatoon(URI consumerURI, String payload) {
 		try {
 			Connector connector = getSelfDescription();
 			ContractRequest contractRequest = serializer.deserialize(payload, ContractRequest.class);
@@ -191,8 +220,9 @@ public class MessageUtil {
 			ContractAgreement ca = new ContractAgreementBuilder()
 					._permission_(permissions)
 					._contractStart_(co.getContractStart())
-					._consumer_(co.getConsumer())
-					._provider_(co.getProvider())
+					._contractDate_(co.getContractDate())
+					._consumer_(consumerURI)
+					._provider_(URI.create(issueConnector))
 					.build();
 		
 			return MultipartMessageProcessor.serializeToJsonLD(ca);
@@ -305,16 +335,12 @@ public class MessageUtil {
 	}
 
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
-		if (header.getTransferContract() != null 
-				&& !(UtilMessageService.TRANSFER_CONTRACT.equals(header.getTransferContract()) 
-						&& UtilMessageService.REQUESTED_ARTIFACT.equals(header.getRequestedArtifact()))) {
-			logger.info("Creating rejection message since transfer contract or requested artifact are not correct");
-			return createRejectionNotAuthorized(header);
-		}
+		// Need to set transferCotract from original message, it will be used in policy enforcement
 		return new ArtifactResponseMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._transferContract_(header.getTransferContract())
 				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
@@ -379,7 +405,7 @@ public class MessageUtil {
 	}
 	
 	private URI whoIAmEngRDProvider() {
-		return URI.create("https://w3id.org/engrd/connector/provider");
+		return URI.create(issueConnector);
 	}
 	
 	private Message createProcessNotificationMessage(Message header) {
@@ -446,7 +472,7 @@ public class MessageUtil {
 				.build();
 	}
 	
-	public HttpEntity createMultipartMessageForm(String header, String payload, String frowardTo, ContentType ctPayload) {
+	public HttpEntity createMultipartMessageForm(String header, String payload) {
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create()
 				.setStrictMode();
 		try {
@@ -458,22 +484,14 @@ public class MessageUtil {
 
 			FormBodyPart bodyPayloadPart = null;
 			if (payload != null) {
-				ContentBody payloadBody = new StringBody(payload, ctPayload);
+				ContentBody payloadBody = new StringBody(payload, encodePayload == true ? ContentType.TEXT_PLAIN : ContentType.APPLICATION_JSON);
 				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
 				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
 				multipartEntityBuilder.addPart(bodyPayloadPart);
 			}
 
-			FormBodyPart headerForwardTo = null;
-			if (frowardTo != null) {
-				ContentBody forwardToBody = new StringBody(frowardTo, ContentType.DEFAULT_TEXT);
-				headerForwardTo = FormBodyPartBuilder.create("forwardTo", forwardToBody).build();
-				headerForwardTo.addField(HTTP.CONTENT_LEN, "" + frowardTo.length());
-				multipartEntityBuilder.addPart(headerForwardTo);
-			}
-
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.error("Error while creating response ", e);
 		}
 		return multipartEntityBuilder.build();
 	}

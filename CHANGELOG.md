@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.8-SNAPSHOT] - 2022-07-18
+ 
+### Added
+
+ - new property to configure issuer connector, will be used in provider and consumer configuration
+ - new property to configure usage control version - application.usageControlVersion
+ - added 2 profile property files, so that dataApp can run in 2 instances, one for Consumer and other for Provider connector
+ - reverted logic that reads policy from filesystem needed for MyData Usage Control
+ 
+### Changed
+ - updated logic for setting request and response messages with correct issuerConnector; in request flow - from property file, in response flow - from request message
+ - changed the way to send back HttpEntity instead String representation of multipart response
+ - when requested connector description, dataApp will fetch connector self description and send it back
+ - in contract negotiation flow, dataApp will fetch connector self description and search it for requested element; also for contract agreement, it will get permission from connector self description document.
+
 ## [0.1.7-SNAPSHOT] - 2022-05-17
  
 ### Added

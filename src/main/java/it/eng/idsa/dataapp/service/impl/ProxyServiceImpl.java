@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
+import java.util.Base64;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -32,12 +33,16 @@ import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.ConnectorUnavailableMessage;
 import de.fraunhofer.iais.eis.ConnectorUpdateMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
+import de.fraunhofer.iais.eis.ContractAgreementMessageBuilder;
 import de.fraunhofer.iais.eis.ContractRequestMessage;
+import de.fraunhofer.iais.eis.ContractRequestMessageBuilder;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
+import de.fraunhofer.iais.eis.DescriptionRequestMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.QueryMessage;
 import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
+import de.fraunhofer.iais.eis.util.Util;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.ProxyService;
@@ -67,13 +72,19 @@ public class ProxyServiceImpl implements ProxyService {
 	private ECCProperties eccProperties;
 	private RecreateFileService recreateFileService;
 	private String dataLakeDirectory;
+	private String issueConnector;
+	private Boolean encodePayload;
 	
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties, RecreateFileService recreateFileService,
-			@Value("${application.dataLakeDirectory}") String dataLakeDirectory) {
+			@Value("${application.dataLakeDirectory}") String dataLakeDirectory,
+			@Value("${application.ecc.issuer.connector}") String issuerConnector,
+			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.recreateFileService = recreateFileService;
 		this.dataLakeDirectory = dataLakeDirectory;
+		this.issueConnector = issuerConnector;
+		this.encodePayload = encodePayload;
 	}
 	
 	@Override
@@ -165,7 +176,7 @@ public class ProxyServiceImpl implements ProxyService {
 		
 		HttpEntity<String> requestEntity = new HttpEntity<String>(proxyPayload, httpHeaders);
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logResponse(resp);
+		logMultipartResponse(resp);
 		return resp;
 	}
 
@@ -223,7 +234,7 @@ public class ProxyServiceImpl implements ProxyService {
 		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
 		requestEntity = new HttpEntity<>(map, httpHeaders);
 		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logResponse(resp);
+		logMultipartResponse(resp);
 		return resp;
 	}
 	
@@ -281,18 +292,40 @@ public class ProxyServiceImpl implements ProxyService {
 						proxyRequest.getTransferContract());
 			} else {
 				logger.info("Creating ArtifactRequest message with default transfer contract");
-				return UtilMessageService.getArtifactRequestMessage(proxyRequest.getRequestedArtifact() != null 
-						? URI.create(proxyRequest.getRequestedArtifact()) 
-								: UtilMessageService.REQUESTED_ARTIFACT);
+				String artifactURI = proxyRequest.getRequestedArtifact() != null 
+						? proxyRequest.getRequestedArtifact() : UtilMessageService.REQUESTED_ARTIFACT.toString();
+				return getArtifactRequestMessageWithTransferContract(artifactURI, UtilMessageService.TRANSFER_CONTRACT.toString());
 			}
 			
 		} else if(ContractAgreementMessage.class.getSimpleName().equals(messageType)) {
-			return UtilMessageService.getContractAgreementMessage();
+			return new ContractAgreementMessageBuilder()
+						._modelVersion_(UtilMessageService.MODEL_VERSION)
+//						._transferContract_(URI.create("http://transferedContract"))
+						._correlationMessage_(URI.create("http://correlationMessage"))
+						._issued_(UtilMessageService.ISSUED)
+						._issuerConnector_(URI.create(issueConnector))
+						._securityToken_(UtilMessageService.getDynamicAttributeToken())
+						._senderAgent_(UtilMessageService.SENDER_AGENT)
+						.build();
 		} else if(ContractRequestMessage.class.getSimpleName().equals(messageType)) {
-			return UtilMessageService.getContractRequestMessage();
+			return new ContractRequestMessageBuilder()
+					._issued_(UtilMessageService.ISSUED)
+					._modelVersion_(UtilMessageService.MODEL_VERSION)
+					._issuerConnector_(URI.create(issueConnector))
+					._recipientConnector_(Util.asList(URI.create(proxyRequest.getForwardTo())))
+					._senderAgent_(UtilMessageService.SENDER_AGENT)
+					._securityToken_(UtilMessageService.getDynamicAttributeToken())
+					.build();
 		} else if(DescriptionRequestMessage.class.getSimpleName().equals(messageType)) {
 			URI reqEl = proxyRequest.getRequestedElement() == null ? null : URI.create(proxyRequest.getRequestedElement());
-			return UtilMessageService.getDescriptionRequestMessage(reqEl);
+			return new DescriptionRequestMessageBuilder()
+					._issued_(UtilMessageService.ISSUED)
+					._issuerConnector_(URI.create(issueConnector))
+					._modelVersion_(UtilMessageService.MODEL_VERSION)
+					._requestedElement_(reqEl)
+					._senderAgent_(UtilMessageService.SENDER_AGENT)
+					._securityToken_(UtilMessageService.getDynamicAttributeToken())
+					.build();
 		} 
 		return null;
 	}
@@ -301,7 +334,7 @@ public class ProxyServiceImpl implements ProxyService {
 		return new ArtifactRequestMessageBuilder()
 				._issued_(UtilMessageService.ISSUED)
 				._transferContract_(URI.create(transferContract))
-				._issuerConnector_(UtilMessageService.ISSUER_CONNECTOR)
+				._issuerConnector_(URI.create(issueConnector))
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._requestedArtifact_(URI.create(requestedArtifact))
 				._senderAgent_(UtilMessageService.SENDER_AGENT)
@@ -333,8 +366,10 @@ public class ProxyServiceImpl implements ProxyService {
 			httpHeaders.add("IDS-TransferContract", proxyRequest.getTransferContract() != null ? proxyRequest.getTransferContract() : UtilMessageService.TRANSFER_CONTRACT.toString());
 		}
 		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
-		httpHeaders.add("IDS-IssuerConnector", "http://w3id.org/engrd/connector/");
-		httpHeaders.add("IDS-SenderAgent", "http://sender.agent.com/");
+		httpHeaders.add("IDS-IssuerConnector", issueConnector);
+		httpHeaders.add("IDS-SenderAgent", issueConnector);
+		httpHeaders.add("IDS-CorrelationMessage", "http://correlationMessage");
+
 		
 		httpHeaders.add("IDS-SecurityToken-Type", "ids:DynamicAttributeToken");
 		httpHeaders.add("IDS-SecurityToken-Id", "https://w3id.org/idsa/autogen/" + UUID.randomUUID());
@@ -361,7 +396,7 @@ public class ProxyServiceImpl implements ProxyService {
 			artifactRequestMessage = new ArtifactRequestMessageBuilder()
 					._issued_(DateUtil.now())
 					._issuerConnector_(URI.create("http://w3id.org/engrd/connector"))
-					._modelVersion_("4.0.6")
+					._modelVersion_(UtilMessageService.MODEL_VERSION)
 					._requestedArtifact_(requestedArtifactURI)
 					._securityToken_(UtilMessageService.getDynamicAttributeToken())
 					._senderAgent_(URI.create("https://sender.agent.com"))
@@ -391,7 +426,23 @@ public class ProxyServiceImpl implements ProxyService {
 	private void logResponse(ResponseEntity<String> resp) {
 		logger.info("Response received with status code {}", resp.getStatusCode());
 		logger.info("Response headers\n{}", resp.getHeaders());
-		logger.info("Response body\n{}", resp.getBody());
+		if(encodePayload && resp.getHeaders().get("IDS-Messagetype").get(0).equals("ArtifactResponseMessage")) {
+			logger.info("Response payload decoded \n{}", new String(Base64.getDecoder().decode(resp.getBody())));
+		} else {
+			logger.info("Response payload\n{}", resp.getBody());
+		}
+	}
+	
+	private void logMultipartResponse(ResponseEntity<String> resp) {
+		logger.info("Response received with status code {}", resp.getStatusCode());
+		logger.info("Response headers\n{}", resp.getHeaders());
+		MultipartMessage mm = MultipartMessageProcessor.parseMultipartMessage(resp.getBody());
+		logger.info("Response header part\n{}", mm.getHeaderContentString());
+		if(encodePayload && mm.getHeaderContent() instanceof ArtifactResponseMessage) {
+			logger.info("Response payload decoded \n{}", new String(Base64.getDecoder().decode(mm.getPayloadContent())));
+		} else {
+			logger.info("Response payload\n{}", mm.getPayloadContent());
+		}
 	}
 	
 	

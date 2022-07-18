@@ -29,6 +29,9 @@ import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
+import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
+import it.eng.idsa.multipart.domain.MultipartMessage;
+import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.UtilMessageService;
 
 public class ProxyServiceTest {
@@ -51,13 +54,14 @@ public class ProxyServiceTest {
 	private ProxyRequest proxyRequest;
 	@Mock
 	private ResponseEntity<String> response;
-	private String dataLakeDirectory ;
+	private String dataLakeDirectory;
+	private String issuerConnector = "http://w3id.org/engrd/connector/";
 	
 	@BeforeEach
 	public void init() {
 		MockitoAnnotations.initMocks(this);
 		when(restTemplateBuilder.build()).thenReturn(restTemplate);
-		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, dataLakeDirectory);
+		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, dataLakeDirectory, issuerConnector, false);
 		messageType = ArtifactRequestMessage.class.getSimpleName();
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");
@@ -74,7 +78,8 @@ public class ProxyServiceTest {
 		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), 
 				ArgumentMatchers.<HttpEntity<String>>any(), eq(String.class)))
 			.thenReturn(response);
-		mockResponse(HttpStatus.OK);
+		String multipartMessageString = createMultipartMessageAsString();
+		mockResponse(HttpStatus.OK, multipartMessageString);
 		
 		service.proxyMultipartMix(proxyRequest, httpHeaders);
 		
@@ -87,17 +92,26 @@ public class ProxyServiceTest {
 
 		when(proxyRequest.getMessageType()).thenReturn(messageType);
 		when(proxyRequest.getPayload()).thenReturn(PAYLOAD);
-		
 		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), 
 				ArgumentMatchers.<HttpEntity<String>>any(), eq(String.class)))
 			.thenReturn(response);
-		mockResponse(HttpStatus.OK);
+		String multipartMessageString = createMultipartMessageAsString();
+		mockResponse(HttpStatus.OK, multipartMessageString);
 		
 		service.proxyMultipartForm(proxyRequest, httpHeaders);
 		
 		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
 	}
 	
+	private String createMultipartMessageAsString() {
+		
+		MultipartMessage mm = new MultipartMessageBuilder()
+				.withHeaderContent(UtilMessageService.getArtifactRequestMessage())
+				.withPayloadContent(PAYLOAD)
+				.build();
+		return MultipartMessageProcessor.multipartMessagetoString(mm);
+	}
+
 	@Test
 	public void proxyMultipartHeader_Success() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_HEADER);
@@ -108,17 +122,17 @@ public class ProxyServiceTest {
 		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), 
 				ArgumentMatchers.<HttpEntity<String>>any(), eq(String.class)))
 			.thenReturn(response);
-		mockResponse(HttpStatus.OK);
+		mockResponse(HttpStatus.OK, PAYLOAD);
 		
 		service.proxyHttpHeader(proxyRequest, httpHeaders);
 		
 		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
 	}
 	
-	private void mockResponse(HttpStatus status) {
+	private void mockResponse(HttpStatus status, String body) {
 		when(response.getStatusCode()).thenReturn(status);
 		when(response.getHeaders()).thenReturn(httpHeaders);
-		when(response.getBody()).thenReturn("Response Body");
+		when(response.getBody()).thenReturn(body);
 	}
 	
 	@Test
