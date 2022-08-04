@@ -230,13 +230,6 @@ public class MessageUtilTest {
 		assertNotNull(message);
 		assertTrue(message instanceof ResultMessage);
 		serializer.serialize(message);
-		
-		String path = "pera\\djoka\\big";
-		String isBig = path.substring(path.lastIndexOf('\\'));
-		if (isBig.equals("\\big")) {
-			System.out.println(true);
-		}
-		
 	}
 	
 	 @Test

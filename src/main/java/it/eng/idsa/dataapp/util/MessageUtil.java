@@ -138,19 +138,11 @@ public class MessageUtil {
 				return getSelfDescriptionAsString();
 			}
 		} else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(requestHeader)) {
-			return createBigResponsePayload();
+			return BigPayload.BIG_PAYLOAD;
 		}
 			return createResponsePayload();
 	}
 	
-	private String createBigResponsePayload() {
-		return "CHAPTER I" + System.lineSeparator()
-	    + "" + System.lineSeparator()
-	    + "\"Well, Prince, so Genoa and Lucca are now just family estates of the" + System.lineSeparator()
-	    + "Buonapartes. But I warn you, if you don't tell me that this means war," + System.lineSeparator()
-	    + "if you still try to defend the infamies and horrors perpetrated by that" + System.lineSeparator();
-	}
-
 	private boolean isBigPayload(Message requestHeader) {
 		String path = ((ArtifactRequestMessage) requestHeader).getRequestedArtifact().getPath();
 		String isBig = path.substring(path.lastIndexOf('/'));
