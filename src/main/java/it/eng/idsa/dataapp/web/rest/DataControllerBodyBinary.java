@@ -1,5 +1,6 @@
 package it.eng.idsa.dataapp.web.rest;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.http.HttpEntity;
@@ -79,9 +80,14 @@ public class DataControllerBodyBinary {
 				payloadContentType);
 		String contentType = resultEntity.getContentType().getValue();
 		contentType = contentType.replace("multipart/form-data", "multipart/mixed");
+		
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        resultEntity.writeTo(outStream);
+        outStream.flush();
+        
 		return ResponseEntity.ok()
 				.header("foo", "bar")
 				.contentType(MediaType.parseMediaType(contentType))
-				.body(resultEntity.getContent().readAllBytes());
+				.body(outStream.toByteArray());
 	}
 }
