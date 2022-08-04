@@ -137,10 +137,29 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
+		} else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(requestHeader)) {
+			return createBigResponsePayload();
 		}
 			return createResponsePayload();
 	}
 	
+	private String createBigResponsePayload() {
+		return "CHAPTER I" + System.lineSeparator()
+	    + "" + System.lineSeparator()
+	    + "\"Well, Prince, so Genoa and Lucca are now just family estates of the" + System.lineSeparator()
+	    + "Buonapartes. But I warn you, if you don't tell me that this means war," + System.lineSeparator()
+	    + "if you still try to defend the infamies and horrors perpetrated by that" + System.lineSeparator();
+	}
+
+	private boolean isBigPayload(Message requestHeader) {
+		String path = ((ArtifactRequestMessage) requestHeader).getRequestedArtifact().getPath();
+		String isBig = path.substring(path.lastIndexOf('/'));
+		if (isBig.equals("/big")) {
+			return true;
+		}
+		return false;
+	}
+
 	private String createContractAgreementMyData() {
 	        String contractAgreement = null;
 	        byte[] bytes;
@@ -401,7 +420,7 @@ public class MessageUtil {
 	}
 
 	private URI whoIAm() {
-		return URI.create("auto-generated");
+		return URI.create("http://auto-generated");
 	}
 	
 	private URI whoIAmEngRDProvider() {

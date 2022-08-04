@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -15,7 +16,6 @@ import java.nio.file.Path;
 
 import org.apache.http.HttpEntity;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -230,16 +230,27 @@ public class MessageUtilTest {
 		assertNotNull(message);
 		assertTrue(message instanceof ResultMessage);
 		serializer.serialize(message);
+		
+		String path = "pera\\djoka\\big";
+		String isBig = path.substring(path.lastIndexOf('\\'));
+		if (isBig.equals("\\big")) {
+			System.out.println(true);
+		}
+		
 	}
 	
-	@Test
-	@Disabled("Until we fix big payload handling")
-	public void bigPayload() throws UnsupportedOperationException, IOException {
-		String header = UtilMessageService.getMessageAsString(UtilMessageService.getArtifactResponseMessage());
+	 @Test
+	    public void bigPayload() throws UnsupportedOperationException, IOException {
+	        String header = UtilMessageService.getMessageAsString(UtilMessageService.getArtifactResponseMessage());
 
-		HttpEntity httpEntity = messageUtil.createMultipartMessageForm(header, BigPayload.BIG_PAYLOAD);
-		assertNotNull(httpEntity);
-		
-		System.out.println(new String(httpEntity.getContent().readAllBytes(), StandardCharsets.UTF_8));
-	}
+	        HttpEntity httpEntity = messageUtil.createMultipartMessageForm(header, BigPayload.BIG_PAYLOAD);
+	        assertNotNull(httpEntity);
+
+	        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+	        httpEntity.writeTo(outStream);
+	        outStream.flush();
+
+	        String bigMultipartResponse = new String(outStream.toByteArray(), StandardCharsets.UTF_8);
+	        assertNotNull(bigMultipartResponse);
+	    }
 }

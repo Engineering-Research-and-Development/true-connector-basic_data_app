@@ -61,7 +61,6 @@ public class DataControllerBodyBinary {
 		if(responsePayload == null && message instanceof ContractRequestMessage) {
 			logger.info("Creating rejection message since contract agreement was not found");
 			headerResponse = messageUtil.createRejectionCommunicationLocalIssues(message);
-//					.getRejectionMessage(RejectionReason.NOT_FOUND);
 		}	
 		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
