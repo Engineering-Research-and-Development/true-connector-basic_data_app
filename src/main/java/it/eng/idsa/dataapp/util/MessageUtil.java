@@ -483,9 +483,17 @@ public class MessageUtil {
 				.build();
 	}
 	
-	public HttpEntity createMultipartMessageForm(String header, String payload) {
+	/**
+	 * 
+	 * @param header
+	 * @param payload
+	 * @param payloadContentType if is null, using default - application/json, otherwise using the one that is passed as in param
+	 * @return
+	 */
+	public HttpEntity createMultipartMessageForm(String header, String payload, ContentType payloadContentType) {
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create()
 				.setStrictMode();
+		ContentType payloadCT = payloadContentType == null ? ContentType.APPLICATION_JSON : payloadContentType;
 		try {
 			FormBodyPart bodyHeaderPart;
 			ContentBody headerBody = new StringBody(header, ContentType.create("application/ld+json"));
@@ -495,7 +503,7 @@ public class MessageUtil {
 
 			FormBodyPart bodyPayloadPart = null;
 			if (payload != null) {
-				ContentBody payloadBody = new StringBody(payload, encodePayload == true ? ContentType.TEXT_PLAIN : ContentType.APPLICATION_JSON);
+				ContentBody payloadBody = new StringBody(payload, encodePayload == true ? ContentType.TEXT_PLAIN : payloadCT);
 				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
 				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
 				multipartEntityBuilder.addPart(bodyPayloadPart);

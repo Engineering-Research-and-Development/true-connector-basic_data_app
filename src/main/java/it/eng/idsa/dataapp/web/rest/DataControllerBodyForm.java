@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Base64;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -87,10 +88,15 @@ public class DataControllerBodyForm {
 			responsePayload = null;
 		}
 
+		ContentType payloadContentType = ContentType.TEXT_PLAIN;
+		if(responsePayload.contains("John")) {
+			payloadContentType = ContentType.APPLICATION_JSON;
+		}
 		// prepare body response - multipart message.
 		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
 				MultipartMessageProcessor.serializeToJsonLD(headerResponse),
-				responsePayload);
+				responsePayload,
+				payloadContentType);
 		
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         resultEntity.writeTo(outStream);

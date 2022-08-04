@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.entity.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -232,18 +233,18 @@ public class MessageUtilTest {
 		serializer.serialize(message);
 	}
 	
-	 @Test
-	    public void bigPayload() throws UnsupportedOperationException, IOException {
-	        String header = UtilMessageService.getMessageAsString(UtilMessageService.getArtifactResponseMessage());
+	@Test
+	public void bigPayload() throws UnsupportedOperationException, IOException {
+		String header = UtilMessageService.getMessageAsString(UtilMessageService.getArtifactResponseMessage());
 
-	        HttpEntity httpEntity = messageUtil.createMultipartMessageForm(header, BigPayload.BIG_PAYLOAD);
-	        assertNotNull(httpEntity);
+		HttpEntity httpEntity = messageUtil.createMultipartMessageForm(header, BigPayload.BIG_PAYLOAD, ContentType.TEXT_PLAIN);
+		assertNotNull(httpEntity);
 
-	        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-	        httpEntity.writeTo(outStream);
-	        outStream.flush();
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		httpEntity.writeTo(outStream);
+		outStream.flush();
 
-	        String bigMultipartResponse = new String(outStream.toByteArray(), StandardCharsets.UTF_8);
-	        assertNotNull(bigMultipartResponse);
-	    }
+		String bigMultipartResponse = new String(outStream.toByteArray(), StandardCharsets.UTF_8);
+		assertNotNull(bigMultipartResponse);
+	}
 }
