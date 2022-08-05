@@ -138,9 +138,9 @@ public class MessageUtil {
 				return getSelfDescriptionAsString();
 			}
 		} else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(((ArtifactRequestMessage) requestHeader).getRequestedArtifact().toString())) {
-			return BigPayload.BIG_PAYLOAD;
+			return encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
 		}
-			return createResponsePayload();
+			return  encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
 	}
 	
 	private boolean isBigPayload(String path) {
@@ -183,9 +183,9 @@ public class MessageUtil {
 				return getSelfDescriptionAsString();
 			}
 		} else if (requestMessageType.contains(ArtifactRequestMessage.class.getSimpleName()) && isBigPayload(httpHeaders.getFirst("IDS-RequestedArtifact"))) {
-			return BigPayload.BIG_PAYLOAD;
+			return encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
 		} else {
-			return createResponsePayload();
+			return  encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
 		}
 	}
 	
@@ -203,11 +203,12 @@ public class MessageUtil {
 		jsonObject.put("address", "591  Franklin Street, Pennsylvania");
 		jsonObject.put("checksum", "ABC123 " + formattedDate);
 		Gson gson = new GsonBuilder().create();
-		if(encodePayload) {
-			logger.info("Encoding payload");
-			return Base64.getEncoder().encodeToString(gson.toJson(jsonObject).getBytes());
-		}
 		return gson.toJson(jsonObject);
+	}
+
+	private String encodePayload(byte[] payload) {
+		logger.info("Encoding payload");
+		return Base64.getEncoder().encodeToString(payload);
 	}
 	
 	private String createContractAgreementPlatoon(URI consumerURI, String payload) {
