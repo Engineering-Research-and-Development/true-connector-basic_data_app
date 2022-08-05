@@ -34,15 +34,11 @@ public class DataControllerHttpHeader {
 	
 	private MessageUtil messageUtil;
 	private String issueConnector;
-	private Boolean encodePayload;
-	
 	public DataControllerHttpHeader(MessageUtil messageUtil,
-			@Value("${application.ecc.issuer.connector}") String issuerConnector,
-			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
+			@Value("${application.ecc.issuer.connector}") String issuerConnector) {
 		super();
 		this.messageUtil = messageUtil;
 		this.issueConnector = issuerConnector;
-		this.encodePayload = encodePayload;
 	}
 
 	@PostMapping(value = "/data")
@@ -80,11 +76,17 @@ public class DataControllerHttpHeader {
 				.headers(responseHeaders)
 				.build();
 		
+		MediaType payloadContentType = MediaType.TEXT_PLAIN;
+		
+		if(responsePayload != null && responsePayload.contains("John")) {
+			payloadContentType = MediaType.APPLICATION_JSON;
+		}
+		
 		// returns John Doe if everything is OK
 		if (!("ids:RejectionMessage".equals(responseHeaders.get("IDS-Messagetype").get(0)))) {
 			response = ResponseEntity.ok()
 					.headers(responseHeaders)
-					.contentType(encodePayload == true ? MediaType.TEXT_PLAIN : MediaType.APPLICATION_JSON)
+					.contentType(payloadContentType)
 					.body(responsePayload);
 		}
 		
