@@ -87,7 +87,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 
 		} catch (Exception e) {
 			logger.error("Error while creating dummy response", e);
-			Message rejectionMessage = messageUtil.createRejectionMessageLocalIssues(receivedMessage.getHeaderContent());
+			Message rejectionMessage = messageUtil.createRejectionMessage(receivedMessage.getHeaderContent());
 			MultipartMessage responseMessageRejection = new MultipartMessageBuilder()
 					.withHeaderContent(rejectionMessage)
 					.withPayloadContent(null)

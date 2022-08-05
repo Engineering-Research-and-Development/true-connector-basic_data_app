@@ -137,10 +137,20 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
+		} else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(((ArtifactRequestMessage) requestHeader).getRequestedArtifact().toString())) {
+			return encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
 		}
-			return createResponsePayload();
+			return  encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
 	}
 	
+	private boolean isBigPayload(String path) {
+		String isBig = path.substring(path.lastIndexOf('/'));
+		if (isBig.equals("/big")) {
+			return true;
+		}
+		return false;
+	}
+
 	private String createContractAgreementMyData() {
 	        String contractAgreement = null;
 	        byte[] bytes;
@@ -172,8 +182,10 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
+		} else if (requestMessageType.contains(ArtifactRequestMessage.class.getSimpleName()) && isBigPayload(httpHeaders.getFirst("IDS-RequestedArtifact"))) {
+			return encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
 		} else {
-			return createResponsePayload();
+			return  encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
 		}
 	}
 	
@@ -191,11 +203,12 @@ public class MessageUtil {
 		jsonObject.put("address", "591  Franklin Street, Pennsylvania");
 		jsonObject.put("checksum", "ABC123 " + formattedDate);
 		Gson gson = new GsonBuilder().create();
-		if(encodePayload) {
-			logger.info("Encoding payload");
-			return Base64.getEncoder().encodeToString(gson.toJson(jsonObject).getBytes());
-		}
 		return gson.toJson(jsonObject);
+	}
+
+	private String encodePayload(byte[] payload) {
+		logger.info("Encoding payload");
+		return Base64.getEncoder().encodeToString(payload);
 	}
 	
 	private String createContractAgreementPlatoon(URI consumerURI, String payload) {
@@ -401,7 +414,7 @@ public class MessageUtil {
 	}
 
 	private URI whoIAm() {
-		return URI.create("auto-generated");
+		return URI.create("http://auto-generated");
 	}
 	
 	private URI whoIAmEngRDProvider() {
@@ -420,32 +433,6 @@ public class MessageUtil {
 				.build();
 	}	
 
-	public Message createRejectionMessageLocalIssues(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
-				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
-				.build();
-	}
-
-	public Message createRejectionTokenLocalIssues(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
-				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
-				.build();
-	}
-
 	public Message createRejectionCommunicationLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())
@@ -459,22 +446,17 @@ public class MessageUtil {
 				.build();
 	}
 	
-	public Message createRejectionNotAuthorized(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
-				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._rejectionReason_(RejectionReason.NOT_AUTHORIZED)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
-				.build();
-	}
-	
-	public HttpEntity createMultipartMessageForm(String header, String payload) {
+	/**
+	 * 
+	 * @param header
+	 * @param payload
+	 * @param payloadContentType if is null, using default - application/json, otherwise using the one that is passed as in param
+	 * @return
+	 */
+	public HttpEntity createMultipartMessageForm(String header, String payload, ContentType payloadContentType) {
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create()
 				.setStrictMode();
+		ContentType payloadCT = payloadContentType == null ? ContentType.APPLICATION_JSON : payloadContentType;
 		try {
 			FormBodyPart bodyHeaderPart;
 			ContentBody headerBody = new StringBody(header, ContentType.create("application/ld+json"));
@@ -484,7 +466,7 @@ public class MessageUtil {
 
 			FormBodyPart bodyPayloadPart = null;
 			if (payload != null) {
-				ContentBody payloadBody = new StringBody(payload, encodePayload == true ? ContentType.TEXT_PLAIN : ContentType.APPLICATION_JSON);
+				ContentBody payloadBody = new StringBody(payload, encodePayload == true ? ContentType.TEXT_PLAIN : payloadCT);
 				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
 				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
 				multipartEntityBuilder.addPart(bodyPayloadPart);

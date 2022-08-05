@@ -3,7 +3,7 @@
 # FROM openjdk:11.0.6-stretch
 # FROM openjdk:12-jdk-alpine
 # FROM openjdk:12-jdk-oraclelinux7
-FROM openjdk:11.0.12-jre
+FROM openjdk:11.0.15-jre
 
 # Add Maintainer Info
 LABEL maintainer="gabriele.deluca@eng.it"

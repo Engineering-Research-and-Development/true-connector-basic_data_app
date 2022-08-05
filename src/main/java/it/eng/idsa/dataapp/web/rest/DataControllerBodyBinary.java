@@ -1,8 +1,10 @@
 package it.eng.idsa.dataapp.web.rest;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -61,7 +63,6 @@ public class DataControllerBodyBinary {
 		if(responsePayload == null && message instanceof ContractRequestMessage) {
 			logger.info("Creating rejection message since contract agreement was not found");
 			headerResponse = messageUtil.createRejectionCommunicationLocalIssues(message);
-//					.getRejectionMessage(RejectionReason.NOT_FOUND);
 		}	
 		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
@@ -69,14 +70,26 @@ public class DataControllerBodyBinary {
 			responsePayload = null;
 		}
 
+		ContentType payloadContentType = ContentType.TEXT_PLAIN;
+		
+		if(responsePayload != null && responsePayload.contains("John")) {
+			payloadContentType = ContentType.APPLICATION_JSON;
+		}
+		
 		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
 				MultipartMessageProcessor.serializeToJsonLD(headerResponse),
-				responsePayload);
+				responsePayload,
+				payloadContentType);
 		String contentType = resultEntity.getContentType().getValue();
 		contentType = contentType.replace("multipart/form-data", "multipart/mixed");
+		
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        resultEntity.writeTo(outStream);
+        outStream.flush();
+        
 		return ResponseEntity.ok()
 				.header("foo", "bar")
 				.contentType(MediaType.parseMediaType(contentType))
-				.body(resultEntity.getContent().readAllBytes());
+				.body(outStream.toByteArray());
 	}
 }
