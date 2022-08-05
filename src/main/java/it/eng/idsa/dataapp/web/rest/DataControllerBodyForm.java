@@ -89,7 +89,8 @@ public class DataControllerBodyForm {
 		}
 
 		ContentType payloadContentType = ContentType.TEXT_PLAIN;
-		if(responsePayload.contains("John")) {
+		
+		if(responsePayload != null && responsePayload.contains("John")) {
 			payloadContentType = ContentType.APPLICATION_JSON;
 		}
 		// prepare body response - multipart message.
@@ -105,6 +106,6 @@ public class DataControllerBodyForm {
 		return ResponseEntity.ok()
 				.header("foo", "bar")
 				.contentType(MediaType.parseMediaType(resultEntity.getContentType().getValue()))
-				.body(outStream.toByteArray());
+				.body(outStream.toString());
 	}
 }

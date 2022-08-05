@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.9-SNAPSHOT] - 2022-08-05
+ 
+### Added
+
+ - new big payload for response available at /big ("requestedArtifact": "http://w3id.org/engrd/connector/artifact/big")
+ 
+### Changed
+
+ - mixed and form responses are now passed through OutputStream to avoid org.apache.http.ContentTooLongException
+
 ## [0.1.8-SNAPSHOT] - 2022-07-18
  
 ### Added

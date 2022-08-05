@@ -137,14 +137,13 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
-		} else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(requestHeader)) {
+		} else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(((ArtifactRequestMessage) requestHeader).getRequestedArtifact().toString())) {
 			return BigPayload.BIG_PAYLOAD;
 		}
 			return createResponsePayload();
 	}
 	
-	private boolean isBigPayload(Message requestHeader) {
-		String path = ((ArtifactRequestMessage) requestHeader).getRequestedArtifact().getPath();
+	private boolean isBigPayload(String path) {
 		String isBig = path.substring(path.lastIndexOf('/'));
 		if (isBig.equals("/big")) {
 			return true;
@@ -183,6 +182,8 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
+		} else if (requestMessageType.contains(ArtifactRequestMessage.class.getSimpleName()) && isBigPayload(httpHeaders.getFirst("IDS-RequestedArtifact"))) {
+			return BigPayload.BIG_PAYLOAD;
 		} else {
 			return createResponsePayload();
 		}
@@ -431,32 +432,6 @@ public class MessageUtil {
 				.build();
 	}	
 
-	public Message createRejectionMessageLocalIssues(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
-				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
-				.build();
-	}
-
-	public Message createRejectionTokenLocalIssues(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
-				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
-				.build();
-	}
-
 	public Message createRejectionCommunicationLocalIssues(Message header) {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())
@@ -465,19 +440,6 @@ public class MessageUtil {
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.NOT_FOUND)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
-				.build();
-	}
-	
-	public Message createRejectionNotAuthorized(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
-				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._rejectionReason_(RejectionReason.NOT_AUTHORIZED)
 				._securityToken_(UtilMessageService.getDynamicAttributeToken())
 				._senderAgent_(whoIAmEngRDProvider())
 				.build();
