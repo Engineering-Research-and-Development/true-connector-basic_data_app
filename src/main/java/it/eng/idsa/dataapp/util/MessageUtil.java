@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,11 +32,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
@@ -456,7 +460,17 @@ public class MessageUtil {
 	public HttpEntity createMultipartMessageForm(String header, String payload, ContentType payloadContentType) {
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create()
 				.setStrictMode();
-		ContentType payloadCT = payloadContentType == null ? ContentType.APPLICATION_JSON : payloadContentType;
+		
+		ContentType payloadCT =  ContentType.TEXT_PLAIN;
+		
+		if (payloadContentType == null) {
+			if (isValidJSON(payload)) {
+				payloadCT = ContentType.APPLICATION_JSON;
+			}
+		} else {
+			payloadCT = payloadContentType;
+		}
+		
 		try {
 			FormBodyPart bodyHeaderPart;
 			ContentBody headerBody = new StringBody(header, ContentType.create("application/ld+json"));
@@ -466,7 +480,7 @@ public class MessageUtil {
 
 			FormBodyPart bodyPayloadPart = null;
 			if (payload != null) {
-				ContentBody payloadBody = new StringBody(payload, encodePayload == true ? ContentType.TEXT_PLAIN : payloadCT);
+				ContentBody payloadBody = new StringBody(payload, payloadCT);
 				bodyPayloadPart = FormBodyPartBuilder.create("payload", payloadBody).build();
 				bodyPayloadPart.addField(HTTP.CONTENT_LEN, "" + payload.length());
 				multipartEntityBuilder.addPart(bodyPayloadPart);
@@ -476,5 +490,25 @@ public class MessageUtil {
 			logger.error("Error while creating response ", e);
 		}
 		return multipartEntityBuilder.build();
+	}
+	
+	public boolean isValidJSON(String json) {
+	    try {
+	        JsonParser.parseString(json);
+	    } catch (JsonSyntaxException e) {
+	        return false;
+	    }
+	    return true;
+	}
+
+	public static MultiValueMap<String, String> REMOVE_IDS_MESSAGE_HEADERS(HttpHeaders headers) {
+		for (Iterator<String> iterator = headers.keySet().iterator(); iterator.hasNext();) {
+			String key = iterator.next();
+			//String.contains is case sensitive so this should have minimal margin of error
+			if (key.contains("IDS-")) {
+				iterator.remove();
+			}
+		}
+		return headers;
 	}
 }

@@ -259,4 +259,20 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 
 ```
 
+# Base64 encoded payload
+
+If you want the demo response from Data App to be Base64 encoded then set the following property to true:
+
+```
+application.encodePayload=true
+```
+
+# Extract payload from response
+
+If you want the sender side Data App to extract only the payload from the received response set the following property to true:
+
+```
+application.extractPayloadFromResponse=true
+```
+
 Remark: requestedElement field can be omitted. In that case, description response will contain whole self description document; otherwise it will contain just the part for requested element.

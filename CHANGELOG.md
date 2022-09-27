@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.10-SNAPSHOT] - 2022-09-27
+ 
+### Added
+
+ - added functionality to return only payload in response controlled with property application.extractPayloadFromResponse=
+ 
+### Changed
+
+ - if rejection message is received as response on sender side it is now processed and only rejection reason and status code are sent from data app (e.g. to Postman)
+
 ## [0.1.9-SNAPSHOT] - 2022-08-05
  
 ### Added
@@ -21,6 +31,7 @@ All notable changes to this project will be documented in this file.
  - reverted logic that reads policy from filesystem needed for MyData Usage Control
  
 ### Changed
+
  - updated logic for setting request and response messages with correct issuerConnector; in request flow - from property file, in response flow - from request message
  - changed the way to send back HttpEntity instead String representation of multipart response
  - when requested connector description, dataApp will fetch connector self description and send it back
