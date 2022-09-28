@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -543,18 +542,14 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 		
 		if (extractPayloadFromResponse) {
+			MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
 			
+			headers.putAll(resp.getHeaders());
 			// replacing Content Type and Length headers from original message with the ones from payload part
-			List<String> ct = new ArrayList<String>();
-			ct.add(mm.getPayloadHeader().get(HTTP.CONTENT_TYPE));
+			headers.set(HTTP.CONTENT_TYPE, mm.getPayloadHeader().get(HTTP.CONTENT_TYPE));
+			headers.set(HTTP.CONTENT_LEN, mm.getPayloadHeader().get(HTTP.CONTENT_LEN));
 			
-			List<String> cl = new ArrayList<String>();
-			cl.add(mm.getPayloadHeader().get(HTTP.CONTENT_LEN));
-			
-			resp.getHeaders().replace(HTTP.CONTENT_TYPE, ct);
-			resp.getHeaders().replace(HTTP.CONTENT_LEN, cl);
-			
-			return new ResponseEntity<String>(mm.getPayloadContent(), resp.getHeaders(), HttpStatus.OK);
+			return new ResponseEntity<String>(mm.getPayloadContent(), headers, HttpStatus.OK);
 		}
 		return resp;
 	}
