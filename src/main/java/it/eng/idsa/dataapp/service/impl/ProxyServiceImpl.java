@@ -548,6 +548,7 @@ public class ProxyServiceImpl implements ProxyService {
 			// replacing Content Type and Length headers from original message with the ones from payload part
 			headers.set(HTTP.CONTENT_TYPE, mm.getPayloadHeader().get(HTTP.CONTENT_TYPE));
 			headers.set(HTTP.CONTENT_LEN, mm.getPayloadHeader().get(HTTP.CONTENT_LEN));
+			headers.remove(HTTP.TRANSFER_ENCODING);
 			
 			return new ResponseEntity<String>(mm.getPayloadContent(), headers, HttpStatus.OK);
 		}

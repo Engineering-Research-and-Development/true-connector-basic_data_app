@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -502,13 +503,15 @@ public class MessageUtil {
 	}
 
 	public static MultiValueMap<String, String> REMOVE_IDS_MESSAGE_HEADERS(HttpHeaders headers) {
-		for (Iterator<String> iterator = headers.keySet().iterator(); iterator.hasNext();) {
+		MultiValueMap<String, String> newHeaders = new LinkedMultiValueMap<>();
+		newHeaders.putAll(headers);
+		for (Iterator<String> iterator = newHeaders.keySet().iterator(); iterator.hasNext();) {
 			String key = iterator.next();
 			//String.contains is case sensitive so this should have minimal margin of error
 			if (key.contains("IDS-")) {
 				iterator.remove();
 			}
 		}
-		return headers;
+		return newHeaders;
 	}
 }
