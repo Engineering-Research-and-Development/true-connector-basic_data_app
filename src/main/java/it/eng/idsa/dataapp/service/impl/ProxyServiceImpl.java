@@ -42,6 +42,7 @@ import de.fraunhofer.iais.eis.ContractRequestMessageBuilder;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.MessageProcessedNotificationMessage;
 import de.fraunhofer.iais.eis.QueryMessage;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import de.fraunhofer.iais.eis.RejectionReason;
@@ -307,6 +308,12 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 		
 		if (extractPayloadFromResponse) {
+			if (resp.getHeaders().size() != 0 
+				&& StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0)) 
+				&& "ids:MessageProcessedNotificationMessage".equals(resp.getHeaders().get("IDS-Messagetype").get(0))) {
+
+				return new ResponseEntity<String>("MessageProcessedNotificationMessage", MessageUtil.REMOVE_IDS_MESSAGE_HEADERS(resp.getHeaders()), HttpStatus.OK);
+			}
 			return new ResponseEntity<String>(resp.getBody(), MessageUtil.REMOVE_IDS_MESSAGE_HEADERS(resp.getHeaders()), HttpStatus.OK);
 		}
 		
@@ -549,6 +556,10 @@ public class ProxyServiceImpl implements ProxyService {
 			headers.set(HTTP.CONTENT_TYPE, mm.getPayloadHeader().get(HTTP.CONTENT_TYPE));
 			headers.set(HTTP.CONTENT_LEN, mm.getPayloadHeader().get(HTTP.CONTENT_LEN));
 			headers.remove(HTTP.TRANSFER_ENCODING);
+			
+			if (mm.getHeaderContent() instanceof MessageProcessedNotificationMessage) {
+				return new ResponseEntity<String>("MessageProcessedNotificationMessage", headers, HttpStatus.OK);
+			}
 			
 			return new ResponseEntity<String>(mm.getPayloadContent(), headers, HttpStatus.OK);
 		}
