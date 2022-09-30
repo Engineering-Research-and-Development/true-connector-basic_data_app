@@ -53,7 +53,7 @@ public class RejectionUtil {
 			return new ResponseEntity<String> ("Rejection occured with reason: VERSION_NOT_SUPPORTED", HttpStatus.BAD_REQUEST);
 
 		default:
-			return new ResponseEntity<String> ("No valid rejection reason found", HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<String> ("Error while processing message", HttpStatus.BAD_REQUEST);
 		}
 	}
 

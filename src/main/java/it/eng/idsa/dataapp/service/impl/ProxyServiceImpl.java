@@ -304,6 +304,10 @@ public class ProxyServiceImpl implements ProxyService {
 		if (resp.getHeaders().size() != 0 
 				&& StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0)) 
 				&& "ids:RejectionMessage".equals(resp.getHeaders().get("IDS-Messagetype").get(0))) {
+			if (StringUtils.isBlank(resp.getHeaders().get("IDS-RejectionReason").get(0))) {
+				return new ResponseEntity<String> ("Error while processing message", HttpStatus.BAD_REQUEST);
+			}
+			
 			return RejectionUtil.HANDLE_REJECTION(RejectionReason.valueOf(resp.getHeaders().get("IDS-RejectionReason").get(0).substring(resp.getHeaders().get("IDS-RejectionReason").get(0).lastIndexOf("/")+1)));
 		}
 		
@@ -545,6 +549,9 @@ public class ProxyServiceImpl implements ProxyService {
 
 	private ResponseEntity<String> handleResponse(ResponseEntity<String> resp, MultipartMessage mm) {
 		if (mm.getHeaderContent() instanceof RejectionMessage) {
+			if (((RejectionMessage) mm.getHeaderContent()).getRejectionReason() == null) {
+				return new ResponseEntity<String> ("Error while processing message", HttpStatus.BAD_REQUEST);
+			}
 			return RejectionUtil.HANDLE_REJECTION(((RejectionMessage) mm.getHeaderContent()).getRejectionReason());
 		}
 		

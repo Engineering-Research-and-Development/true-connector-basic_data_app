@@ -122,6 +122,26 @@ public class ProxyServiceTest {
 	}
 	
 	@Test
+	public void proxyMultipartMix_NoRejectionReason() throws URISyntaxException {
+		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_MIXED);
+
+		when(proxyRequest.getMessageType()).thenReturn(messageType);
+		when(proxyRequest.getPayload()).thenReturn(PAYLOAD);
+		
+		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), 
+				ArgumentMatchers.<HttpEntity<String>>any(), eq(String.class)))
+			.thenReturn(response);
+		String multipartMessageString = createMultipartMessageAsString(UtilMessageService.getRejectionMessage(null));
+		mockResponse(HttpStatus.OK, multipartMessageString);
+		
+		ResponseEntity<String> testResponse = service.proxyMultipartMix(proxyRequest, httpHeaders);
+		
+		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
+		assertEquals(HttpStatus.BAD_REQUEST, testResponse.getStatusCode());
+		assertEquals("Error while processing message", testResponse.getBody());
+	}
+	
+	@Test
 	public void proxyMultipartMix_extractPayloadFromResponse() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_MIXED);
 		ReflectionTestUtils.setField(service, "extractPayloadFromResponse", true);
@@ -176,6 +196,25 @@ public class ProxyServiceTest {
 		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getStatusCode(), testResponse.getStatusCode());
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getBody(), testResponse.getBody());
+	}
+	
+	@Test
+	public void proxyMultipartForm_NoRejectionReason() throws URISyntaxException {
+		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_FORM);
+
+		when(proxyRequest.getMessageType()).thenReturn(messageType);
+		when(proxyRequest.getPayload()).thenReturn(PAYLOAD);
+		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), 
+				ArgumentMatchers.<HttpEntity<String>>any(), eq(String.class)))
+			.thenReturn(response);
+		String multipartMessageString = createMultipartMessageAsString(UtilMessageService.getRejectionMessage(null));
+		mockResponse(HttpStatus.OK, multipartMessageString);
+		
+		ResponseEntity<String> testResponse = service.proxyMultipartForm(proxyRequest, httpHeaders);
+		
+		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
+		assertEquals(HttpStatus.BAD_REQUEST, testResponse.getStatusCode());
+		assertEquals("Error while processing message", testResponse.getBody());
 	}
 	
 	@Test
@@ -264,6 +303,42 @@ public class ProxyServiceTest {
 		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getStatusCode(), testResponse.getStatusCode());
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getBody(), testResponse.getBody());
+	}
+	
+	@Test
+	public void proxyMultipartHeader_NoRejectionReason() throws URISyntaxException {
+		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_HEADER);
+
+		when(proxyRequest.getMessageType()).thenReturn(messageType);
+		when(proxyRequest.getPayload()).thenReturn(PAYLOAD);
+		
+		Map<String, Object> message = UtilMessageService.getArtifactResponseMessageAsMap();
+		
+		// changing values to rejection message
+		message.replace("IDS-Messagetype", message.get("IDS-Messagetype"), "ids:RejectionMessage");
+		message.put("IDS-RejectionReason", null);
+		
+		HttpHeaders messageHeaders = new HttpHeaders();
+		
+		for (String key : message.keySet()) {
+			if ( message.get(key) != null) {
+				messageHeaders.add(key, message.get(key).toString());
+			} else {
+				messageHeaders.add(key, null);
+			}
+		}
+		
+		mockResponseForHttpHeaders(HttpStatus.OK, PAYLOAD, messageHeaders);
+		
+		when(restTemplate.exchange(any(URI.class), any(HttpMethod.class), 
+				any(HttpEntity.class), eq(String.class)))
+			.thenReturn(response);
+		
+		ResponseEntity<String> testResponse = service.proxyHttpHeader(proxyRequest, httpHeaders);
+		
+		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
+		assertEquals(HttpStatus.BAD_REQUEST, testResponse.getStatusCode());
+		assertEquals("Error while processing message", testResponse.getBody());
 	}
 	
 	@Test
