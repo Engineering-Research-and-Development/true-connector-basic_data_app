@@ -61,9 +61,9 @@ public class DataControllerHttpHeader {
 			responsePayload = messageUtil.createResponsePayload(httpHeaders, payload);
 		}
 		if(responsePayload == null && 
-				"ids:ContractRequestMessage".equals(responseHeaders.get("IDS-Messagetype").get(0))) {
+				"ids:ContractAgreementMessage".equals(responseHeaders.get("IDS-Messagetype").get(0))) {
 			logger.info("Creating rejection message since contract agreement was not found");
-			responseHeaders = createResponseMessageHeaders(httpHeaders, "NOT-FOUND");
+			responseHeaders = createResponseMessageHeaders(httpHeaders, "NOT_FOUND");
 		}	
 		
 		if (responsePayload != null && responsePayload.contains("IDS-RejectionReason")) {
@@ -78,7 +78,7 @@ public class DataControllerHttpHeader {
 		
 		MediaType payloadContentType = MediaType.TEXT_PLAIN;
 		
-		if(responsePayload != null && responsePayload.contains("John")) {
+		if(responsePayload != null && messageUtil.isValidJSON(responsePayload)) {
 			payloadContentType = MediaType.APPLICATION_JSON;
 		}
 		

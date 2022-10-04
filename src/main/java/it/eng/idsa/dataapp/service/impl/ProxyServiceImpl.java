@@ -9,6 +9,7 @@ import java.util.Base64;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.protocol.HTTP;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -24,6 +25,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -39,7 +42,10 @@ import de.fraunhofer.iais.eis.ContractRequestMessageBuilder;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.MessageProcessedNotificationMessage;
 import de.fraunhofer.iais.eis.QueryMessage;
+import de.fraunhofer.iais.eis.RejectionMessage;
+import de.fraunhofer.iais.eis.RejectionReason;
 import de.fraunhofer.iais.eis.TokenFormat;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import de.fraunhofer.iais.eis.util.Util;
@@ -47,6 +53,8 @@ import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.ProxyService;
 import it.eng.idsa.dataapp.service.RecreateFileService;
+import it.eng.idsa.dataapp.util.MessageUtil;
+import it.eng.idsa.dataapp.util.RejectionUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
@@ -74,17 +82,20 @@ public class ProxyServiceImpl implements ProxyService {
 	private String dataLakeDirectory;
 	private String issueConnector;
 	private Boolean encodePayload;
+	private Boolean extractPayloadFromResponse;
 	
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties, RecreateFileService recreateFileService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory,
 			@Value("${application.ecc.issuer.connector}") String issuerConnector,
-			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
+			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
+			@Value("#{new Boolean('${application.extractPayloadFromResponse:false}')}") Boolean extractPayloadFromResponse) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.recreateFileService = recreateFileService;
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.issueConnector = issuerConnector;
 		this.encodePayload = encodePayload;
+		this.extractPayloadFromResponse = extractPayloadFromResponse;
 	}
 	
 	@Override
@@ -175,9 +186,8 @@ public class ProxyServiceImpl implements ProxyService {
 		logger.info("Forwarding mix POST request to {}", thirdPartyApi.toString());
 		
 		HttpEntity<String> requestEntity = new HttpEntity<String>(proxyPayload, httpHeaders);
-		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logMultipartResponse(resp);
-		return resp;
+		
+		return sendMultipartRequest(thirdPartyApi, requestEntity);
 	}
 
 	@Override
@@ -233,9 +243,7 @@ public class ProxyServiceImpl implements ProxyService {
 		
 		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
 		requestEntity = new HttpEntity<>(map, httpHeaders);
-		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logMultipartResponse(resp);
-		return resp;
+		return sendMultipartRequest(thirdPartyApi, requestEntity);
 	}
 	
 	@Override
@@ -278,8 +286,41 @@ public class ProxyServiceImpl implements ProxyService {
 					null, null);
 		}
 		
-		ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
-		logResponse(resp);
+		return sendHttpHeadersRequest(thirdPartyApi, requestEntity);
+	}
+
+	private ResponseEntity<String> sendHttpHeadersRequest(URI thirdPartyApi, HttpEntity<String> requestEntity) {
+		try {
+			ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
+			logHttpHeadersResponse(resp);
+			return handleHttpHeadersResponse(resp);
+		} catch (RestClientException e) {
+			logger.error("Following error occured: {}", e);
+			return new ResponseEntity<String> ("Message could not be processed", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	private ResponseEntity<String> handleHttpHeadersResponse(ResponseEntity<String> resp) {
+		if (resp.getHeaders().size() != 0 
+				&& StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0)) 
+				&& "ids:RejectionMessage".equals(resp.getHeaders().get("IDS-Messagetype").get(0))) {
+			if (StringUtils.isBlank(resp.getHeaders().get("IDS-RejectionReason").get(0))) {
+				return new ResponseEntity<String> ("Error while processing message", HttpStatus.BAD_REQUEST);
+			}
+			
+			return RejectionUtil.HANDLE_REJECTION(RejectionReason.valueOf(resp.getHeaders().get("IDS-RejectionReason").get(0).substring(resp.getHeaders().get("IDS-RejectionReason").get(0).lastIndexOf("/")+1)));
+		}
+		
+		if (extractPayloadFromResponse) {
+			if (resp.getHeaders().size() != 0 
+				&& StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0)) 
+				&& "ids:MessageProcessedNotificationMessage".equals(resp.getHeaders().get("IDS-Messagetype").get(0))) {
+
+				return new ResponseEntity<String>("MessageProcessedNotificationMessage", MessageUtil.REMOVE_IDS_MESSAGE_HEADERS(resp.getHeaders()), HttpStatus.OK);
+			}
+			return new ResponseEntity<String>(resp.getBody(), MessageUtil.REMOVE_IDS_MESSAGE_HEADERS(resp.getHeaders()), HttpStatus.OK);
+		}
+		
 		return resp;
 	}
 
@@ -423,7 +464,7 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 	}
 	
-	private void logResponse(ResponseEntity<String> resp) {
+	private void logHttpHeadersResponse(ResponseEntity<String> resp) {
 		logger.info("Response received with status code {}", resp.getStatusCode());
 		logger.info("Response headers\n{}", resp.getHeaders());
 		if(encodePayload && resp.getHeaders().get("IDS-Messagetype").get(0).equals("ArtifactResponseMessage")) {
@@ -433,10 +474,9 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 	}
 	
-	private void logMultipartResponse(ResponseEntity<String> resp) {
+	private void logMultipartResponse(ResponseEntity<String> resp, MultipartMessage mm) {
 		logger.info("Response received with status code {}", resp.getStatusCode());
 		logger.info("Response headers\n{}", resp.getHeaders());
-		MultipartMessage mm = MultipartMessageProcessor.parseMultipartMessage(resp.getBody());
 		logger.info("Response header part\n{}", mm.getHeaderContentString());
 		if(encodePayload && mm.getHeaderContent() instanceof ArtifactResponseMessage) {
 			logger.info("Response payload decoded \n{}", new String(Base64.getDecoder().decode(mm.getPayloadContent())));
@@ -493,5 +533,43 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 		
 		return ResponseEntity.ok(responseMessage);
+	}
+	
+	private ResponseEntity<String> sendMultipartRequest(URI thirdPartyApi, HttpEntity<?> requestEntity) {
+		try {
+			ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity, String.class);
+			MultipartMessage mm = MultipartMessageProcessor.parseMultipartMessage(resp.getBody());
+			logMultipartResponse(resp, mm);
+			return handleResponse(resp, mm);
+		} catch (RestClientException e) {
+			logger.error("Following error occured: {}", e);
+			return new ResponseEntity<String> ("Message could not be processed", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	private ResponseEntity<String> handleResponse(ResponseEntity<String> resp, MultipartMessage mm) {
+		if (mm.getHeaderContent() instanceof RejectionMessage) {
+			if (((RejectionMessage) mm.getHeaderContent()).getRejectionReason() == null) {
+				return new ResponseEntity<String> ("Error while processing message", HttpStatus.BAD_REQUEST);
+			}
+			return RejectionUtil.HANDLE_REJECTION(((RejectionMessage) mm.getHeaderContent()).getRejectionReason());
+		}
+		
+		if (extractPayloadFromResponse) {
+			MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+			
+			headers.putAll(resp.getHeaders());
+			// replacing Content Type and Length headers from original message with the ones from payload part
+			headers.set(HTTP.CONTENT_TYPE, mm.getPayloadHeader().get(HTTP.CONTENT_TYPE));
+			headers.set(HTTP.CONTENT_LEN, mm.getPayloadHeader().get(HTTP.CONTENT_LEN));
+			headers.remove(HTTP.TRANSFER_ENCODING);
+			
+			if (mm.getHeaderContent() instanceof MessageProcessedNotificationMessage) {
+				return new ResponseEntity<String>("MessageProcessedNotificationMessage", headers, HttpStatus.OK);
+			}
+			
+			return new ResponseEntity<String>(mm.getPayloadContent(), headers, HttpStatus.OK);
+		}
+		return resp;
 	}
 }

@@ -72,7 +72,7 @@ public class DataControllerBodyBinary {
 
 		ContentType payloadContentType = ContentType.TEXT_PLAIN;
 		
-		if(responsePayload != null && responsePayload.contains("John")) {
+		if(responsePayload != null && messageUtil.isValidJSON(responsePayload)) {
 			payloadContentType = ContentType.APPLICATION_JSON;
 		}
 		
