@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.11-SNAPSHOT] - 2022-10-31
+
+### Changed
+
+ - banner is now packed with jar, to avoid need to manually change it in dockerized version 
+
+
 ## [0.1.10-SNAPSHOT] - 2022-09-27
  
 ### Added
