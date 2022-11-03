@@ -1,7 +1,49 @@
 # market4.0-data_app_test_BE
 [![License: AGPL](https://img.shields.io/github/license/Engineering-Research-and-Development/true-connector-basic_data_app.svg)](https://opensource.org/licenses/AGPL-3.0)
 
-## Dedicated endpoint in dataApp
+## Building dataApp
+
+**Requirement:**
+
+ `Java11` `Apache Maven`
+ 
+To build dataApp you will have to do one of the following:
+
+ * Clone [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) 
+ * Once this project is cloned, run mvn clean install
+ * Clone [WebSocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer)
+ * Once this project is cloned, run mvn clean install
+
+This will install 2 internal libraries that are needed by DataApp project.
+
+After that you can run mvn clean package in the root of the dataApp project, to build it.
+
+---
+
+Other solution is to use provided libraries on GitHub Package. To do so, you will have to modify Apache Maven seetings.xml file like following:
+
+Add in servers part:
+
+```<xml>
+<server>
+	<id>github</id> 
+    <username>some_username</username>
+    <password>{your GitHub Personal Access Token}</password> 
+</server>
+
+```
+
+How to get GH PAT, you can check following [link](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+
+### Creating docker image
+
+Once you build dataApp, if required, you can build docker image, by executing following command, from terminal, inside the root of the project:
+
+```
+docker build -t some_tag .
+```
+
+## Dedicated endpoint in dataApp <a name="proxyendpoint"></a>
 
 ```
 @RequestMapping("/proxy")
@@ -11,6 +53,102 @@ public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
 ```
 This methods is used in both REST and WSS flows.
 
+
+## Customizing DataApp
+
+If you need to modify dataApp, you can perform such modification in 2 places: consumer side or provider.
+
+### Consumer side modification
+
+Following class is used as entry point for consumer side:
+
+**it.eng.idsa.dataapp.web.rest.ProxyController**
+
+This class is the entry point of [proxy request](#proxyendpoint). Business logic for creating request is delegated to:
+
+**it.eng.idsa.dataapp.service.ProxyServiceImpl**
+
+This class wraps up logic for creating proper IDS Message, and proper request, based on the configuration (mixed, form or header) and sends request to consumer ECC.
+
+Once response is received, it will just log request. If you need to do something else with the response - check following method:
+
+**handleResponse(ResponseEntity<String> resp, MultipartMessage mm)**
+
+### Provider side modification
+
+For making modification when dataApp is in provider role, one of the following controllers can be used as starting point
+
+**it.eng.idsa.dataapp.web.rest.DataControllerBodyBinary**
+
+**it.eng.idsa.dataapp.web.rest.DataControllerBodyForm**
+
+**it.eng.idsa.dataapp.web.rest.DataControllerHttpHeader**
+
+Depending on the configuration, mixed, form or header.
+
+This class (controller) is an entry point in Provider part of the dataApp, and it will receive request from Provider ECC.
+Depending on the IDS Message received it will execute predefined logic, and that should not be changed. Only modification should be made when ArtifactRequestMessage is received - when creating response payload. Code of interest can be found in following method:
+
+**MessageUtil.it.eng.idsa.dataapp.util.createResponsePayload(Message requestHeader, String payload)**
+
+```
+else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(((ArtifactRequestMessage) requestHeader).getRequestedArtifact().toString())) {
+	return encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
+	}
+	return  encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
+			
+```
+Current example has 2 payloads, one small - json representing "John Doe" and other - big payload, that has several hundred lines of text. For your use case, you can simplify it and just handle *if (requestHeader instanceof ArtifactRequestMessage)* use case. 
+
+What is needed is to modify
+**private String createResponsePayload() ** method and provide logic that will fit your needs. You can add here part to read from some DB, call API, read file from filesystem, anything you need.
+
+### Testing DataApp Provider endoint
+
+During development process, you can use following curl command (or import it in postman) to test custom logic you are working on. Provided example curl assumes you are using *form* configuration.
+
+```
+curl --location --request POST 'https://localhost:8083/data' \
+--form 'header={
+  "@context" : {
+    "ids" : "https://w3id.org/idsa/core/",
+    "idsc" : "https://w3id.org/idsa/code/"
+  },
+  "@type" : "ids:ArtifactRequestMessage\",
+  "@id" : "https://w3id.org/idsa/autogen/artifactRequestMessage/a55ed1d5-576d-4a90-b7b2-2606d5a7905c",
+  "ids:requestedArtifact" : {
+    "@id" : "http://w3id.org/engrd/connector/artifact/1"
+  },
+  "ids:modelVersion" : "4.1.0",
+  "ids:issued" : {
+    "@value" : "2022-11-02T14:22:06.935Z",
+    "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+  },
+  "ids:issuerConnector" : {
+    "@id" : "http://w3id.org/engrd/connector/consumer"
+  },
+  "ids:recipientConnector" : [ ],
+  "ids:senderAgent" : {
+    "@id" : "http://sender.agent/sender"
+  },
+  "ids:recipientAgent" : [ ],
+  "ids:securityToken" : {
+    "@type" : "ids:DynamicAttributeToken",
+    "@id" : "https://w3id.org/idsa/autogen/dynamicAttributeToken/b49b7382-73a7-4838-a3d0-ad8d2ee2c5a4",
+    "ids:tokenValue" : "DummyTokenValue",
+    "ids:tokenFormat" : {
+      "@id" : "https://w3id.org/idsa/code/JWT"
+    }
+  },
+  "ids:transferContract" : {
+    "@id" : "https://w3id.org/idsa/autogen/contractAgreement/155b87e3-5d4b-48ee-bcb2-24a1be346bbe"
+  }
+}' \
+--form 'payload=ABC'
+
+```
+
+In payload you can provide any data that is needed for your backend system: DB query parameters, filter used in REST API call...
 
 ## WebSocket file exchange
 
