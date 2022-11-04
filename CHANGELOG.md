@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
  
 ### Changed
 
- - fixed transferCOntract field for WSS ArtifactRequestMessage flow
+ - fixed transferContract field for WSS ArtifactRequestMessage flow
 
 
 ## [0.1.11-SNAPSHOT] - 2022-10-31

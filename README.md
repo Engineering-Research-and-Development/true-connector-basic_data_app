@@ -9,6 +9,8 @@
  
 To build dataApp you will have to do one of the following:
 
+**Solution 1**
+
  * Clone [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) 
  * Once this project is cloned, run mvn clean install
  * Clone [WebSocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer)
@@ -20,7 +22,9 @@ After that you can run mvn clean package in the root of the dataApp project, to 
 
 ---
 
-Other solution is to use provided libraries on GitHub Package. To do so, you will have to modify Apache Maven seetings.xml file like following:
+**Solution 2**
+
+Use provided libraries on GitHub Package. To do so, you will have to modify Apache Maven settings.xml file like following:
 
 Add in servers part:
 
@@ -101,7 +105,7 @@ else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(((Artif
 Current example has 2 payloads, one small - json representing "John Doe" and other - big payload, that has several hundred lines of text. For your use case, you can simplify it and just handle *if (requestHeader instanceof ArtifactRequestMessage)* use case. 
 
 What is needed is to modify
-**private String createResponsePayload() ** method and provide logic that will fit your needs. You can add here part to read from some DB, call API, read file from filesystem, anything you need.
+**private String createResponsePayload()** method and provide logic that will fit your needs. You can add here part to read from some DB, call API, read file from filesystem, anything you need.
 
 ### Testing DataApp Provider endoint
 
