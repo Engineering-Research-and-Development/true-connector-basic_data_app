@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.12-SNAPSHOT] - 2022-11-04
+
+### Added
+
+ - developer documentation for modifying DataApp, consumer and provider vise
+ 
+### Changed
+
+ - fixed transferContract field for WSS ArtifactRequestMessage flow
+
+
 ## [0.1.11-SNAPSHOT] - 2022-10-31
 
 ### Changed
