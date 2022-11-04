@@ -24,9 +24,9 @@ Other solution is to use provided libraries on GitHub Package. To do so, you wil
 
 Add in servers part:
 
-```<xml>
+```xml
 <server>
-	<id>github</id> 
+    <id>github</id> 
     <username>some_username</username>
     <password>{your GitHub Personal Access Token}</password> 
 </server>

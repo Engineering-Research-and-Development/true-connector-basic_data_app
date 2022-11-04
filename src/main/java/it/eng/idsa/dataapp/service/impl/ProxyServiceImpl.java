@@ -429,22 +429,25 @@ public class ProxyServiceImpl implements ProxyService {
 		if(StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
 			return ResponseEntity.badRequest().body("Missing required fields Forward-To or Forward-To-Internal");
 		}
-		
-		URI requestedArtifactURI = URI
-				.create("http://w3id.org/engrd/connector/artifact/" + proxyRequest.getRequestedArtifact());
 		Message artifactRequestMessage;
 		try {
+			URI transferContract = null;
+			if(proxyRequest.getTransferContract() != null) {
+				transferContract = URI.create(proxyRequest.getTransferContract());
+			}
 			artifactRequestMessage = new ArtifactRequestMessageBuilder()
 					._issued_(DateUtil.now())
-					._issuerConnector_(URI.create("http://w3id.org/engrd/connector"))
+					._issuerConnector_(URI.create(issueConnector))
 					._modelVersion_(UtilMessageService.MODEL_VERSION)
-					._requestedArtifact_(requestedArtifactURI)
+					._requestedArtifact_(URI.create(proxyRequest.getRequestedArtifact()))
 					._securityToken_(UtilMessageService.getDynamicAttributeToken())
-					._senderAgent_(URI.create("https://sender.agent.com"))
+					._senderAgent_(UtilMessageService.SENDER_AGENT)
+					._transferContract_(transferContract)
 					.build();
 
 			Serializer serializer = new Serializer();
 			String requestMessage = serializer.serialize(artifactRequestMessage);
+			logger.debug("Artifact request message {}", requestMessage);
 			FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
 			String responseMessage = WebSocketClientManager.getMessageWebSocketSender()
 					.sendMultipartMessageWebSocketOverHttps(requestMessage, proxyRequest.getPayload(), forwardToInternal);
