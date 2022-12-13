@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.13-SNAPSHOT] - 2022-12-14
+
+### Added
+
+ - Authorization header for SelfDescription requests
+ - new properties to store user credentials, needed to make API requests to ECC
+ 
+ ```
+ application.ecc.eccUsername=admin
+ application.ecc.eccPassword=password
+ ```
 ## [0.1.12-SNAPSHOT] - 2022-11-04
 
 ### Added

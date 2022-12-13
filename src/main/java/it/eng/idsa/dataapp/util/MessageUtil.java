@@ -31,6 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -69,6 +71,7 @@ import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
+import okhttp3.Credentials;
 
 @Component
 public class MessageUtil {
@@ -81,7 +84,7 @@ public class MessageUtil {
 	private String issueConnector;
 	private String usageControlVersion;
 	private Path dataLakeDirectory;
-	
+
 	private static Serializer serializer;
 	static {
 		serializer = new Serializer();
@@ -270,9 +273,19 @@ public class MessageUtil {
 		URI eccURI = null;
 
 		try {
-			eccURI = new URI(eccProperties.getRESTprotocol(), null, eccProperties.getHost(), eccProperties.getRESTport(), null, null, null);
+			eccURI = new URI(eccProperties.getRESTprotocol(), null, eccProperties.getHost(), eccProperties.getRESTport(), 
+					null, null, null);
 			logger.info("Fetching self description from ECC {}.", eccURI.toString());
-			String selfDescription = restTemplate.getForObject(eccURI, String.class);
+
+			HttpHeaders headers = new HttpHeaders();
+			if (StringUtils.isNotBlank(eccProperties.getEccUsername()) && 
+					StringUtils.isNotBlank(eccProperties.getEccPassword())) {
+				headers.setBasicAuth(eccProperties.getEccUsername(), eccProperties.getEccPassword());
+			}
+			org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
+			
+			ResponseEntity<String> response = restTemplate.exchange(eccURI, HttpMethod.GET, entity, String.class);
+			String selfDescription = response.getBody();
 			logger.info("Deserializing self description.");
 			logger.debug("Self description content: {}{}", System.lineSeparator(), selfDescription);
 			return serializer.deserialize(selfDescription, Connector.class);

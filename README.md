@@ -1,4 +1,5 @@
-# market4.0-data_app_test_BE
+# Basic DataApp
+
 [![License: AGPL](https://img.shields.io/github/license/Engineering-Research-and-Development/true-connector-basic_data_app.svg)](https://opensource.org/licenses/AGPL-3.0)
 
 ## Building dataApp
@@ -26,15 +27,16 @@ After that you can run mvn clean package in the root of the dataApp project, to 
 
 Use provided libraries on GitHub Package. To do so, you will have to modify Apache Maven settings.xml file like following:
 
-Add in servers part:
+Add in servers section:
 
 ```xml
-<server>
+<servers>
+  <server>
     <id>github</id> 
     <username>some_username</username>
     <password>{your GitHub Personal Access Token}</password> 
-</server>
-
+  </server>
+</servers>
 ```
 
 How to get GH PAT, you can check following [link](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)

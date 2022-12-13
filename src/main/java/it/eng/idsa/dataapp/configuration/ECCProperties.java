@@ -14,6 +14,8 @@ public class ECCProperties {
 	private String mixContext;
 	private String formContext;
 	private String headerContext;
+	private String eccUsername;
+	private String eccPassword;
 	
 	private String brokerRegisterContext;
 	private String brokerUpdateContext;
@@ -68,6 +70,18 @@ public class ECCProperties {
 	}
 	public void setHeaderContext(String headerContext) {
 		this.headerContext = headerContext;
+	}
+	public String getEccUsername() {
+		return eccUsername;
+	}
+	public void setEccUsername(String eccUsername) {
+		this.eccUsername = eccUsername;
+	}
+	public String getEccPassword() {
+		return eccPassword;
+	}
+	public void setEccPassword(String eccPassword) {
+		this.eccPassword = eccPassword;
 	}
 	public String getBrokerRegisterContext() {
 		return brokerRegisterContext;

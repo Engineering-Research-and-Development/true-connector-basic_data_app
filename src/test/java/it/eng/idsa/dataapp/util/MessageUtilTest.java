@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -44,6 +46,8 @@ public class MessageUtilTest {
 	
 	@Mock
 	private RestTemplate restTemplate;
+	@Mock
+	private ResponseEntity<String> response;
 	
 	@Mock
 	private ECCProperties eccProperties;
@@ -69,7 +73,9 @@ public class MessageUtilTest {
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
 		EXISTING_REQUESTED_ELEMENT_ID = baseConnector.getResourceCatalog().get(0).getOfferedResource().get(0).getId();
 		String selfDescriptionAsString = serializer.serialize(baseConnector);
-		when(restTemplate.getForObject(any(), any())).thenReturn(selfDescriptionAsString);
+		when(restTemplate.exchange(any(), any(), any(), eq(String.class))).thenReturn(response);
+//		when(restTemplate.getForObject(any(), any())).thenReturn(response);
+		when(response.getBody()).thenReturn(selfDescriptionAsString);
 		messageUtil = new MessageUtil(restTemplate, eccProperties, false, true, issuerConnector, "platoon", Path.of("."));
 		//not most elegant way without setting default value
 		ReflectionTestUtils.setField(messageUtil, "contractNegotiationDemo", true);
@@ -87,7 +93,7 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderMessageFailed() {
-		when(restTemplate.getForObject(any(), any())).thenReturn(null);
+		when(response.getBody()).thenReturn(null);
  		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null), "ABC"));
 	}
 	
@@ -101,7 +107,7 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringFailed() {
-		when(restTemplate.getForObject(any(), any())).thenReturn(null);
+		when(response.getBody()).thenReturn(null);
 		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null), "ABC"));
 	}
 	
@@ -116,7 +122,7 @@ public class MessageUtilTest {
 	
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHttpHeadersFailed() {
-		when(restTemplate.getForObject(any(), any())).thenReturn(null);
+		when(response.getBody()).thenReturn(null);
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
 		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(headers, null));
 	}
