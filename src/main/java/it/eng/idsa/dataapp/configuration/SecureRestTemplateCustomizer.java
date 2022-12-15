@@ -21,20 +21,23 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import it.eng.idsa.dataapp.web.rest.DataControllerBodyBinary;
 
+/**
+ * Used for Customized TLS security, to avoid PKIX error.
+ * When using RestTemplate call restTemplateBuilder.build().
+ * 
+ * @see it.eng.idsa.dataapp.service.impl.ProxyServiceImpl#ProxyServiceImpl(org.springframework.boot.web.client.RestTemplateBuilder, ECCProperties, it.eng.idsa.dataapp.service.RecreateFileService, String, String, Boolean, Boolean)
+ */
 @Component
 @ConditionalOnProperty(name = "application.ecc.protocol", havingValue = "https")
 public class SecureRestTemplateCustomizer implements RestTemplateCustomizer {
 
-	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyBinary.class);
+	private static final Logger logger = LoggerFactory.getLogger(SecureRestTemplateCustomizer.class);
 
 	@Value("${server.ssl.key-store}")
 	private String trustStore;
 	@Value("${server.ssl.key-password}")
 	String trustStorePassword;
-
-	String protocol = "TLSv1.2";
 
 	@Override
 	public void customize(RestTemplate restTemplate) {

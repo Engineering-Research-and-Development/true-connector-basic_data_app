@@ -84,6 +84,20 @@ public class ProxyServiceImpl implements ProxyService {
 	private Boolean encodePayload;
 	private Boolean extractPayloadFromResponse;
 	
+	/**
+	 * 
+	 * ProxyServiceImpl constructor
+	 * 
+	 * Use this as an example how to setup RestTemplate with RestTemplateBuilder
+	 * 
+	 * @param restTemplateBuilder
+	 * @param eccProperties
+	 * @param recreateFileService
+	 * @param dataLakeDirectory
+	 * @param issuerConnector
+	 * @param encodePayload
+	 * @param extractPayloadFromResponse
+	 */
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties, RecreateFileService recreateFileService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory,
 			@Value("${application.ecc.issuer.connector}") String issuerConnector,

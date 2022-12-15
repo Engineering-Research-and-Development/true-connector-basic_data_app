@@ -30,6 +30,7 @@ import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -71,7 +72,6 @@ import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
-import okhttp3.Credentials;
 
 @Component
 public class MessageUtil {
@@ -90,7 +90,7 @@ public class MessageUtil {
 		serializer = new Serializer();
 	}
 	
-	public MessageUtil(RestTemplate restTemplate, 
+	public MessageUtil(RestTemplateBuilder restTemplateBuilder,
 			ECCProperties eccProperties,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
 			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
@@ -98,7 +98,7 @@ public class MessageUtil {
 			@Value("${application.usageControlVersion}") String usageControlVersion,
 			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory) {
 		super();
-		this.restTemplate = restTemplate;
+		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.encodePayload = encodePayload;
 		this.contractNegotiationDemo = contractNegotiationDemo;
@@ -273,18 +273,11 @@ public class MessageUtil {
 		URI eccURI = null;
 
 		try {
-			eccURI = new URI(eccProperties.getRESTprotocol(), null, eccProperties.getHost(), eccProperties.getRESTport(), 
-					null, null, null);
+			eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccProperties.getPort(), 
+					eccProperties.getSelfdescriptionContext(), null, null);
 			logger.info("Fetching self description from ECC {}.", eccURI.toString());
 
-			HttpHeaders headers = new HttpHeaders();
-			if (StringUtils.isNotBlank(eccProperties.getEccUsername()) && 
-					StringUtils.isNotBlank(eccProperties.getEccPassword())) {
-				headers.setBasicAuth(eccProperties.getEccUsername(), eccProperties.getEccPassword());
-			}
-			org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
-			
-			ResponseEntity<String> response = restTemplate.exchange(eccURI, HttpMethod.GET, entity, String.class);
+			ResponseEntity<String> response = restTemplate.exchange(eccURI, HttpMethod.GET, null, String.class);
 			String selfDescription = response.getBody();
 			logger.info("Deserializing self description.");
 			logger.debug("Self description content: {}{}", System.lineSeparator(), selfDescription);
