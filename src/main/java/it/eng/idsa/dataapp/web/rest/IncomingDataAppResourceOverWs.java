@@ -111,7 +111,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 
 		} catch (Exception e) {
 			logger.error("Error while reading resource from disk", e);
-			Message rejectionMessage = messageUtil.createRejectionCommunicationLocalIssues(requestMessage);
+			Message rejectionMessage = messageUtil.createRejectionNotFound(requestMessage);
 			String payload = "{\r\n" + 
 					"	\"reason\" : \"Resource '" + e.getMessage()  + "' not found\"\r\n" + 
 					"}";

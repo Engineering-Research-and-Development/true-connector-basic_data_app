@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("application.ecc")
 public class ECCProperties {
 	private String protocol;
-	private String RESTprotocol;
 	private String host;
 	private int port;
-	private int RESTport;
+	private String selfdescriptionContext;
 	private String mixContext;
 	private String formContext;
 	private String headerContext;
@@ -27,12 +26,6 @@ public class ECCProperties {
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}
-	public String getRESTprotocol() {
-		return RESTprotocol;
-	}
-	public void setRESTprotocol(String rESTprotocol) {
-		RESTprotocol = rESTprotocol;
-	}
 	public String getHost() {
 		return host;
 	}
@@ -45,11 +38,11 @@ public class ECCProperties {
 	public void setPort(int port) {
 		this.port = port;
 	}
-	public int getRESTport() {
-		return RESTport;
+	public String getSelfdescriptionContext() {
+		return selfdescriptionContext;
 	}
-	public void setRESTport(int RESTport) {
-		this.RESTport = RESTport;
+	public void setSelfdescriptionContext(String selfdescriptionContext) {
+		this.selfdescriptionContext = selfdescriptionContext;
 	}
 	public String getMixContext() {
 		return mixContext;
@@ -99,5 +92,4 @@ public class ECCProperties {
 	public void setBrokerQuerryContext(String brokerQuerryContext) {
 		this.brokerQuerryContext = brokerQuerryContext;
 	}
-	
 }

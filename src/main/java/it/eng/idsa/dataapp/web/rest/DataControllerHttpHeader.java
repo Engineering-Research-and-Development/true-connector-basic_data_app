@@ -22,6 +22,7 @@ import de.fraunhofer.iais.eis.ArtifactResponseMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
 import de.fraunhofer.iais.eis.DescriptionResponseMessage;
 import de.fraunhofer.iais.eis.MessageProcessedNotificationMessage;
+import de.fraunhofer.iais.eis.RejectionReason;
 import de.fraunhofer.iais.eis.TokenFormat;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
@@ -61,9 +62,15 @@ public class DataControllerHttpHeader {
 			responsePayload = messageUtil.createResponsePayload(httpHeaders, payload);
 		}
 		if(responsePayload == null && 
-				"ids:ContractAgreementMessage".equals(responseHeaders.get("IDS-Messagetype").get(0))) {
+				"ids:ContractRequestMessage".equals(responseHeaders.get("IDS-Messagetype").get(0))) {
 			logger.info("Creating rejection message since contract agreement was not found");
-			responseHeaders = createResponseMessageHeaders(httpHeaders, "NOT_FOUND");
+			responseHeaders = createResponseMessageHeaders(httpHeaders, RejectionReason.NOT_FOUND.name());
+		}	
+		
+		if(responsePayload == null && 
+				"ids:DescriptionRequestMessage".equals(responseHeaders.get("IDS-Messagetype").get(0))) {
+			logger.info("Creating rejection message since self description could not be fetched");
+			responseHeaders = createResponseMessageHeaders(httpHeaders, RejectionReason.INTERNAL_RECIPIENT_ERROR.name());
 		}	
 		
 		if (responsePayload != null && responsePayload.contains("IDS-RejectionReason")) {

@@ -1,6 +1,30 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.13-SNAPSHOT] - 2022-12-15
+
+### Notes
+
+ - make use of RestTemplateBuilder instead of RestTemplate to solve PKIX, please use ProxyServiceImpl constructor as reference
+
+### Added
+
+ - added property with path for new internal SelfDescription requests
+ 
+```
+application.ecc.selfdescription-context=/internal/sd
+```
+ 
+### Removed
+
+ - removed properties used for fetching SelfDescription
+ 
+```
+application.ecc.RESTprotocol=
+application.ecc.RESTport=
+```
+ 
+
 ## [0.1.12-SNAPSHOT] - 2022-11-04
 
 ### Added

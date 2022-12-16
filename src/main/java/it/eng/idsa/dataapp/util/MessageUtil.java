@@ -30,11 +30,13 @@ import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
@@ -81,13 +83,13 @@ public class MessageUtil {
 	private String issueConnector;
 	private String usageControlVersion;
 	private Path dataLakeDirectory;
-	
+
 	private static Serializer serializer;
 	static {
 		serializer = new Serializer();
 	}
 	
-	public MessageUtil(RestTemplate restTemplate, 
+	public MessageUtil(RestTemplateBuilder restTemplateBuilder,
 			ECCProperties eccProperties,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
 			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
@@ -95,7 +97,7 @@ public class MessageUtil {
 			@Value("${application.usageControlVersion}") String usageControlVersion,
 			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory) {
 		super();
-		this.restTemplate = restTemplate;
+		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.encodePayload = encodePayload;
 		this.contractNegotiationDemo = contractNegotiationDemo;
@@ -133,7 +135,7 @@ public class MessageUtil {
 					return element;
 				} else {
 					try {
-						return MultipartMessageProcessor.serializeToJsonLD(createRejectionCommunicationLocalIssues(drm));
+						return MultipartMessageProcessor.serializeToJsonLD(createRejectionNotFound(drm));
 					} catch (IOException e) {
 						logger.error("Could not serialize rejection", e);
 					}
@@ -270,17 +272,26 @@ public class MessageUtil {
 		URI eccURI = null;
 
 		try {
-			eccURI = new URI(eccProperties.getRESTprotocol(), null, eccProperties.getHost(), eccProperties.getRESTport(), null, null, null);
+			eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccProperties.getPort(), 
+					eccProperties.getSelfdescriptionContext(), null, null);
 			logger.info("Fetching self description from ECC {}.", eccURI.toString());
-			String selfDescription = restTemplate.getForObject(eccURI, String.class);
-			logger.info("Deserializing self description.");
-			logger.debug("Self description content: {}{}", System.lineSeparator(), selfDescription);
-			return serializer.deserialize(selfDescription, Connector.class);
+
+			ResponseEntity<String> response = restTemplate.exchange(eccURI, HttpMethod.GET, null, String.class);
+			if (response != null ) {
+				if (response.getStatusCodeValue() == 200) {
+					String selfDescription = response.getBody();
+					logger.info("Deserializing self description.");
+					logger.debug("Self description content: {}{}", System.lineSeparator(), selfDescription);
+					return serializer.deserialize(selfDescription, Connector.class);
+				} else {
+					logger.error("Could not fetch self description, ECC responded with status {} and message \r{}", response.getStatusCodeValue(), response.getBody());
+					return null;
+				} 
+			}
+			logger.error("Could not fetch self description, ECC did not respond");
+			return null;
 		} catch (URISyntaxException e) {
 			logger.error("Could not create URI for Self Description request.", e);
-			return null;
-		} catch (RestClientException e) {
-			logger.error("Could not fetch self description from ECC", e);
 			return null;
 		} catch (IOException e) {
 			logger.error("Could not deserialize self description to Connector instance", e);
@@ -290,7 +301,10 @@ public class MessageUtil {
 	
 	private String getSelfDescriptionAsString() {
 		try {
-			return MultipartMessageProcessor.serializeToJsonLD(getSelfDescription());
+			String sd = MultipartMessageProcessor.serializeToJsonLD(getSelfDescription());
+			//MultipartMessageProcessor.serializeToJsonLD(getSelfDescription()) on null Object returns String "null", this is a temporary fix
+			//TODO fix MultipartMessageProcessor.serializeToJsonLD(getSelfDescription()) so that it returns proper null if something fails
+			return sd.equals("null") ? null : sd;
 		} catch (IOException e) {
 			logger.error("Could not serialize self description", e);
 		}
@@ -438,7 +452,7 @@ public class MessageUtil {
 				.build();
 	}	
 
-	public Message createRejectionCommunicationLocalIssues(Message header) {
+	public Message createRejectionNotFound(Message header) {
 		return new RejectionMessageBuilder()
 				._issuerConnector_(whoIAmEngRDProvider())
 				._issued_(DateUtil.now())
@@ -446,6 +460,19 @@ public class MessageUtil {
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.NOT_FOUND)
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())
+				._senderAgent_(whoIAmEngRDProvider())
+				.build();
+	}
+	
+	public Message createRejectionInternalRecipientError(Message header) {
+		return new RejectionMessageBuilder()
+				._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._rejectionReason_(RejectionReason.INTERNAL_RECIPIENT_ERROR)
 				._securityToken_(UtilMessageService.getDynamicAttributeToken())
 				._senderAgent_(whoIAmEngRDProvider())
 				.build();

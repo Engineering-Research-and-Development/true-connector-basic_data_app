@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestPart;
 
 import de.fraunhofer.iais.eis.ContractRequestMessage;
+import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import it.eng.idsa.dataapp.util.MessageUtil;
@@ -62,8 +63,13 @@ public class DataControllerBodyBinary {
 		} 
 		if(responsePayload == null && message instanceof ContractRequestMessage) {
 			logger.info("Creating rejection message since contract agreement was not found");
-			headerResponse = messageUtil.createRejectionCommunicationLocalIssues(message);
+			headerResponse = messageUtil.createRejectionNotFound(message);
 		}	
+		
+		if(responsePayload == null && message instanceof DescriptionRequestMessage) {
+			logger.info("Creating rejection message since self description could not be fetched");
+			headerResponse = messageUtil.createRejectionInternalRecipientError(message);
+		}
 		
 		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
 			headerResponse = MultipartMessageProcessor.getMessage(responsePayload);
