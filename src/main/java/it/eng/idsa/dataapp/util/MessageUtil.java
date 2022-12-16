@@ -37,7 +37,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
@@ -293,9 +292,6 @@ public class MessageUtil {
 			return null;
 		} catch (URISyntaxException e) {
 			logger.error("Could not create URI for Self Description request.", e);
-			return null;
-		} catch (RestClientException e) {
-			logger.error("Could not fetch self description from ECC", e);
 			return null;
 		} catch (IOException e) {
 			logger.error("Could not deserialize self description to Connector instance", e);
