@@ -4,7 +4,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -81,6 +80,7 @@ public class MessageUtilTest {
 		String selfDescriptionAsString = serializer.serialize(baseConnector);
 		when(restTemplate.exchange(any(), any(), any(), eq(String.class))).thenReturn(response);
 		when(response.getBody()).thenReturn(selfDescriptionAsString);
+		when(response.getStatusCodeValue()).thenReturn(200);
 		messageUtil = new MessageUtil(restTemplateBuilder, eccProperties, false, true, issuerConnector, "platoon", Path.of("."));
 		//not most elegant way without setting default value
 		ReflectionTestUtils.setField(messageUtil, "contractNegotiationDemo", true);
@@ -91,7 +91,7 @@ public class MessageUtilTest {
 	//Description request message as Java Object
 	
 	@Test
-	public void testResponsePayloadWithoutRequestedElementInHeaderMessageSuccessfull() throws IOException {
+	public void testResponsePayloadWithoutRequestedElementInHeaderMessageSuccessfull()  {
  		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null), "ABC");
  		assertTrue(payload.contains(baseConnector.getId().toString()));
 	}
@@ -99,13 +99,13 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderMessageFailed() {
 		when(restTemplate.exchange(any(), any(), any(), eq(String.class))).thenReturn(null);
- 		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null), "ABC"));
+		assertNull(messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null), "ABC"));
 	}
 	
 	//Description request message as String
 	
 	@Test
-	public void testResponsePayloadWithoutRequestedElementInHeaderStringSuccessfull() throws IOException {
+	public void testResponsePayloadWithoutRequestedElementInHeaderStringSuccessfull()  {
  		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null), "ABC");
  		assertTrue(payload.contains(baseConnector.getId().toString()));
 	}
@@ -113,13 +113,13 @@ public class MessageUtilTest {
 	@Test
 	public void testResponsePayloadWithoutRequestedElementInHeaderStringFailed() {
 		when(restTemplate.exchange(any(), any(), any(), eq(String.class))).thenReturn(null);
-		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null), "ABC"));
+		assertNull(messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(null), "ABC"));
 	}
 	
 	//Description request message in Http Headers
 	
 	@Test
-	public void testResponsePayloadWithoutRequestedElementInHttpHeadersSuccessfull() throws IOException {
+	public void testResponsePayloadWithoutRequestedElementInHttpHeadersSuccessfull()  {
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
  		String payload = messageUtil.createResponsePayload(headers, null);
  		assertTrue(payload.contains(baseConnector.getId().toString()));
@@ -129,14 +129,14 @@ public class MessageUtilTest {
 	public void testResponsePayloadWithoutRequestedElementInHttpHeadersFailed() {
 		when(restTemplate.exchange(any(), any(), any(), eq(String.class))).thenReturn(null);
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
-		assertThrows(NullPointerException.class, () -> messageUtil.createResponsePayload(headers, null));
+		assertNull(messageUtil.createResponsePayload(headers, null));
 	}
 	
 	//Description request message with requested element
 	//Description request message as Java Object
 	
 	@Test
-	public void testResponsePayloadWithRequestedElementInHeaderMessageFailed() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHeaderMessageFailed() {
  		String payload = messageUtil.createResponsePayload(UtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID), null);
 		assertTrue(payload.contains(RejectionMessage.class.getSimpleName()));
 	}
@@ -144,14 +144,14 @@ public class MessageUtilTest {
 	//Description request message as String
 	
 	@Test
-	public void testResponsePayloadWithRequestedElementInHeaderStringSuccessfull() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHeaderStringSuccessfull()  {
 		DescriptionRequestMessage drm = UtilMessageService.getDescriptionRequestMessage(EXISTING_REQUESTED_ELEMENT_ID);
  		String payload = messageUtil.createResponsePayload(drm, null);
  		assertTrue(payload.contains(EXISTING_REQUESTED_ELEMENT_ID.toString()));
 	}
 	
 	@Test
-	public void testResponsePayloadWithRequestedElementInHeaderStringFailed() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHeaderStringFailed()  {
 		DescriptionRequestMessage drm = UtilMessageService.getDescriptionRequestMessage(NON_EXISTING_REQUESTED_ELEMENT_ID);
  		String payload = messageUtil.createResponsePayload(drm, null);
  		assertTrue(payload.contains(RejectionMessage.class.getSimpleName()));
@@ -160,7 +160,7 @@ public class MessageUtilTest {
 	//Description request message in Http Headers
 	
 	@Test
-	public void testResponsePayloadWithRequestedElementInHttpHeadersSuccessfull() throws IOException {
+	public void testResponsePayloadWithRequestedElementInHttpHeadersSuccessfull()  {
 		headers.add(IDS_MESSAGE_TYPE, DescriptionRequestMessage.class.getSimpleName());
 		headers.add(IDS_REQUESTED_ELEMENT, EXISTING_REQUESTED_ELEMENT_ID.toString());
  		String payload = messageUtil.createResponsePayload(headers, null);
@@ -178,7 +178,7 @@ public class MessageUtilTest {
 	//Response for ContractRequestMessage
 	
 	@Test
-	public void testResponsePayload_IDSContractRequestMessage() throws IOException {
+	public void testResponsePayload_IDSContractRequestMessage()  {
 		URI permissionId = baseConnector.getResourceCatalog().get(0).getOfferedResource().get(0).getContractOffer().get(0).getPermission().get(0).getId();
 		String payload = messageUtil.createResponsePayload(UtilMessageService.getContractRequestMessage(), 
 				UtilMessageService.getMessageAsString(UtilMessageService.getContractRequest(
@@ -187,7 +187,7 @@ public class MessageUtilTest {
 	}
 	
 	@Test
-	public void testResponsePayload_StringContractRequestMessage() throws IOException {
+	public void testResponsePayload_StringContractRequestMessage()  {
 		URI permissionId = baseConnector.getResourceCatalog().get(0).getOfferedResource().get(0).getContractOffer().get(0).getPermission().get(0).getId();
 		String payload = messageUtil.createResponsePayload(UtilMessageService.getContractRequestMessage(),
 				UtilMessageService.getMessageAsString(UtilMessageService.getContractRequest(UtilMessageService.REQUESTED_ARTIFACT, permissionId)));
@@ -219,7 +219,7 @@ public class MessageUtilTest {
 	}
 
 	@Test
-	public void createArtifactResponseMessage() throws IOException {
+	public void createArtifactResponseMessage() throws IOException  {
 		// provide default ArtifactRequestMessage so it does not fail on check for
 		// transfer contract and requested element
 		Message message = messageUtil.createArtifactResponseMessage(UtilMessageService.getArtifactRequestMessage());
@@ -229,7 +229,7 @@ public class MessageUtilTest {
 	}
 
 	@Test
-	public void createContractAgreementMessage() throws IOException {
+	public void createContractAgreementMessage() throws IOException  {
 		Message message = messageUtil.createContractAgreementMessage(UtilMessageService.getContractRequestMessage());
 		assertNotNull(message);
 		assertTrue(message instanceof ContractAgreementMessage);
@@ -237,7 +237,7 @@ public class MessageUtilTest {
 	}
 
 	@Test
-	public void createResultMessage() throws IOException {
+	public void createResultMessage() throws IOException  {
 		Message message = messageUtil.createResultMessage(UtilMessageService.getArtifactRequestMessage());
 		assertNotNull(message);
 		assertTrue(message instanceof ResultMessage);
