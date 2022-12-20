@@ -1,4 +1,4 @@
-name: ECC
+name: Update docker image
 
 on: push
 
