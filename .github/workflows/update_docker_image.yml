@@ -1,0 +1,26 @@
+name: ECC
+
+on: push
+
+#on:
+#  push:
+#    branches:
+#      - master
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_USER: ${{secrets.DOCKER_USER}}
+      DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+
+    steps:
+      
+      - name: Git Checkout
+        uses: actions/checkout@v3
+      
+      - name: Run Creating Docker Image from Data-App repo
+        run: ./ci/deploy.sh
+      
