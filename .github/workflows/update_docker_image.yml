@@ -22,9 +22,6 @@ jobs:
       
       - name: Git Checkout
         uses: actions/checkout@v3
-        
-      - name: Run env setup
-        run: ./ci/setupEnv.sh
       
       - name: Run Creating Docker Image from Data-App repo
         run: ./ci/deploy.sh
