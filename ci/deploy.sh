@@ -1,6 +1,5 @@
 #!/bin/bash
 echo "Creating Docker Container from Data-App repo..."
-mvn -U clean install
 sudo docker build -f Dockerfile -t rdlabengpa/ids_be_data_app:develop .
 cd ..
 echo "Data-App is ready"
