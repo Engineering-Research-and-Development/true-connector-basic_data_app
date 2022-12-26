@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - uses: actions/cache@v3
-      - name: Cache target directory
+        name: Cache target directory
         id: cache-target
         with:
           path: ~/target/*
