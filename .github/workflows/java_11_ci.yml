@@ -2,7 +2,6 @@ name: Java 11 Maven clean package
 
 on:
   workflow_call:
-    secrets: inherit
 
 jobs:
   build-project:
