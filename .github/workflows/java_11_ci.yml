@@ -3,7 +3,7 @@ name: Java 11 Maven clean package
 on:
   workflow_call:
     secrets:
-      GITHUB_TOKEN:
+      PAT:
         required: true
       GH_PACKAGE_REPO_PASSWORD:
         required: true
