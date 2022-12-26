@@ -1,0 +1,11 @@
+name: Build Data App
+
+on:
+  push:
+    branches-ignore:
+      - master
+
+jobs:
+  build-data-app:
+    uses: ./.github/workflows/java_11_ci.yml
+    

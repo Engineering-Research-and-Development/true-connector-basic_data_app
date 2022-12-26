@@ -1,6 +1,6 @@
-name: Java 11 CI
+name: Java 11 Maven clean package
 
-on: push
+#on: push
 
 jobs:
   build-project:
