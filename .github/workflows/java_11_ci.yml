@@ -2,11 +2,7 @@ name: Java 11 Maven clean package
 
 on:
   workflow_call:
-    secrets:
-      PAT:
-        required: true
-      GH_PACKAGE_REPO_PASSWORD:
-        required: true
+    secrets: inherit
 
 jobs:
   build-project:

@@ -10,9 +10,7 @@ jobs:
   build-data-app:
     uses: ./.github/workflows/java_11_ci.yml
     with:
-      secrets:
-        PAT: ${{ secrets.GITHUB_TOKEN }}
-        GH_PACKAGE_REPO_PASSWORD: ${{ secrets.GH_PACKAGE_REPO_PASSWORD }}
+       secrets: inherit
 #    type:
 #      - complete
     
