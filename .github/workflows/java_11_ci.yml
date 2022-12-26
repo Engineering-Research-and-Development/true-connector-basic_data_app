@@ -2,6 +2,11 @@ name: Java 11 Maven clean package
 
 on:
   workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+      GH_PACKAGE_REPO_PASSWORD:
+        required: true
 
 jobs:
   build-project:
@@ -18,7 +23,5 @@ jobs:
            
       - name: Build with Maven
         run: mvn clean package
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_PACKAGE_REPO_PASSWORD: ${{ secrets.GH_PACKAGE_REPO_PASSWORD }}
+        
     

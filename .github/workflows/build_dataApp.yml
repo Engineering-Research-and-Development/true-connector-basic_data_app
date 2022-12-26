@@ -8,4 +8,8 @@ on:
 jobs:
   build-data-app:
     uses: ./.github/workflows/java_11_ci.yml
+    with:
+      secrets:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_PACKAGE_REPO_PASSWORD: ${{ secrets.GH_PACKAGE_REPO_PASSWORD }}
     
