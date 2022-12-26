@@ -9,8 +9,6 @@ jobs:
 
   build-data-app:
     uses: ./.github/workflows/java_11_ci.yml
-    with:
-       secrets: inherit
 #    type:
 #      - complete
     
