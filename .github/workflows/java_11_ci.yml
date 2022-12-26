@@ -22,4 +22,11 @@ jobs:
         env:
           GH_PACKAGE_REPO_PASSWORD : ${{ secrets.GH_PACKAGE_REPO_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - uses: actions/cache@v3
+      - name: Cache target directory
+        id: cache-target
+        with:
+          path: ~/target/*
+          key: target
     
