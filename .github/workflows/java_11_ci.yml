@@ -1,6 +1,7 @@
 name: Java 11 Maven clean package
 
-#on: push
+on:
+  workflow_call:
 
 jobs:
   build-project:
