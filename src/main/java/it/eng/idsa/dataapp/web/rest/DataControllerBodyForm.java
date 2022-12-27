@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -23,6 +24,8 @@ import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionMessage;
+import it.eng.idsa.dataapp.handler.DataAppMessageHandler;
+import it.eng.idsa.dataapp.handler.MessageHandlerFactory;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
@@ -32,9 +35,11 @@ public class DataControllerBodyForm {
 	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyForm.class);
 
 	private MessageUtil messageUtil;
+	private MessageHandlerFactory factory;
 	
-	public DataControllerBodyForm(MessageUtil messageUtil) {
+	public DataControllerBodyForm(MessageUtil messageUtil, MessageHandlerFactory factory) {
 		this.messageUtil= messageUtil;
+		this.factory = factory;
     }
 	
 	/**
@@ -75,6 +80,8 @@ public class DataControllerBodyForm {
 		
 		Message message = MultipartMessageProcessor.getMessage(header);
 
+		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
+		Map<String, Object> responseMap = handler.handleMessage(message, payload);
 		Message headerResponse = messageUtil.getResponseHeader(message);
 		String responsePayload = null;
 		if (!(headerResponse instanceof RejectionMessage)) {
