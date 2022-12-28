@@ -8,18 +8,24 @@ import de.fraunhofer.iais.eis.Message;
 
 @Component
 public class MessageHandlerFactory {
-	
+
 	@Autowired
 	private ApplicationContext context;
 
-	public DataAppMessageHandler<? extends Message> createMessageHandler(Class<? extends Message> clazz) {
-		DataAppMessageHandler<? extends Message> handler = null;
+	public DataAppMessageHandler createMessageHandler(Class<? extends Message> clazz) {
+		DataAppMessageHandler handler = null;
 		switch (clazz.getSimpleName().replace("Impl", "")) {
 		case "ArtifactRequestMessage":
 			handler = context.getBean(ArtifactMessageHandler.class);
 			break;
-		case "DescriptionRequestMessage" :
-			handler = context.getBean(DescriptionMessageHandler.class);
+		case "DescriptionRequestMessage":
+			handler = context.getBean(DescriptionRequestMessageHandler.class);
+			break;
+		case "ContractRequestMessage":
+			handler = context.getBean(ContractRequestMessageHandler.class);
+			break;
+		case "ContractAgreementMessage":
+			handler = context.getBean(ContractAgreementMessageHandler.class);
 			break;
 		default:
 			break;
