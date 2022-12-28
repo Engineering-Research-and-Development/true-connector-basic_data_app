@@ -2,6 +2,7 @@ package it.eng.idsa.dataapp.web.rest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -16,10 +17,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestPart;
 
-import de.fraunhofer.iais.eis.ContractRequestMessage;
-import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Message;
-import de.fraunhofer.iais.eis.RejectionMessage;
+import it.eng.idsa.dataapp.handler.DataAppMessageHandler;
+import it.eng.idsa.dataapp.handler.MessageHandlerFactory;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
@@ -28,13 +28,15 @@ import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 public class DataControllerBodyBinary {
 
 	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyBinary.class);
-	
+
 	private MessageUtil messageUtil;
-	
-	public DataControllerBodyBinary(MessageUtil messageUtil) {
+	private MessageHandlerFactory factory;
+
+	public DataControllerBodyBinary(MessageUtil messageUtil, MessageHandlerFactory factory) {
 		this.messageUtil = messageUtil;
+		this.factory = factory;
 	}
-	
+
 	@PostMapping(value = "/data")
 	public ResponseEntity<?> routerBinary(@RequestHeader HttpHeaders httpHeaders,
 			@RequestPart(value = "header") String headerMessage,
@@ -52,50 +54,30 @@ public class DataControllerBodyBinary {
 		} else {
 			logger.info("Payload is empty");
 		}
-		
+
 		Message message = MultipartMessageProcessor.getMessage(headerMessage);
 
-		Message headerResponse = messageUtil.getResponseHeader(message);
-		String responsePayload = null;
-		
-		if (!(headerResponse instanceof RejectionMessage)) {
-			responsePayload = messageUtil.createResponsePayload(message, payload);
-		} 
-		if(responsePayload == null && message instanceof ContractRequestMessage) {
-			logger.info("Creating rejection message since contract agreement was not found");
-			headerResponse = messageUtil.createRejectionNotFound(message);
-		}	
-		
-		if(responsePayload == null && message instanceof DescriptionRequestMessage) {
-			logger.info("Creating rejection message since self description could not be fetched");
-			headerResponse = messageUtil.createRejectionInternalRecipientError(message);
-		}
-		
-		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
-			headerResponse = MultipartMessageProcessor.getMessage(responsePayload);
-			responsePayload = null;
-		}
+		// Create handler based on type of message and get map with header and payload
+		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
+		Map<String, Object> responseMap = handler.handleMessage(message, payload);
 
 		ContentType payloadContentType = ContentType.TEXT_PLAIN;
-		
-		if(responsePayload != null && messageUtil.isValidJSON(responsePayload)) {
+
+		if (responseMap.get("payload") != null && messageUtil.isValidJSON(responseMap.get("payload").toString())) {
 			payloadContentType = ContentType.APPLICATION_JSON;
 		}
-		
+
 		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
-				MultipartMessageProcessor.serializeToJsonLD(headerResponse),
-				responsePayload,
-				payloadContentType);
+				MultipartMessageProcessor.serializeToJsonLD(responseMap.get("header")),
+				responseMap.get("payload").toString(), payloadContentType);
 		String contentType = resultEntity.getContentType().getValue();
 		contentType = contentType.replace("multipart/form-data", "multipart/mixed");
-		
+
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        resultEntity.writeTo(outStream);
-        outStream.flush();
-        
-		return ResponseEntity.ok()
-				.header("foo", "bar")
-				.contentType(MediaType.parseMediaType(contentType))
+		resultEntity.writeTo(outStream);
+		outStream.flush();
+
+		return ResponseEntity.ok().header("foo", "bar").contentType(MediaType.parseMediaType(contentType))
 				.body(outStream.toByteArray());
 	}
 }
