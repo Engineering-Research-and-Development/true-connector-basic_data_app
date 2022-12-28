@@ -2,7 +2,6 @@ package it.eng.idsa.dataapp.handler;
 
 import static de.fraunhofer.iais.eis.util.Util.asList;
 
-import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -26,30 +25,32 @@ import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
 
 @Component
-public class ArtifactMessageHandler extends DataAppMessageHandler<ArtifactRequestMessage> {
-	
-	@Value("#{new Boolean('${application.encodePayload:false}')}") 
+public class ArtifactMessageHandler extends DataAppMessageHandler {
+
+	@Value("#{new Boolean('${application.encodePayload:false}')}")
 	private Boolean encodePayload;
-	
-	@Value("${application.ecc.issuer.connector}")
-	private String issuerConnector;
 
 	private static final Logger logger = LoggerFactory.getLogger(ArtifactMessageHandler.class);
 
 	@Override
-	public Map<String, Object> handleMessage(ArtifactRequestMessage artifactRequest, Object payload) {
-		System.out.println("ArtifactMessageHandler");
+	public Map<String, Object> handleMessage(Message artifactRequest, Object payload) {
+		logger.info("Handling header through ArtifactMessageHandler");
+
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) artifactRequest;
+		Message artifactResponseMessage = null;
 		Map<String, Object> response = new HashMap<>();
-		
-		Message artifactResponseMessage = createArtifactResponseMessage(artifactRequest); 
-		
-		if (isBigPayload(artifactRequest.getRequestedArtifact().toString())) {
+
+		if (isBigPayload(arm.getRequestedArtifact().toString())) {
 			payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
 		}
-			payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
-			
-		response.put("header", artifactResponseMessage);
-		response.put("payload", payload);
+		payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
+
+		if (payload != null) {
+			artifactResponseMessage = createArtifactResponseMessage(arm);
+			response.put("header", artifactResponseMessage);
+			response.put("payload", payload);
+		}
+
 		return response;
 	}
 
@@ -58,11 +59,13 @@ public class ArtifactMessageHandler extends DataAppMessageHandler<ArtifactReques
 		if (isBig.equals("/big")) {
 			return true;
 		}
+
 		return false;
 	}
 
 	private String encodePayload(byte[] payload) {
 		logger.info("Encoding payload");
+
 		return Base64.getEncoder().encodeToString(payload);
 	}
 
@@ -79,28 +82,18 @@ public class ArtifactMessageHandler extends DataAppMessageHandler<ArtifactReques
 		jsonObject.put("address", "591  Franklin Street, Pennsylvania");
 		jsonObject.put("checksum", "ABC123 " + formattedDate);
 		Gson gson = new GsonBuilder().create();
+
 		return gson.toJson(jsonObject);
 	}
-	
+
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
-		// Need to set transferCotract from original message, it will be used in policy enforcement
-		return new ArtifactResponseMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._transferContract_(header.getTransferContract())
+		// Need to set transferCotract from original message, it will be used in policy
+		// enforcement
+		return new ArtifactResponseMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)._transferContract_(header.getTransferContract())
 				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				.build();
-	}
-	
-	private URI whoIAm() {
-		return URI.create("http://auto-generated");
-	}
-	
-	private URI whoIAmEngRDProvider() {
-		return URI.create(issuerConnector);
+				._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
 	}
 }
