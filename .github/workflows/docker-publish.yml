@@ -1,4 +1,4 @@
-name: Docker CI
+name: Create Dockerized release for DataApp
 
 on:
   workflow_dispatch:
