@@ -40,10 +40,18 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 		Message artifactResponseMessage = null;
 		Map<String, Object> response = new HashMap<>();
 
-		if (isBigPayload(arm.getRequestedArtifact().toString())) {
-			payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
+		if (arm.getRequestedArtifact() != null) {
+			if (isBigPayload(arm.getRequestedArtifact().toString())) {
+				payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
+						: BigPayload.BIG_PAYLOAD;
+			} else {
+				payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
+						: createResponsePayload();
+			}
+		} else {
+			payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
+					: createResponsePayload();
 		}
-		payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
 
 		if (payload != null) {
 			artifactResponseMessage = createArtifactResponseMessage(arm);

@@ -69,7 +69,7 @@ public class DataControllerBodyBinary {
 
 		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
 				MultipartMessageProcessor.serializeToJsonLD(responseMap.get("header")),
-				responseMap.get("payload").toString(), payloadContentType);
+				responseMap.get("payload") != null ? responseMap.get("payload").toString() : null, payloadContentType);
 		String contentType = resultEntity.getContentType().getValue();
 		contentType = contentType.replace("multipart/form-data", "multipart/mixed");
 
