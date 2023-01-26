@@ -1,14 +1,14 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.UUID;
+import java.util.Enumeration;
+import java.util.HashMap;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,34 +17,39 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.context.request.NativeWebRequest;
 
-import de.fraunhofer.iais.eis.ArtifactResponseMessage;
-import de.fraunhofer.iais.eis.ContractAgreementMessage;
-import de.fraunhofer.iais.eis.DescriptionResponseMessage;
-import de.fraunhofer.iais.eis.MessageProcessedNotificationMessage;
-import de.fraunhofer.iais.eis.RejectionReason;
-import de.fraunhofer.iais.eis.TokenFormat;
+import de.fraunhofer.iais.eis.Message;
+import it.eng.idsa.dataapp.handler.DataAppMessageHandler;
+import it.eng.idsa.dataapp.handler.MessageHandlerFactory;
+import it.eng.idsa.dataapp.util.HttpHeadersUtil;
 import it.eng.idsa.dataapp.util.MessageUtil;
-import it.eng.idsa.multipart.util.UtilMessageService;
 
 @Controller
 @ConditionalOnProperty(name = "application.dataapp.http.config", havingValue = "http-header")
 public class DataControllerHttpHeader {
 
 	private static final Logger logger = LoggerFactory.getLogger(DataControllerHttpHeader.class);
-	
+
 	private MessageUtil messageUtil;
-	private String issueConnector;
-	public DataControllerHttpHeader(MessageUtil messageUtil,
-			@Value("${application.ecc.issuer.connector}") String issuerConnector) {
+	private MessageHandlerFactory factory;
+	private HttpHeadersUtil httpHeadersUtil;
+
+	public DataControllerHttpHeader(MessageUtil messageUtil, MessageHandlerFactory factory,
+			HttpHeadersUtil httpHeadersUtil) {
 		super();
 		this.messageUtil = messageUtil;
-		this.issueConnector = issuerConnector;
+		this.factory = factory;
+		this.httpHeadersUtil = httpHeadersUtil;
 	}
 
 	@PostMapping(value = "/data")
-	public ResponseEntity<?> routerHttpHeader(@RequestHeader HttpHeaders httpHeaders,
-			@RequestBody(required = false) String payload) {
+	public ResponseEntity<?> routerHttpHeader(@RequestHeader HttpHeaders httpHeaders, HttpServletRequest request,
+			NativeWebRequest webRequest, @RequestBody(required = false) String payload) {
+
+		HttpServletRequest requestNative = webRequest.getNativeRequest(HttpServletRequest.class);
+		Enumeration<String> headerNamesNative = request.getHeaderNames();
+		Enumeration<String> headerNames = request.getHeaderNames();
 
 		logger.info("Http Header request");
 		logger.info("headers=" + httpHeaders);
@@ -55,112 +60,32 @@ public class DataControllerHttpHeader {
 			logger.info("Payload is empty");
 		}
 
-		HttpHeaders responseHeaders = createResponseMessageHeaders(httpHeaders, null);
-		String responsePayload = null;
-		
-		if (!("ids:RejectionMessage".equals(responseHeaders.get("IDS-Messagetype").get(0)))) {
-			responsePayload = messageUtil.createResponsePayload(httpHeaders, payload);
+		HttpHeaders responseHeaders = new HttpHeaders();
+
+		Map<String, Object> headersMap = httpHeadersUtil.httpHeadersToMap(httpHeaders);
+
+		Message message = httpHeadersUtil.headersToMessage(headersMap);
+
+		// Create handler based on type of message and get map with header and payload
+		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
+		Map<String, Object> responseMap = handler.handleMessage(message, payload);
+		Map<String, Object> responseHeaderMap = new HashMap<>();
+		if (responseMap.get("header") != null) {
+			responseHeaderMap = httpHeadersUtil.messageToHeaders((Message) responseMap.get("header"));
+			responseHeaders = httpHeadersUtil.createResponseMessageHeaders(responseHeaderMap);
 		}
-		if(responsePayload == null && 
-				"ids:ContractRequestMessage".equals(responseHeaders.get("IDS-Messagetype").get(0))) {
-			logger.info("Creating rejection message since contract agreement was not found");
-			responseHeaders = createResponseMessageHeaders(httpHeaders, RejectionReason.NOT_FOUND.name());
-		}	
-		
-		if(responsePayload == null && 
-				"ids:DescriptionRequestMessage".equals(responseHeaders.get("IDS-Messagetype").get(0))) {
-			logger.info("Creating rejection message since self description could not be fetched");
-			responseHeaders = createResponseMessageHeaders(httpHeaders, RejectionReason.INTERNAL_RECIPIENT_ERROR.name());
-		}	
-		
-		if (responsePayload != null && responsePayload.contains("IDS-RejectionReason")) {
-			responseHeaders = createResponseMessageHeaders(httpHeaders, responsePayload.substring(responsePayload.indexOf(":")+1));
-			responsePayload = null;
-		}
-		
-		
-		ResponseEntity<?> response = ResponseEntity.noContent()
-				.headers(responseHeaders)
-				.build();
-		
+
+		ResponseEntity<?> response = ResponseEntity.noContent().headers(responseHeaders).build();
+
 		MediaType payloadContentType = MediaType.TEXT_PLAIN;
-		
-		if(responsePayload != null && messageUtil.isValidJSON(responsePayload)) {
+
+		if (responseMap.get("payload") != null && messageUtil.isValidJSON(responseMap.get("payload").toString())) {
 			payloadContentType = MediaType.APPLICATION_JSON;
 		}
-		
-		// returns John Doe if everything is OK
-		if (!("ids:RejectionMessage".equals(responseHeaders.get("IDS-Messagetype").get(0)))) {
-			response = ResponseEntity.ok()
-					.headers(responseHeaders)
-					.contentType(payloadContentType)
-					.body(responsePayload);
-		}
-		
+
+		response = ResponseEntity.ok().headers(responseHeaders).contentType(payloadContentType)
+				.body(responseMap.get("payload"));
+
 		return response;
 	}
-
-	private HttpHeaders createResponseMessageHeaders(HttpHeaders httpHeaders, String rejectionReason) {
-		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
-		HttpHeaders headers = new HttpHeaders();
-
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-		Date date = new Date();
-		String formattedDate = dateFormat.format(date);
-
-		String responseMessageType = null;
-
-		if (StringUtils.isNotEmpty(rejectionReason)) {
-			requestMessageType = "ids:RejectionMessage";
-		}
-		
-		switch (requestMessageType) {
-		case "ids:ContractRequestMessage":
-			responseMessageType = ContractAgreementMessage.class.getSimpleName();
-			break;
-
-		case "ids:ArtifactRequestMessage":
-			responseMessageType = ArtifactResponseMessage.class.getSimpleName();
-			headers.add("IDS-TransferContract", httpHeaders.getFirst("IDS-TransferContract"));
-			break;
-			
-		case "ids:DescriptionRequestMessage":
-			responseMessageType = DescriptionResponseMessage.class.getSimpleName();
-			break;
-			
-		case "ids:ContractAgreementMessage":
-			responseMessageType = MessageProcessedNotificationMessage.class.getSimpleName();
-			break;
-			
-		case "ids:RejectionMessage":
-			responseMessageType = requestMessageType.substring(4);
-			break;
-
-		default:
-			break;
-		}
-		
-		if (StringUtils.isNotEmpty(responseMessageType)) {
-			headers.add("IDS-Messagetype", "ids:" + responseMessageType);
-		}
-		headers.add("IDS-Issued", formattedDate);
-		headers.add("IDS-IssuerConnector", issueConnector);
-		headers.add("IDS-CorrelationMessage", httpHeaders.getFirst("IDS-Id"));
-		headers.add("IDS-ModelVersion", UtilMessageService.MODEL_VERSION);
-		headers.add("IDS-Id", "https://w3id.org/idsa/autogen/"+ responseMessageType +"/"+ UUID.randomUUID().toString());
-		headers.add("IDS-SenderAgent", "https://sender.agent.com");
-		
-		headers.add("IDS-SecurityToken-Type", "ids:DynamicAttributeToken");
-		headers.add("IDS-SecurityToken-Id", "https://w3id.org/idsa/autogen/" + UUID.randomUUID());
-		headers.add("IDS-SecurityToken-TokenFormat", TokenFormat.JWT.getId().toString());
-		headers.add("IDS-SecurityToken-TokenValue", UtilMessageService.TOKEN_VALUE);
-		if (StringUtils.isNotEmpty(rejectionReason)) {
-			headers.add("IDS-RejectionReason", rejectionReason);
-		}
-		
-		headers.add("foo", "bar");
-
-		return headers;
-	}
-
 }
