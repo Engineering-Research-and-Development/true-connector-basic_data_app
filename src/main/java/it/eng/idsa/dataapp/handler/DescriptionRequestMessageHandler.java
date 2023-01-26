@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -27,6 +26,8 @@ import de.fraunhofer.iais.eis.Resource;
 import de.fraunhofer.iais.eis.ResourceCatalog;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
+import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
+import it.eng.idsa.dataapp.web.rest.exceptions.NotFoundException;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
@@ -54,34 +55,21 @@ public class DescriptionRequestMessageHandler extends DataAppMessageHandler {
 		logger.info("DescriptionRequestMessage");
 
 		DescriptionRequestMessage drm = (DescriptionRequestMessage) message;
-
 		Map<String, Object> response = new HashMap<>();
-
 		Message descriptionResponseMessage = null;
-
 		String responsePayload = null;
+
 		if (drm.getRequestedElement() != null) {
-			String element = getRequestedElement(drm.getRequestedElement(), getSelfDescription());
-			if (StringUtils.isNotBlank(element)) {
-				responsePayload = element;
-			} else {
-				try {
-					responsePayload = MultipartMessageProcessor.serializeToJsonLD(createRejectionNotFound(drm));
-				} catch (IOException e) {
-					logger.error("Could not serialize rejection", e);
-				}
-				responsePayload = null;
-			}
+			String element = getRequestedElement(drm.getRequestedElement(), getSelfDescription(message), message);
+			responsePayload = element;
 		} else {
-			responsePayload = getSelfDescriptionAsString();
+			responsePayload = getSelfDescriptionAsString(message);
 		}
 
-		if (responsePayload != null) {
-			descriptionResponseMessage = createDescriptionResponseMessage(drm);
-			response.put("header", descriptionResponseMessage);
-			response.put("payload", responsePayload);
+		descriptionResponseMessage = createDescriptionResponseMessage(drm);
 
-		}
+		response.put("header", descriptionResponseMessage);
+		response.put("payload", responsePayload);
 
 		return response;
 	}
@@ -95,23 +83,27 @@ public class DescriptionRequestMessageHandler extends DataAppMessageHandler {
 				.build();
 	}
 
-	private String getRequestedElement(URI requestedElement, Connector connector) {
+	private String getRequestedElement(URI requestedElement, Connector connector, Message message) {
 		for (ResourceCatalog catalog : connector.getResourceCatalog()) {
 			for (Resource offeredResource : catalog.getOfferedResource()) {
 				if (requestedElement.equals(offeredResource.getId())) {
 					try {
+
 						return MultipartMessageProcessor.serializeToJsonLD(offeredResource);
 					} catch (IOException e) {
 						logger.error("Could not serialize requested element.", e);
+
+						throw new InternalRecipientException("Could not serialize requested element", message);
 					}
 				}
 			}
 		}
 		logger.error("Requested element not found.");
-		return null;
+
+		throw new NotFoundException("Requested element not found", message);
 	}
 
-	private Connector getSelfDescription() {
+	private Connector getSelfDescription(Message message) {
 		URI eccURI = null;
 
 		try {
@@ -125,27 +117,33 @@ public class DescriptionRequestMessageHandler extends DataAppMessageHandler {
 					String selfDescription = response.getBody();
 					logger.info("Deserializing self description.");
 					logger.debug("Self description content: {}{}", System.lineSeparator(), selfDescription);
+
 					return serializer.deserialize(selfDescription, Connector.class);
 				} else {
 					logger.error("Could not fetch self description, ECC responded with status {} and message \r{}",
 							response.getStatusCodeValue(), response.getBody());
-					return null;
+
+					throw new InternalRecipientException("Could not fetch self description", message);
 				}
 			}
 			logger.error("Could not fetch self description, ECC did not respond");
-			return null;
+
+			throw new InternalRecipientException("Could not fetch self description, ECC did not respond", message);
 		} catch (URISyntaxException e) {
 			logger.error("Could not create URI for Self Description request.", e);
-			return null;
+
+			throw new InternalRecipientException("Could not create URI for Self Description request", message);
 		} catch (IOException e) {
 			logger.error("Could not deserialize self description to Connector instance", e);
-			return null;
+
+			throw new InternalRecipientException("Could not deserialize self description to Connector instance",
+					message);
 		}
 	}
 
-	private String getSelfDescriptionAsString() {
+	private String getSelfDescriptionAsString(Message message) {
 		try {
-			String sd = MultipartMessageProcessor.serializeToJsonLD(getSelfDescription());
+			String sd = MultipartMessageProcessor.serializeToJsonLD(getSelfDescription(message));
 			// MultipartMessageProcessor.serializeToJsonLD(getSelfDescription()) on null
 			// Object returns String "null", this is a temporary fix
 			// TODO fix MultipartMessageProcessor.serializeToJsonLD(getSelfDescription()) so
@@ -153,8 +151,9 @@ public class DescriptionRequestMessageHandler extends DataAppMessageHandler {
 			return sd.equals("null") ? null : sd;
 		} catch (IOException e) {
 			logger.error("Could not serialize self description", e);
+
+			throw new InternalRecipientException("Could not serialize self description", message);
 		}
-		return null;
 	}
 
 	public Message createRejectionNotFound(Message header) {
@@ -166,5 +165,4 @@ public class DescriptionRequestMessageHandler extends DataAppMessageHandler {
 				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();
 	}
-
 }
