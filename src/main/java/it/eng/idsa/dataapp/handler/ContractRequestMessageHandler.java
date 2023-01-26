@@ -37,6 +37,7 @@ import de.fraunhofer.iais.eis.ResourceCatalog;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import de.fraunhofer.iais.eis.util.Util;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
+import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
@@ -77,7 +78,6 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 		logger.info("ContractRequestMessageHandler");
 
 		ContractRequestMessage crm = (ContractRequestMessage) message;
-
 		Map<String, Object> response = new HashMap<>();
 		Message contractRequestResponseMessage = null;
 		String responsePayload = null;
@@ -85,28 +85,35 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 		if (contractNegotiationDemo) {
 			logger.info("Returning default contract agreement");
 			if (StringUtils.equals("platoon", usageControlVersion)) {
-				responsePayload = createContractAgreementPlatoon(crm.getIssuerConnector(), payload.toString());
+
+				responsePayload = createContractAgreementPlatoon(crm, payload.toString());
 			}
 			if (StringUtils.equals("mydata", usageControlVersion)) {
-				responsePayload = createContractAgreementMyData();
+
+				responsePayload = createContractAgreementMyData(message);
 			}
 		} else {
 			logger.info("Creating processed notification, contract agreement needs evaluation");
-//			contractRequestResponseMessage = createProcessNotificationMessage(null);
+
+			contractRequestResponseMessage = createProcessNotificationMessage(null);
 			try {
+
 				responsePayload = MultipartMessageProcessor
 						.serializeToJsonLD(createProcessNotificationMessage(contractRequestResponseMessage));
 			} catch (IOException e) {
 				logger.error("Error while creating message", e);
+
+				throw new InternalRecipientException("Error while creating message", message);
 			}
-			responsePayload = null;
+
+			throw new InternalRecipientException("Creating processed notification, contract agreement needs evaluation",
+					message);
 		}
 
-		if (responsePayload != null) {
-			contractRequestResponseMessage = createContractAgreementMessage(crm);
-			response.put("header", contractRequestResponseMessage);
-			response.put("payload", responsePayload);
-		}
+		contractRequestResponseMessage = createContractAgreementMessage(crm);
+
+		response.put("header", contractRequestResponseMessage);
+		response.put("payload", responsePayload);
 
 		return response;
 	}
@@ -130,19 +137,14 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 				.build();
 	}
 
-	private String createContractAgreementPlatoon(URI consumerURI, String payload) {
+	private String createContractAgreementPlatoon(Message message, String payload) {
 		try {
-			Connector connector = getSelfDescription();
+			Connector connector = getSelfDescription(message);
 			ContractRequest contractRequest = serializer.deserialize(payload, ContractRequest.class);
 
 			ContractOffer co = getPermissionAndTarget(connector, contractRequest.getPermission().get(0).getId(),
-					contractRequest.getPermission().get(0).getTarget());
+					contractRequest.getPermission().get(0).getTarget(), message);
 			List<Permission> permissions = new ArrayList<>();
-			if (co == null) {
-				logger.info("Could not find contract offer that match with request - permissionId and target");
-
-				return null;
-			}
 			for (Permission p : co.getPermission()) {
 				if (p.getId().equals(contractRequest.getPermission().get(0).getId())
 						&& p.getTarget().equals(contractRequest.getPermission().get(0).getTarget())) {
@@ -150,18 +152,18 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 				}
 			}
 			ContractAgreement ca = new ContractAgreementBuilder()._permission_(permissions)
-					._contractStart_(co.getContractStart())._contractDate_(co.getContractDate())._consumer_(consumerURI)
-					._provider_(URI.create(issueConnector)).build();
+					._contractStart_(co.getContractStart())._contractDate_(co.getContractDate())
+					._consumer_(message.getIssuerConnector())._provider_(URI.create(issueConnector)).build();
 
 			return MultipartMessageProcessor.serializeToJsonLD(ca);
 		} catch (IOException e) {
 			logger.error("Error while creating contract agreement", e);
-		}
 
-		return null;
+			throw new InternalRecipientException("Error while creating contract agreement", message);
+		}
 	}
 
-	private String createContractAgreementMyData() {
+	private String createContractAgreementMyData(Message message) {
 		String contractAgreement = null;
 		byte[] bytes;
 		try {
@@ -169,13 +171,15 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 			contractAgreement = IOUtils.toString(bytes, "UTF8");
 		} catch (IOException e) {
 			logger.error("Error while reading contract agreement file from dataLakeDirectory {}", e);
+
+			throw new InternalRecipientException("Error while reading contract agreement file from dataLakeDirectory",
+					message);
 		}
 
 		return contractAgreement;
-
 	}
 
-	private Connector getSelfDescription() {
+	private Connector getSelfDescription(Message message) {
 		URI eccURI = null;
 
 		try {
@@ -195,24 +199,25 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 					logger.error("Could not fetch self description, ECC responded with status {} and message \r{}",
 							response.getStatusCodeValue(), response.getBody());
 
-					return null;
+					throw new InternalRecipientException("Could not fetch self description", message);
 				}
 			}
 			logger.error("Could not fetch self description, ECC did not respond");
 
-			return null;
+			throw new InternalRecipientException("Could not fetch self description, ECC did not respond", message);
 		} catch (URISyntaxException e) {
 			logger.error("Could not create URI for Self Description request.", e);
 
-			return null;
+			throw new InternalRecipientException("Could not create URI for Self Description request", message);
 		} catch (IOException e) {
 			logger.error("Could not deserialize self description to Connector instance", e);
 
-			return null;
+			throw new InternalRecipientException("Could not deserialize self description to Connector instance",
+					message);
 		}
 	}
 
-	private ContractOffer getPermissionAndTarget(Connector connector, URI permission, URI target) {
+	private ContractOffer getPermissionAndTarget(Connector connector, URI permission, URI target, Message message) {
 		for (ResourceCatalog resourceCatalog : connector.getResourceCatalog()) {
 			for (Resource resource : resourceCatalog.getOfferedResource()) {
 				for (ContractOffer co : resource.getContractOffer()) {
@@ -227,6 +232,7 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 			}
 		}
 
-		return null;
+		throw new InternalRecipientException(
+				"Could not find contract offer that match with request - permissionId and target", message);
 	}
 }
