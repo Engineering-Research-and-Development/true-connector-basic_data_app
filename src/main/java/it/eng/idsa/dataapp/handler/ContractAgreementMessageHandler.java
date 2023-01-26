@@ -25,7 +25,6 @@ public class ContractAgreementMessageHandler extends DataAppMessageHandler {
 		logger.info("Handling header through ContractAgreementMessageHandler");
 
 		ContractAgreementMessage cam = (ContractAgreementMessage) message;
-
 		Map<String, Object> response = new HashMap<>();
 		Message contractAgreementResponseMessage = null;
 		String responsePayload = null;

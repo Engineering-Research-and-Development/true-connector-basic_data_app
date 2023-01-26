@@ -87,7 +87,8 @@ public class DataControllerBodyForm {
 		}
 		// prepare body response - multipart message.
 		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
-				MultipartMessageProcessor.serializeToJsonLD(responseMap.get("header")),
+				MultipartMessageProcessor.serializeToJsonLD(responseMap.get(
+						"header")),
 				responseMap.get("payload") != null ? responseMap.get("payload").toString() : null, payloadContentType);
 
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
