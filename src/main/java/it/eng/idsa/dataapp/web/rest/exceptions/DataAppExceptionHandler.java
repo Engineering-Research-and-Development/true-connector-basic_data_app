@@ -48,16 +48,13 @@ public class DataAppExceptionHandler extends ResponseEntityExceptionHandler {
 	private String issuerConnector;
 	private String httpConfig;
 	private MessageUtil messageUtil;
-	private HttpHeadersUtil httpHeadersUtil;
 
 	public DataAppExceptionHandler(@Value("${application.ecc.issuer.connector}") String issuerConnector,
-			@Value("${application.dataapp.http.config}") String httpConfig, MessageUtil messageUtil,
-			HttpHeadersUtil httpHeadersUtil) {
+			@Value("${application.dataapp.http.config}") String httpConfig, MessageUtil messageUtil) {
 		super();
 		this.issuerConnector = issuerConnector;
 		this.httpConfig = httpConfig;
 		this.messageUtil = messageUtil;
-		this.httpHeadersUtil = httpHeadersUtil;
 	}
 
 	@ExceptionHandler(InternalRecipientException.class)
@@ -113,8 +110,8 @@ public class DataAppExceptionHandler extends ResponseEntityExceptionHandler {
 		if (StringUtils.equals("http-header", httpConfig)) {
 			HttpHeaders responseHeaders = new HttpHeaders();
 			Map<String, Object> responseHeaderMap = new HashMap<>();
-			responseHeaderMap = httpHeadersUtil.messageToHeaders(header);
-			responseHeaders = httpHeadersUtil.createResponseMessageHeaders(responseHeaderMap);
+			responseHeaderMap = HttpHeadersUtil.messageToHttpHeaders(header);
+			responseHeaders = HttpHeadersUtil.createResponseMessageHttpHeaders(responseHeaderMap);
 
 			ResponseEntity<?> response = ResponseEntity.noContent().headers(responseHeaders).build();
 
@@ -164,9 +161,8 @@ public class DataAppExceptionHandler extends ResponseEntityExceptionHandler {
 			headers.add("ids-rejectionreason", rejectionReason.toString());
 
 			headers.add("foo", "bar");
-			Map<String, Object> headersMap = httpHeadersUtil.httpHeadersToMap(headers);
 
-			return httpHeadersUtil.headersToMessage(headersMap);
+			return HttpHeadersUtil.httpHeadersToMessage(headers);
 		} else {
 
 			return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
@@ -179,10 +175,12 @@ public class DataAppExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	protected URI whoIAm() {
+
 		return URI.create("http://auto-generated");
 	}
 
 	protected URI whoIAmEngRDProvider() {
+
 		return URI.create(issuerConnector);
 	}
 }
