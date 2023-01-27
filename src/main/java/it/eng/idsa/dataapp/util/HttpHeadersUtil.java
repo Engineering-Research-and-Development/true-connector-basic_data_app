@@ -1,28 +1,25 @@
 package it.eng.idsa.dataapp.util;
 
-import java.net.URI;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import javax.xml.datatype.XMLGregorianCalendar;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.custom.XMLGregorianCalendarDeserializer;
 import de.fraunhofer.iais.eis.ids.jsonld.custom.XMLGregorianCalendarSerializer;
+import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
 import it.eng.idsa.multipart.util.UtilMessageService;
 
 @Component
@@ -30,12 +27,8 @@ public class HttpHeadersUtil {
 
 	private static final Logger logger = LoggerFactory.getLogger(HttpHeadersUtil.class);
 
-	public HttpHeadersUtil() {
-		super();
-	}
-
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> messageToHeaders(Message message) {
+	public static Map<String, Object> messageToHttpHeaders(Message message) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Converting following message to http-headers: \r\n {}",
 					UtilMessageService.getMessageAsString(message));
@@ -86,13 +79,7 @@ public class HttpHeadersUtil {
 		return headers;
 	}
 
-	@SuppressWarnings("unchecked")
-	public Message headersToMessage(Map<String, Object> headers) {
-		// bare in mind that in rumtime, headers is
-		// org.apache.camel.util.CaseInsensitiveMap
-		// which means that headers.get("aaa") is the same like headers.get("Aaa")
-		logger.debug("Converting following http-headers to message: \r\n {}", headers.toString());
-
+	public static Message httpHeadersToMessage(HttpHeaders httpHeaders) {
 		Map<String, Object> messageAsHeader = new HashMap<>();
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -104,49 +91,51 @@ public class HttpHeadersUtil {
 		mapper.setSerializationInclusion(Include.NON_NULL);
 
 		Map<String, Object> tokeAsMap = null;
-		if (headers.containsKey("ids-securitytoken-type")) {
-			tokeAsMap = processDAPSTokenHeaders(headers);
+		if (httpHeaders.containsKey("ids-securitytoken-type")) {
+			tokeAsMap = processDAPSTokenHttpHeaders(httpHeaders);
 		}
-		String type = (String) headers.get("ids-messagetype");
-		String id = (String) headers.get("ids-id");
+		String type = (String) httpHeaders.getFirst("ids-messagetype");
+		String id = (String) httpHeaders.getFirst("ids-id");
 
-		// handle recipientConnector - List
-		List<URI> recipientConnector = new ArrayList<>();
-		if (headers.containsKey("ids-recipientconnector")) {
-			if (headers.get("ids-recipientconnector") instanceof String) {
-				if (!headers.get("ids-recipientconnector").toString().equals("[]")) {
-					recipientConnector.add(URI.create((String) headers.get("ids-recipientconnector")));
-				}
-			} else {
-				recipientConnector = (List<URI>) headers.get("ids-recipientconnector");
+		List<String> fieldNames = getIDSMessageFieldNames(type);
+
+		for (String field : fieldNames) {
+			if (httpHeaders.containsKey(field.replace("ids:", "ids-"))) {
+				Object value = httpHeaders.get(field.replace("ids:", "ids-")).size() == 1
+						? httpHeaders.getFirst(field.replace("ids:", "ids-"))
+						: httpHeaders.get(field.replace("ids:", "ids-"));
+
+				messageAsHeader.put(field, value);
 			}
-			headers.remove("ids-recipientconnector");
 		}
-		// handle recipientAgent - List
-		List<URI> recipientAgent = new ArrayList<>();
-		if (headers.containsKey("ids-recipientagent")) {
-			if (headers.get("ids-recipientagent") instanceof String) {
-				if (!headers.get("ids-recipientagent").toString().equals("[]")) {
-
-					recipientAgent.add(URI.create((String) headers.get("ids-recipientagent")));
-				}
-			} else {
-				recipientAgent = (List<URI>) headers.get("ids-recipientagent");
-			}
-			headers.remove("ids-recipientagent");
-		}
-
-		messageAsHeader = getIDSHeaders(headers);
-
 		messageAsHeader.put("ids:securityToken", tokeAsMap);
-		messageAsHeader.put("ids:recipientConnector", recipientConnector);
-		messageAsHeader.put("ids:recipientAgent", recipientAgent);
-		messageAsHeader.remove("ids:messagetype");
-		messageAsHeader.remove("ids:id");
 		messageAsHeader.put("@type", type);
 		messageAsHeader.put("@id", id);
 
-		headers.entrySet().removeIf(entry -> entry.getKey().startsWith("ids-") || entry.getKey().startsWith("ids:"));
+		// handle recipientConnector - List
+		// handle recipientConnector - List
+		List<String> recipientConnector = new ArrayList<>();
+		if (httpHeaders.containsKey("ids-recipientconnector")) {
+			List<String> ss = httpHeaders.get("ids-recipientconnector");
+			if (!ss.isEmpty()) {
+				recipientConnector.addAll(httpHeaders.get("ids-recipientconnector"));
+			}
+			messageAsHeader.put("ids:recipientConnector", recipientConnector);
+			httpHeaders.remove("ids-recipientconnector");
+		}
+		// handle recipientAgent - List
+		List<String> recipientAgent = new ArrayList<>();
+		if (httpHeaders.containsKey("ids-recipientagent")) {
+			List<String> ss = httpHeaders.get("ids-recipientagent");
+			if (!ss.isEmpty()) {
+				recipientAgent.addAll(httpHeaders.get("ids-recipientagent"));
+			}
+			messageAsHeader.put("ids:recipientAgent", recipientAgent);
+			httpHeaders.remove("ids-recipientagent");
+		}
+
+		messageAsHeader.put("ids:recipientConnector", recipientConnector);
+		messageAsHeader.put("ids:recipientAgent", recipientAgent);
 
 		Message message = mapper.convertValue(messageAsHeader, Message.class);
 
@@ -158,47 +147,44 @@ public class HttpHeadersUtil {
 		return message;
 	}
 
-	public Map<String, Object> getIDSHeaders(Map<String, Object> headers) {
-		return headers.entrySet().stream().filter(e -> StringUtils.containsIgnoreCase(e.getKey(), "ids-"))
-				.collect(java.util.stream.Collectors.toMap(e -> e.getKey().replaceFirst("ids-", "ids:")
-						.replaceFirst(e.getKey().substring(4, 5), e.getKey().substring(4, 5).toLowerCase()),
-						e -> e.getValue()));
+	private static List<String> getIDSMessageFieldNames(String clazzName) {
+		Class<?> clazz = null;
+		try {
+			clazz = ClassLoader.getSystemClassLoader()
+					.loadClass("de.fraunhofer.iais.eis." + clazzName.replace("ids:", ""));
+		} catch (ClassNotFoundException e) {
+			logger.error("Error while getting IDS Message field names", e);
+
+			throw new InternalRecipientException("Error while getting IDS Message field names");
+		}
+		List<String> annotatedMethods = new ArrayList<>();
+		Method[] methods = clazz.getMethods();
+		for (Method method : methods) {
+			JsonProperty annotation = method.getAnnotation(JsonProperty.class);
+			if (annotation != null) {
+				annotatedMethods.add(annotation.value());
+			}
+		}
+		return annotatedMethods;
 	}
 
-	private Map<String, Object> processDAPSTokenHeaders(Map<String, Object> headers) {
+	private static Map<String, Object> processDAPSTokenHttpHeaders(HttpHeaders httpHeaders) {
 		Map<String, Object> tokenAsMap = new HashMap<>();
 		Map<String, Object> tokenFormatAsMap = new HashMap<>();
-		tokenAsMap.put("@type", headers.get("ids-securitytoken-type"));
-		tokenAsMap.put("@id", headers.get("ids-securitytoken-id"));
-		tokenFormatAsMap.put("@id", headers.get("ids-securitytoken-tokenformat"));
+		tokenAsMap.put("@type", httpHeaders.getFirst("ids-securitytoken-type"));
+		tokenAsMap.put("@id", httpHeaders.getFirst("ids-securitytoken-id"));
+		tokenFormatAsMap.put("@id", httpHeaders.getFirst("ids-securitytoken-tokenformat"));
 		tokenAsMap.put("ids:tokenFormat", tokenFormatAsMap);
-		tokenAsMap.put("ids:tokenValue", headers.get("ids-securitytoken-tokenvalue"));
+		tokenAsMap.put("ids:tokenValue", httpHeaders.getFirst("ids-securitytoken-tokenvalue"));
 
-		headers.remove("ids-securitytoken-type");
-		headers.remove("ids-securitytoken-id");
-		headers.remove("ids-securitytoken-tokenformat");
-		headers.remove("ids-securitytoken-tokenvalue");
+		httpHeaders.remove("ids-securitytoken-type");
+		httpHeaders.remove("ids-securitytoken-id");
+		httpHeaders.remove("ids-securitytoken-tokenformat");
+		httpHeaders.remove("ids-securitytoken-tokenvalue");
 		return tokenAsMap;
 	}
 
-	public Map<String, Object> httpHeadersToMap(HttpHeaders headers) {
-		logger.debug("Converting HttpHeaders to map: \r\n {}", headers.toString());
-		Map<String, Object> convertedHeaders = new HashMap<>();
-
-		headers.forEach((key, value) -> {
-			if (value.size() == 1) {
-				convertedHeaders.put(key, value.get(0));
-			} else {
-				convertedHeaders.put(key, value);
-			}
-		});
-
-		logger.debug("HttpHeaders converted, following map is the result: \r\n {}", convertedHeaders.toString());
-
-		return convertedHeaders;
-	}
-
-	public HttpHeaders createResponseMessageHeaders(Map<String, Object> httpHeadersReponse) {
+	public static HttpHeaders createResponseMessageHttpHeaders(Map<String, Object> httpHeadersReponse) {
 		HttpHeaders headers = new HttpHeaders();
 		Map<String, String> flatHttpHeadersReponse = httpHeadersReponse.entrySet().stream()
 				.filter(entry -> entry.getValue() instanceof String)
