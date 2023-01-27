@@ -15,14 +15,11 @@ import it.eng.idsa.multipart.util.UtilMessageService;
 
 class HttpHeadersUtilTest {
 
-	private HttpHeadersUtil httpHeadersUtil;
 	@Mock
 	private HttpHeaders htppHeaders;
 
 	@BeforeEach
 	public void init() {
-
-		httpHeadersUtil = new HttpHeadersUtil();
 
 		htppHeaders = new HttpHeaders();
 		htppHeaders.add("ids-messagetype", "ids:ArtifactResponseMessage");
@@ -39,7 +36,7 @@ class HttpHeadersUtilTest {
 	public void messageToHeadersTest_DescriptionRequestMessage() {
 		Message message = UtilMessageService.getDescriptionRequestMessage(null);
 
-		Map<String, Object> headers = httpHeadersUtil.messageToHeaders(message);
+		Map<String, Object> headers = HttpHeadersUtil.messageToHttpHeaders(message);
 
 		assertNotNull(headers.entrySet());
 		assertEquals(headers.get("IDS-Messagetype"), "ids:DescriptionRequestMessage");
@@ -51,7 +48,7 @@ class HttpHeadersUtilTest {
 	public void messageToHeadersTest_ContractRequestMessage() {
 		Message message = UtilMessageService.getContractRequestMessage();
 
-		Map<String, Object> headers = httpHeadersUtil.messageToHeaders(message);
+		Map<String, Object> headers = HttpHeadersUtil.messageToHttpHeaders(message);
 
 		assertNotNull(headers.entrySet());
 		assertEquals(headers.get("IDS-Messagetype"), "ids:ContractRequestMessage");
@@ -63,7 +60,7 @@ class HttpHeadersUtilTest {
 	public void messageToHeadersTest_ContractAgreementMessage() {
 		Message message = UtilMessageService.getContractAgreementMessage();
 
-		Map<String, Object> headers = httpHeadersUtil.messageToHeaders(message);
+		Map<String, Object> headers = HttpHeadersUtil.messageToHttpHeaders(message);
 
 		assertNotNull(headers.entrySet());
 		assertEquals(headers.get("IDS-Messagetype"), "ids:ContractAgreementMessage");
@@ -75,7 +72,7 @@ class HttpHeadersUtilTest {
 	public void messageToHeadersTest_ArtifactRequestMessage() {
 		Message message = UtilMessageService.getArtifactRequestMessage();
 
-		Map<String, Object> headers = httpHeadersUtil.messageToHeaders(message);
+		Map<String, Object> headers = HttpHeadersUtil.messageToHttpHeaders(message);
 
 		assertNotNull(headers.entrySet());
 		assertEquals(headers.get("IDS-Messagetype"), "ids:ArtifactRequestMessage");
@@ -88,8 +85,7 @@ class HttpHeadersUtilTest {
 		htppHeaders.add("ids-id",
 				"https://w3id.org/idsa/autogen/descriptionRequestMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f");
 
-		Map<String, Object> httpHeadersToMap = httpHeadersUtil.httpHeadersToMap(htppHeaders);
-		Message httpHeadersToMessage = httpHeadersUtil.headersToMessage(httpHeadersToMap);
+		Message httpHeadersToMessage = HttpHeadersUtil.httpHeadersToMessage(htppHeaders);
 
 		assertNotNull(httpHeadersToMessage);
 		assertEquals(htppHeaders.get("ids-id").get(0), httpHeadersToMessage.getId().toString());
@@ -100,8 +96,7 @@ class HttpHeadersUtilTest {
 		htppHeaders.add("ids-id",
 				"https://w3id.org/idsa/autogen/contractRequestMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f");
 
-		Map<String, Object> httpHeadersToMap = httpHeadersUtil.httpHeadersToMap(htppHeaders);
-		Message httpHeadersToMessage = httpHeadersUtil.headersToMessage(httpHeadersToMap);
+		Message httpHeadersToMessage = HttpHeadersUtil.httpHeadersToMessage(htppHeaders);
 
 		assertNotNull(httpHeadersToMessage);
 		assertEquals(htppHeaders.get("ids-id").get(0), httpHeadersToMessage.getId().toString());
@@ -112,8 +107,7 @@ class HttpHeadersUtilTest {
 		htppHeaders.add("ids-id",
 				"https://w3id.org/idsa/autogen/contractAgreementMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f");
 
-		Map<String, Object> httpHeadersToMap = httpHeadersUtil.httpHeadersToMap(htppHeaders);
-		Message httpHeadersToMessage = httpHeadersUtil.headersToMessage(httpHeadersToMap);
+		Message httpHeadersToMessage = HttpHeadersUtil.httpHeadersToMessage(htppHeaders);
 
 		assertNotNull(httpHeadersToMessage);
 		assertEquals(htppHeaders.get("ids-id").get(0), httpHeadersToMessage.getId().toString());
@@ -124,36 +118,24 @@ class HttpHeadersUtilTest {
 		htppHeaders.add("ids-id",
 				"https://w3id.org/idsa/autogen/artifactRequestMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f");
 
-		Map<String, Object> httpHeadersToMap = httpHeadersUtil.httpHeadersToMap(htppHeaders);
-		Message httpHeadersToMessage = httpHeadersUtil.headersToMessage(httpHeadersToMap);
+		Message httpHeadersToMessage = HttpHeadersUtil.httpHeadersToMessage(htppHeaders);
 
 		assertNotNull(httpHeadersToMessage);
 		assertEquals(htppHeaders.get("ids-id").get(0), httpHeadersToMessage.getId().toString());
 	}
 
 	@Test
-	public void httpHeadersToMapTest() {
-		htppHeaders.add("ids-id",
-				"https://w3id.org/idsa/autogen/descriptionRequestMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f");
-
-		Map<String, Object> httpHeadersToMap = httpHeadersUtil.httpHeadersToMap(htppHeaders);
-
-		assertNotNull(httpHeadersToMap);
-		assertEquals(htppHeaders.get("ids-id").get(0), httpHeadersToMap.get("ids-id"));
-	}
-
-	@Test
 	public void createResponseMessageHeadersTest() {
-		htppHeaders.add("ids-id",
-				"https://w3id.org/idsa/autogen/descriptionRequestMessage/eb3ab487-dfb0-4d18-b39a-585514dd044f");
 
-		Map<String, Object> httpHeadersToMap = httpHeadersUtil.httpHeadersToMap(htppHeaders);
+		Message message = UtilMessageService.getArtifactRequestMessage();
 
-		HttpHeaders messageToHeaders = httpHeadersUtil.createResponseMessageHeaders(httpHeadersToMap);
+		Map<String, Object> httpHeadersToMap = HttpHeadersUtil.messageToHttpHeaders(message);
+
+		HttpHeaders messageToHeaders = HttpHeadersUtil.createResponseMessageHttpHeaders(httpHeadersToMap);
 
 		assertNotNull(messageToHeaders);
-		assertEquals(htppHeaders.get("ids-messagetype"), messageToHeaders.get("ids-messagetype"));
-		assertEquals(htppHeaders.get("ids-id"), messageToHeaders.get("ids-id"));
+		assertEquals(message.getId().toString(), messageToHeaders.get("ids-id").get(0));
+
 	}
 
 }

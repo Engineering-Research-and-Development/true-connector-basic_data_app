@@ -22,12 +22,14 @@ class ArtifactMessageHandlerTest {
 	private Message message;
 	Map<String, Object> responseMap = new HashMap<>();
 	private String issuerConnector = "http://w3id.org/engrd/connector/";
+	private Boolean encodePayload = false;
 
 	@BeforeEach
 	public void init() {
 
 		MockitoAnnotations.initMocks(this);
 		ReflectionTestUtils.setField(artifactMessageHandler, "issuerConnector", issuerConnector);
+		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", encodePayload);
 		message = UtilMessageService.getArtifactRequestMessage();
 	}
 
