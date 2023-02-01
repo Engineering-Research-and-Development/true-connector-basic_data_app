@@ -9,6 +9,9 @@ import de.fraunhofer.iais.eis.Message;
 
 public abstract class DataAppMessageHandler {
 
+	public static final String HEADER = "header";
+	public static final String PAYLOAD = "payload";
+
 	@Value("${application.ecc.issuer.connector}")
 	private String issuerConnector;
 
