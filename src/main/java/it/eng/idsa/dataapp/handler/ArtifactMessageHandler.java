@@ -41,6 +41,8 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 		Map<String, Object> response = new HashMap<>();
 
 		if (arm.getRequestedArtifact() != null) {
+			logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact());
+
 			if (isBigPayload(arm.getRequestedArtifact().toString())) {
 				payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
 						: BigPayload.BIG_PAYLOAD;
@@ -49,15 +51,15 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 						: createResponsePayload();
 			}
 		} else {
+			logger.debug("Handling message without requestedElement");
+
 			payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
 					: createResponsePayload();
 		}
 
-		if (payload != null) {
-			artifactResponseMessage = createArtifactResponseMessage(arm);
-			response.put("header", artifactResponseMessage);
-			response.put("payload", payload);
-		}
+		artifactResponseMessage = createArtifactResponseMessage(arm);
+		response.put(DataAppMessageHandler.HEADER, artifactResponseMessage);
+		response.put(DataAppMessageHandler.PAYLOAD, payload);
 
 		return response;
 	}
