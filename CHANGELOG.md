@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.14-SNAPSHOT] - 2023-02-01
+
+### Added
+
+ - Message factory and proper handlers for each type of IDS message (Artifact Message, Contract Request Message, Contract Agreement Message, and  Description Request Message) which are holding business logic for processing messages
+ - HttpHeadersUtil - util class for handling things related to http-header conversion to IDS Messages
+ - Global Exception handler and exceptions related to all types of IDS Rejection Reasons (BAD_PARAMETERS, INTERNAL_RECIPIENT_ERROR, MALFORMED_MESSAGE, MESSAGE_TYPE_NOT_SUPPORTED, METHOD_NOT_SUPPORTED, NOT_AUTHENTICATED, NOT_AUTHORIZED, NOT_FOUND, TEMPORARILY_NOT_AVAILABLE, TOO_MANY_RESULTS, VERSION_NOT_SUPPORTED)
+ - SelfDescriptionService - service that holds business logic related to self-description
+
+### Changed
+
+ - Business logic is moved from Message Utils to proper Message handlers, and messages are processed in different message handlers
+ - Instead of returning null in different scenarios, and then building rejection messages, the proper exceptions are now thrown 
+ - All Data Controllers are refactored according to the new logic
+
 ## [0.1.13-SNAPSHOT] - 2022-12-22
 
 ### Notes
