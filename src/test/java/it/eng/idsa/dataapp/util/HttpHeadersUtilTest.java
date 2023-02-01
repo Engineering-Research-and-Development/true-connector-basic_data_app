@@ -2,8 +2,6 @@ package it.eng.idsa.dataapp.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Map;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -36,48 +34,48 @@ class HttpHeadersUtilTest {
 	public void messageToHeadersTest_DescriptionRequestMessage() {
 		Message message = UtilMessageService.getDescriptionRequestMessage(null);
 
-		Map<String, Object> headers = HttpHeadersUtil.messageToHttpHeaders(message);
+		HttpHeaders headers = HttpHeadersUtil.messageToHttpHeaders(message);
 
 		assertNotNull(headers.entrySet());
-		assertEquals(headers.get("IDS-Messagetype"), "ids:DescriptionRequestMessage");
-		assertEquals(headers.get("IDS-Id"), message.getId().toString());
-		assertEquals(headers.get("IDS-SecurityToken-TokenValue"), message.getSecurityToken().getTokenValue());
+		assertEquals(headers.get("IDS-Messagetype").get(0), "ids:DescriptionRequestMessage");
+		assertEquals(headers.get("IDS-Id").get(0), message.getId().toString());
+		assertEquals(headers.get("IDS-SecurityToken-TokenValue").get(0), message.getSecurityToken().getTokenValue());
 	}
 
 	@Test
 	public void messageToHeadersTest_ContractRequestMessage() {
 		Message message = UtilMessageService.getContractRequestMessage();
 
-		Map<String, Object> headers = HttpHeadersUtil.messageToHttpHeaders(message);
+		HttpHeaders headers = HttpHeadersUtil.messageToHttpHeaders(message);
 
 		assertNotNull(headers.entrySet());
-		assertEquals(headers.get("IDS-Messagetype"), "ids:ContractRequestMessage");
-		assertEquals(headers.get("IDS-Id"), message.getId().toString());
-		assertEquals(headers.get("IDS-SecurityToken-TokenValue"), message.getSecurityToken().getTokenValue());
+		assertEquals(headers.get("IDS-Messagetype").get(0), "ids:ContractRequestMessage");
+		assertEquals(headers.get("IDS-Id").get(0), message.getId().toString());
+		assertEquals(headers.get("IDS-SecurityToken-TokenValue").get(0), message.getSecurityToken().getTokenValue());
 	}
 
 	@Test
 	public void messageToHeadersTest_ContractAgreementMessage() {
 		Message message = UtilMessageService.getContractAgreementMessage();
 
-		Map<String, Object> headers = HttpHeadersUtil.messageToHttpHeaders(message);
+		HttpHeaders headers = HttpHeadersUtil.messageToHttpHeaders(message);
 
 		assertNotNull(headers.entrySet());
-		assertEquals(headers.get("IDS-Messagetype"), "ids:ContractAgreementMessage");
-		assertEquals(headers.get("IDS-Id"), message.getId().toString());
-		assertEquals(headers.get("IDS-SecurityToken-TokenValue"), message.getSecurityToken().getTokenValue());
+		assertEquals(headers.get("IDS-Messagetype").get(0), "ids:ContractAgreementMessage");
+		assertEquals(headers.get("IDS-Id").get(0), message.getId().toString());
+		assertEquals(headers.get("IDS-SecurityToken-TokenValue").get(0), message.getSecurityToken().getTokenValue());
 	}
 
 	@Test
 	public void messageToHeadersTest_ArtifactRequestMessage() {
 		Message message = UtilMessageService.getArtifactRequestMessage();
 
-		Map<String, Object> headers = HttpHeadersUtil.messageToHttpHeaders(message);
+		HttpHeaders headers = HttpHeadersUtil.messageToHttpHeaders(message);
 
 		assertNotNull(headers.entrySet());
-		assertEquals(headers.get("IDS-Messagetype"), "ids:ArtifactRequestMessage");
-		assertEquals(headers.get("IDS-Id"), message.getId().toString());
-		assertEquals(headers.get("IDS-SecurityToken-TokenValue"), message.getSecurityToken().getTokenValue());
+		assertEquals(headers.get("IDS-Messagetype").get(0), "ids:ArtifactRequestMessage");
+		assertEquals(headers.get("IDS-Id").get(0), message.getId().toString());
+		assertEquals(headers.get("IDS-SecurityToken-TokenValue").get(0), message.getSecurityToken().getTokenValue());
 	}
 
 	@Test
@@ -123,19 +121,4 @@ class HttpHeadersUtilTest {
 		assertNotNull(httpHeadersToMessage);
 		assertEquals(htppHeaders.get("ids-id").get(0), httpHeadersToMessage.getId().toString());
 	}
-
-	@Test
-	public void createResponseMessageHeadersTest() {
-
-		Message message = UtilMessageService.getArtifactRequestMessage();
-
-		Map<String, Object> httpHeadersToMap = HttpHeadersUtil.messageToHttpHeaders(message);
-
-		HttpHeaders messageToHeaders = HttpHeadersUtil.createResponseMessageHttpHeaders(httpHeadersToMap);
-
-		assertNotNull(messageToHeaders);
-		assertEquals(message.getId().toString(), messageToHeaders.get("ids-id").get(0));
-
-	}
-
 }

@@ -76,5 +76,4 @@ class MessageHandlerFactoryTest {
 		assertNotNull(handler);
 		assertTrue(handler instanceof ArtifactMessageHandler);
 	}
-
 }
