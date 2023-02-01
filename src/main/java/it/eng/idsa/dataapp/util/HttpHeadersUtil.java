@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.xml.datatype.XMLGregorianCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,68 @@ public class HttpHeadersUtil {
 	private static final Logger logger = LoggerFactory.getLogger(HttpHeadersUtil.class);
 
 	@SuppressWarnings("unchecked")
-	public static Map<String, Object> messageToHttpHeaders(Message message) {
+	public static HttpHeaders messageToHttpHeaders(Message message) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("Converting following message to http-headers: \r\n {}",
+					UtilMessageService.getMessageAsString(message));
+		}
+		HttpHeaders headers = new HttpHeaders();
+		ObjectMapper mapper = new ObjectMapper();
+		// exclude null values from map
+		mapper.setSerializationInclusion(Include.NON_NULL);
+
+		SimpleModule simpleModule = new SimpleModule();
+		simpleModule.addSerializer(XMLGregorianCalendar.class, new XMLGregorianCalendarSerializer());
+		mapper.registerModule(simpleModule);
+
+		Map<String, Object> messageAsMap = mapper.convertValue(message, new TypeReference<Map<String, Object>>() {
+		});
+
+		messageAsMap.entrySet().forEach(entry -> {
+			if (entry.getKey().equals("@id")) {
+				headers.add("IDS-Id", message.getId().toString());
+			} else if (entry.getKey().equals("@type")) {
+				// when using Java it looks like this
+				// headers.put("IDS-Messagetype", "ids:" +
+				// message.getClass().getInterfaces()[1].getSimpleName());
+				// for now we agreed to use the following, because of simplicity
+				headers.add("IDS-Messagetype", entry.getValue().toString());
+			} else if (entry.getKey().equals("ids:securityToken")) {
+				headers.add("IDS-SecurityToken-Type", ((Map<String, Object>) entry.getValue()).get("@type").toString());
+				headers.add("IDS-SecurityToken-Id", message.getSecurityToken().getId().toString());
+				headers.add("IDS-SecurityToken-TokenFormat", message.getSecurityToken().getTokenFormat().toString());
+				headers.add("IDS-SecurityToken-TokenValue", message.getSecurityToken().getTokenValue());
+			} else if (entry.getValue() instanceof Map) {
+				Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
+				if (valueMap.get("@id") != null) {
+					headers.add(entry.getKey().replaceFirst("ids:", "IDS-").replaceFirst(entry.getKey().substring(4, 5),
+							entry.getKey().substring(4, 5).toUpperCase()), valueMap.get("@id").toString());
+				} else if (valueMap.get("@value") != null) {
+					headers.add(entry.getKey().replaceFirst("ids:", "IDS-").replaceFirst(entry.getKey().substring(4, 5),
+							entry.getKey().substring(4, 5).toUpperCase()), valueMap.get("@value").toString());
+				}
+			} else if (entry.getValue() instanceof ArrayList) {
+				ArrayList<String> valueList = (ArrayList<String>) entry.getValue();
+				if (valueList.isEmpty()) {
+					headers.add(entry.getKey().replaceFirst("ids:", "IDS-").replaceFirst(entry.getKey().substring(4, 5),
+							entry.getKey().substring(4, 5).toUpperCase()), "");
+				} else {
+					String result = String.join(", ", valueList);
+					headers.add(entry.getKey().replaceFirst("ids:", "IDS-").replaceFirst(entry.getKey().substring(4, 5),
+							entry.getKey().substring(4, 5).toUpperCase()), result);
+				}
+			} else {
+				headers.add(entry.getKey().replaceFirst("ids:", "IDS-").replaceFirst(entry.getKey().substring(4, 5),
+						entry.getKey().substring(4, 5).toUpperCase()), entry.getValue().toString());
+			}
+		});
+		logger.debug("Message converted, following headers are the result: \r\n {}", headers.toString());
+
+		return headers;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> messageToMap(Message message) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Converting following message to http-headers: \r\n {}",
 					UtilMessageService.getMessageAsString(message));
@@ -165,6 +225,7 @@ public class HttpHeadersUtil {
 				annotatedMethods.add(annotation.value());
 			}
 		}
+
 		return annotatedMethods;
 	}
 
@@ -181,21 +242,7 @@ public class HttpHeadersUtil {
 		httpHeaders.remove("ids-securitytoken-id");
 		httpHeaders.remove("ids-securitytoken-tokenformat");
 		httpHeaders.remove("ids-securitytoken-tokenvalue");
+
 		return tokenAsMap;
-	}
-
-	public static HttpHeaders createResponseMessageHttpHeaders(Map<String, Object> httpHeadersReponse) {
-		HttpHeaders headers = new HttpHeaders();
-		Map<String, String> flatHttpHeadersReponse = httpHeadersReponse.entrySet().stream()
-				.filter(entry -> entry.getValue() instanceof String)
-				.collect(Collectors.toMap(Map.Entry::getKey, e -> (String) e.getValue()));
-
-		flatHttpHeadersReponse.forEach((key, value) -> {
-			headers.add(key, value);
-		});
-
-		headers.add("foo", "bar");
-
-		return headers;
 	}
 }
