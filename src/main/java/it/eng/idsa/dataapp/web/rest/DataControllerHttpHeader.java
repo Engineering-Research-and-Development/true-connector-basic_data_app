@@ -1,6 +1,5 @@
 package it.eng.idsa.dataapp.web.rest;
 
-import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,14 +25,11 @@ public class DataControllerHttpHeader {
 
 	private MessageUtil messageUtil;
 	private MessageHandlerFactory factory;
-//	private HttpHeadersUtil httpHeadersUtil;
 
-	public DataControllerHttpHeader(MessageUtil messageUtil, MessageHandlerFactory factory,
-			HttpHeadersUtil httpHeadersUtil) {
+	public DataControllerHttpHeader(MessageUtil messageUtil, MessageHandlerFactory factory) {
 		super();
 		this.messageUtil = messageUtil;
 		this.factory = factory;
-//		this.httpHeadersUtil = httpHeadersUtil;
 	}
 
 	@PostMapping(value = "/data")
@@ -55,22 +51,21 @@ public class DataControllerHttpHeader {
 		// Create handler based on type of message and get map with header and payload
 		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
 		Map<String, Object> responseMap = handler.handleMessage(message, payload);
-		Map<String, Object> responseHeaderMap = new HashMap<>();
-		if (responseMap.get("header") != null) {
-			responseHeaderMap = HttpHeadersUtil.messageToHttpHeaders((Message) responseMap.get("header"));
-			responseHeaders = HttpHeadersUtil.createResponseMessageHttpHeaders(responseHeaderMap);
+		Object responseHeader = responseMap.get(DataAppMessageHandler.HEADER);
+		Object responsePayload = responseMap.get(DataAppMessageHandler.PAYLOAD);
+		if (responseHeader != null) {
+			responseHeaders = HttpHeadersUtil.messageToHttpHeaders((Message) responseHeader);
 		}
 
 		ResponseEntity<?> response = ResponseEntity.noContent().headers(responseHeaders).build();
 
 		MediaType payloadContentType = MediaType.TEXT_PLAIN;
 
-		if (responseMap.get("payload") != null && messageUtil.isValidJSON(responseMap.get("payload").toString())) {
+		if (responsePayload != null && messageUtil.isValidJSON(responsePayload.toString())) {
 			payloadContentType = MediaType.APPLICATION_JSON;
 		}
 
-		response = ResponseEntity.ok().headers(responseHeaders).contentType(payloadContentType)
-				.body(responseMap.get("payload"));
+		response = ResponseEntity.ok().headers(responseHeaders).contentType(payloadContentType).body(responsePayload);
 
 		return response;
 	}

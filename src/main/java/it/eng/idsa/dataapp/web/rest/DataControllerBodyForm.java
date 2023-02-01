@@ -80,16 +80,17 @@ public class DataControllerBodyForm {
 		// Create handler based on type of message and get map with header and payload
 		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
 		Map<String, Object> responseMap = handler.handleMessage(message, payload);
-
+		Object responseHeader = responseMap.get(DataAppMessageHandler.HEADER);
+		Object responsePayload = responseMap.get(DataAppMessageHandler.PAYLOAD);
 		ContentType payloadContentType = ContentType.TEXT_PLAIN;
-		if (responseMap.get("payload") != null && messageUtil.isValidJSON(responseMap.get("payload").toString())) {
+
+		if (responsePayload != null && messageUtil.isValidJSON(responsePayload.toString())) {
 			payloadContentType = ContentType.APPLICATION_JSON;
 		}
 		// prepare body response - multipart message.
 		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
-				MultipartMessageProcessor.serializeToJsonLD(responseMap.get(
-						"header")),
-				responseMap.get("payload") != null ? responseMap.get("payload").toString() : null, payloadContentType);
+				MultipartMessageProcessor.serializeToJsonLD(responseHeader),
+				responsePayload != null ? responsePayload.toString() : null, payloadContentType);
 
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 		resultEntity.writeTo(outStream);
