@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.14-SNAPSHOT] - 2023-02-01
+
+### Changed
+
+ - Multipart message library upgrade from 1.0.14-SNAPSHOT to 1.0.15-SNAPSHOT (memory cleaner in MMP)
+ - WebSocket Message Streamer library upgrade from 1.0.15-SNAPSHOT to 1.0.16-SNAPSHOT (memory cleaner in MMP)
+
 ## [0.1.13-SNAPSHOT] - 2022-12-22
 
 ### Notes
