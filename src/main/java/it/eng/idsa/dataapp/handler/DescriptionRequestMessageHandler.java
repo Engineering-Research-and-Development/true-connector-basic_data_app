@@ -43,12 +43,13 @@ public class DescriptionRequestMessageHandler extends DataAppMessageHandler {
 		String responsePayload = null;
 
 		if (drm.getRequestedElement() != null) {
-			String element = getRequestedElement(drm.getRequestedElement(),
+			responsePayload = getRequestedElement(drm.getRequestedElement(),
 					selfDescriptionService.getSelfDescription(message), message);
-			responsePayload = element;
+			;
 		} else {
 			responsePayload = selfDescriptionService.getSelfDescriptionAsString(message);
 		}
+
 		descriptionResponseMessage = createDescriptionResponseMessage(drm);
 
 		response.put("header", descriptionResponseMessage);
