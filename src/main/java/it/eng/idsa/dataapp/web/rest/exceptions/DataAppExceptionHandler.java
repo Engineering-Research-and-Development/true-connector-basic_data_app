@@ -198,9 +198,6 @@ public class DataAppExceptionHandler extends ResponseEntityExceptionHandler {
 			HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
 					MultipartMessageProcessor.serializeToJsonLD(header), null, payloadContentType);
 
-			String contentType = resultEntity.getContentType().getValue();
-			contentType = contentType.replace("multipart/form-data", "multipart/mixed");
-
 			ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 			resultEntity.writeTo(outStream);
 			outStream.flush();
