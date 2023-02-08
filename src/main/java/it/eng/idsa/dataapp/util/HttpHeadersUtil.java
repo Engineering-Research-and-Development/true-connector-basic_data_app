@@ -9,7 +9,6 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -21,7 +20,6 @@ import de.fraunhofer.iais.eis.ids.jsonld.custom.XMLGregorianCalendarSerializer;
 import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
 import it.eng.idsa.multipart.util.UtilMessageService;
 
-@Component
 public class HttpHeadersUtil {
 
 	private static final Logger logger = LoggerFactory.getLogger(HttpHeadersUtil.class);
@@ -82,58 +80,6 @@ public class HttpHeadersUtil {
 						entry.getKey().substring(4, 5).toUpperCase()), entry.getValue().toString());
 			}
 		});
-		logger.debug("Message converted, following headers are the result: \r\n {}", headers.toString());
-
-		return headers;
-	}
-
-	@SuppressWarnings("unchecked")
-	public static Map<String, Object> messageToMap(Message message) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Converting following message to http-headers: \r\n {}",
-					UtilMessageService.getMessageAsString(message));
-		}
-		Map<String, Object> headers = new HashMap<>();
-		ObjectMapper mapper = new ObjectMapper();
-		// exclude null values from map
-		mapper.setSerializationInclusion(Include.NON_NULL);
-
-		SimpleModule simpleModule = new SimpleModule();
-		simpleModule.addSerializer(XMLGregorianCalendar.class, new XMLGregorianCalendarSerializer());
-		mapper.registerModule(simpleModule);
-
-		Map<String, Object> messageAsMap = mapper.convertValue(message, new TypeReference<Map<String, Object>>() {
-		});
-
-		messageAsMap.entrySet().forEach(entry -> {
-			if (entry.getKey().equals("@id")) {
-				headers.put("IDS-Id", message.getId().toString());
-			} else if (entry.getKey().equals("@type")) {
-				// when using Java it looks like this
-				// headers.put("IDS-Messagetype", "ids:" +
-				// message.getClass().getInterfaces()[1].getSimpleName());
-				// for now we agreed to use the following, because of simplicity
-				headers.put("IDS-Messagetype", entry.getValue());
-			} else if (entry.getKey().equals("ids:securityToken")) {
-				headers.put("IDS-SecurityToken-Type", ((Map<String, Object>) entry.getValue()).get("@type"));
-				headers.put("IDS-SecurityToken-Id", message.getSecurityToken().getId().toString());
-				headers.put("IDS-SecurityToken-TokenFormat", message.getSecurityToken().getTokenFormat().toString());
-				headers.put("IDS-SecurityToken-TokenValue", message.getSecurityToken().getTokenValue());
-			} else if (entry.getValue() instanceof Map) {
-				Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
-				if (valueMap.get("@id") != null) {
-					headers.put(entry.getKey().replaceFirst("ids:", "IDS-").replaceFirst(entry.getKey().substring(4, 5),
-							entry.getKey().substring(4, 5).toUpperCase()), valueMap.get("@id"));
-				} else if (valueMap.get("@value") != null) {
-					headers.put(entry.getKey().replaceFirst("ids:", "IDS-").replaceFirst(entry.getKey().substring(4, 5),
-							entry.getKey().substring(4, 5).toUpperCase()), valueMap.get("@value"));
-				}
-			} else {
-				headers.put(entry.getKey().replaceFirst("ids:", "IDS-").replaceFirst(entry.getKey().substring(4, 5),
-						entry.getKey().substring(4, 5).toUpperCase()), entry.getValue());
-			}
-		});
-
 		logger.debug("Message converted, following headers are the result: \r\n {}", headers.toString());
 
 		return headers;

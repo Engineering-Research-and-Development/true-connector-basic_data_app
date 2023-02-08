@@ -5,9 +5,6 @@ FROM eclipse-temurin:11-jre-alpine
 # Add Maintainer Info
 LABEL maintainer="gabriele.deluca@eng.it"
 
-#Install wget from remote repository
-RUN apk add --no-cache wget
-
 # Install whois service
 # RUN yum install -y whois
 
