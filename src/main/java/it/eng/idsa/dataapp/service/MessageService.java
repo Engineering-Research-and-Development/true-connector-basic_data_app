@@ -11,9 +11,9 @@ import it.eng.idsa.dataapp.domain.MessageIDS;
  */
 
 public interface MessageService {
-	
-	public List<MessageIDS> getMessages();
-	
-	public void setMessage(String contentType, String header, String payload);
-	
+
+	List<MessageIDS> getMessages();
+
+	void setMessage(String contentType, String header, String payload);
+
 }

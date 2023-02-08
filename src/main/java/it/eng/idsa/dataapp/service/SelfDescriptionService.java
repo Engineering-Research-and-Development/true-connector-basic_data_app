@@ -5,7 +5,7 @@ import de.fraunhofer.iais.eis.Message;
 
 public interface SelfDescriptionService {
 
-	public Connector getSelfDescription(Message message);
+	Connector getSelfDescription(Message message);
 
-	public String getSelfDescriptionAsString(Message message);
+	String getSelfDescriptionAsString(Message message);
 }
