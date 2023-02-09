@@ -14,7 +14,6 @@
 	<version>0.1.14-SNAPSHOT</version>
 	<name>market4.0-data-app</name>
 	<description>The project for market4.0-data-app</description>
-
 	<properties>
 		<java.version>11</java.version>
 		<tomcat.version>9.0.27</tomcat.version>
@@ -22,8 +21,8 @@
 		<information.model.version>4.1.1</information.model.version>
 		<multipart.message.processor.version>1.0.14-SNAPSHOT</multipart.message.processor.version>
 		<websocket.message.streamer.version>1.0.15-SNAPSHOT</websocket.message.streamer.version>
+		<jacoco.version>0.8.8</jacoco.version>
 	</properties>
-
 	<repositories>
 		<repository>
 			<id>snapshots</id>
@@ -48,14 +47,12 @@
 			<url>https://maven.pkg.github.com/Engineering-Research-and-Development/market4.0-data_app_test_BE</url>
 		</repository>
 	</distributionManagement>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
 			<artifactId>maven-model</artifactId>
 			<version>3.6.3</version>
 		</dependency>
-
 		<!-- Spring Boot - common dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -80,7 +77,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<!-- Swagger -->
 		<dependency>
 			<groupId>io.springfox</groupId>
@@ -92,7 +88,6 @@
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>2.9.2</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
@@ -107,13 +102,11 @@
 			<artifactId>logback-classic</artifactId>
 			<groupId>ch.qos.logback</groupId>
 		</dependency>
-
 		<!-- H2 database -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 		</dependency>
-
 		<!-- Fraunhofer -->
 		<dependency>
 			<groupId>de.fraunhofer.iais.eis.ids.infomodel</groupId>
@@ -125,7 +118,6 @@
 			<artifactId>validation-serialization-provider</artifactId>
 			<version>${information.model.version}</version>
 		</dependency>
-
 		<!-- it.eng.idsa -->
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
@@ -161,7 +153,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
 		<dependency>
 			<groupId>it.eng.idsa</groupId>
 			<artifactId>multipart-message-processor</artifactId>
@@ -170,47 +161,39 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpmime</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
 			<version>1.1.1</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>1.8</version>
 		</dependency>
-
 		<!-- gson -->
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
 	</dependencies>
-
 	<build>
 		<resources>
 			<resource>
@@ -255,7 +238,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -290,7 +272,31 @@
 					</execution>
 				</executions>
 			</plugin>
+			            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>it/eng/idsa/dataapp/domain/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>generate-coverage-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 		</plugins>
 	</build>
-
 </project>
