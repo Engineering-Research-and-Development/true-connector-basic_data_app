@@ -19,8 +19,8 @@
 		<tomcat.version>9.0.27</tomcat.version>
 		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
 		<information.model.version>4.1.1</information.model.version>
-		<multipart.message.processor.version>1.0.14-SNAPSHOT</multipart.message.processor.version>
-		<websocket.message.streamer.version>1.0.15-SNAPSHOT</websocket.message.streamer.version>
+		<multipart.message.processor.version>1.0.15-SNAPSHOT</multipart.message.processor.version>
+		<websocket.message.streamer.version>1.0.16-SNAPSHOT</websocket.message.streamer.version>
 		<jacoco.version>0.8.8</jacoco.version>
 	</properties>
 	<repositories>
