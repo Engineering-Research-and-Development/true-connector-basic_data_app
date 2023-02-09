@@ -75,7 +75,7 @@ import it.eng.idsa.multipart.util.UtilMessageService;
 @Component
 public class MessageUtil {
 	private static final Logger logger = LoggerFactory.getLogger(MessageUtil.class);
-	
+
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
 	private Boolean encodePayload;
@@ -88,9 +88,8 @@ public class MessageUtil {
 	static {
 		serializer = new Serializer();
 	}
-	
-	public MessageUtil(RestTemplateBuilder restTemplateBuilder,
-			ECCProperties eccProperties,
+
+	public MessageUtil(RestTemplateBuilder restTemplateBuilder, ECCProperties eccProperties,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
 			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
 			@Value("${application.ecc.issuer.connector}") String issuerConnector,
@@ -105,7 +104,7 @@ public class MessageUtil {
 		this.usageControlVersion = usageControlVersion;
 		this.dataLakeDirectory = dataLakeDirectory;
 	}
-	
+
 	public String createResponsePayload(Message requestHeader, String payload) {
 		if (requestHeader instanceof ContractRequestMessage) {
 			if (contractNegotiationDemo) {
@@ -144,12 +143,13 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
-		} else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(((ArtifactRequestMessage) requestHeader).getRequestedArtifact().toString())) {
+		} else if (requestHeader instanceof ArtifactRequestMessage
+				&& isBigPayload(((ArtifactRequestMessage) requestHeader).getRequestedArtifact().toString())) {
 			return encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
 		}
-			return  encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
+		return encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
 	}
-	
+
 	private boolean isBigPayload(String path) {
 		String isBig = path.substring(path.lastIndexOf('/'));
 		if (isBig.equals("/big")) {
@@ -159,28 +159,30 @@ public class MessageUtil {
 	}
 
 	private String createContractAgreementMyData() {
-	        String contractAgreement = null;
-	        byte[] bytes;
-	        try {
-	            bytes = Files.readAllBytes(dataLakeDirectory.resolve("contract_agreement.json"));
-	            contractAgreement = IOUtils.toString(bytes, "UTF8");
-	        } catch (IOException e) {
-				logger.error("Error while reading contract agreement file from dataLakeDirectory {}", e);
-			}
-			return contractAgreement;
-	            
+		String contractAgreement = null;
+		byte[] bytes;
+		try {
+			bytes = Files.readAllBytes(dataLakeDirectory.resolve("contract_agreement.json"));
+			contractAgreement = IOUtils.toString(bytes, "UTF8");
+		} catch (IOException e) {
+			logger.error("Error while reading contract agreement file from dataLakeDirectory {}", e);
+		}
+		return contractAgreement;
+
 	}
 
 	public String createResponsePayload(HttpHeaders httpHeaders, String payload) {
 		String requestMessageType = httpHeaders.getFirst("IDS-Messagetype");
 		if (requestMessageType.contains(ContractRequestMessage.class.getSimpleName())) {
-			//header message is not used (at the moment) so we can pass null here for first parameter
+			// header message is not used (at the moment) so we can pass null here for first
+			// parameter
 			return createContractAgreementPlatoon(URI.create(httpHeaders.get("IDS-IssuerConnector").get(0)), payload);
 		} else if (requestMessageType.contains(ContractAgreementMessage.class.getSimpleName())) {
 			return null;
 		} else if (requestMessageType.contains(DescriptionRequestMessage.class.getSimpleName())) {
 			if (httpHeaders.containsKey("IDS-RequestedElement")) {
-				String element = getRequestedElement(URI.create(httpHeaders.get("IDS-RequestedElement").get(0)), getSelfDescription());
+				String element = getRequestedElement(URI.create(httpHeaders.get("IDS-RequestedElement").get(0)),
+						getSelfDescription());
 				if (StringUtils.isNotBlank(element)) {
 					return element;
 				} else {
@@ -189,13 +191,13 @@ public class MessageUtil {
 			} else {
 				return getSelfDescriptionAsString();
 			}
-		} else if (requestMessageType.contains(ArtifactRequestMessage.class.getSimpleName()) && isBigPayload(httpHeaders.getFirst("IDS-RequestedArtifact"))) {
+		} else if (requestMessageType.contains(ArtifactRequestMessage.class.getSimpleName())
+				&& isBigPayload(httpHeaders.getFirst("IDS-RequestedArtifact"))) {
 			return encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
 		} else {
-			return  encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
+			return encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
 		}
 	}
-	
 
 	private String createResponsePayload() {
 		// Put check sum in the payload
@@ -217,41 +219,36 @@ public class MessageUtil {
 		logger.info("Encoding payload");
 		return Base64.getEncoder().encodeToString(payload);
 	}
-	
+
 	private String createContractAgreementPlatoon(URI consumerURI, String payload) {
 		try {
 			Connector connector = getSelfDescription();
 			ContractRequest contractRequest = serializer.deserialize(payload, ContractRequest.class);
 
-			ContractOffer co = getPermissionAndTarget(connector, 
-					contractRequest.getPermission().get(0).getId(), 
+			ContractOffer co = getPermissionAndTarget(connector, contractRequest.getPermission().get(0).getId(),
 					contractRequest.getPermission().get(0).getTarget());
 			List<Permission> permissions = new ArrayList<>();
-			if(co == null) {
+			if (co == null) {
 				logger.info("Could not find contract offer that match with request - permissionId and target");
 				return null;
 			}
-			for(Permission p: co.getPermission()) {
-				if(p.getId().equals(contractRequest.getPermission().get(0).getId()) 
+			for (Permission p : co.getPermission()) {
+				if (p.getId().equals(contractRequest.getPermission().get(0).getId())
 						&& p.getTarget().equals(contractRequest.getPermission().get(0).getTarget())) {
 					permissions.add(p);
 				}
 			}
-			ContractAgreement ca = new ContractAgreementBuilder()
-					._permission_(permissions)
-					._contractStart_(co.getContractStart())
-					._contractDate_(co.getContractDate())
-					._consumer_(consumerURI)
-					._provider_(URI.create(issueConnector))
-					.build();
-		
+			ContractAgreement ca = new ContractAgreementBuilder()._permission_(permissions)
+					._contractStart_(co.getContractStart())._contractDate_(co.getContractDate())._consumer_(consumerURI)
+					._provider_(URI.create(issueConnector)).build();
+
 			return MultipartMessageProcessor.serializeToJsonLD(ca);
 		} catch (IOException e) {
 			logger.error("Error while creating contract agreement", e);
 		}
 		return null;
 	}
-	
+
 	private ContractOffer getPermissionAndTarget(Connector connector, URI permission, URI target) {
 		for (ResourceCatalog resourceCatalog : connector.getResourceCatalog()) {
 			for (Resource resource : resourceCatalog.getOfferedResource()) {
@@ -267,26 +264,27 @@ public class MessageUtil {
 		}
 		return null;
 	}
-	
+
 	private Connector getSelfDescription() {
 		URI eccURI = null;
 
 		try {
-			eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccProperties.getPort(), 
+			eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccProperties.getPort(),
 					eccProperties.getSelfdescriptionContext(), null, null);
 			logger.info("Fetching self description from ECC {}.", eccURI.toString());
 
 			ResponseEntity<String> response = restTemplate.exchange(eccURI, HttpMethod.GET, null, String.class);
-			if (response != null ) {
+			if (response != null) {
 				if (response.getStatusCodeValue() == 200) {
 					String selfDescription = response.getBody();
 					logger.info("Deserializing self description.");
 					logger.debug("Self description content: {}{}", System.lineSeparator(), selfDescription);
 					return serializer.deserialize(selfDescription, Connector.class);
 				} else {
-					logger.error("Could not fetch self description, ECC responded with status {} and message \r{}", response.getStatusCodeValue(), response.getBody());
+					logger.error("Could not fetch self description, ECC responded with status {} and message \r{}",
+							response.getStatusCodeValue(), response.getBody());
 					return null;
-				} 
+				}
 			}
 			logger.error("Could not fetch self description, ECC did not respond");
 			return null;
@@ -298,19 +296,21 @@ public class MessageUtil {
 			return null;
 		}
 	}
-	
+
 	private String getSelfDescriptionAsString() {
 		try {
 			String sd = MultipartMessageProcessor.serializeToJsonLD(getSelfDescription());
-			//MultipartMessageProcessor.serializeToJsonLD(getSelfDescription()) on null Object returns String "null", this is a temporary fix
-			//TODO fix MultipartMessageProcessor.serializeToJsonLD(getSelfDescription()) so that it returns proper null if something fails
+			// MultipartMessageProcessor.serializeToJsonLD(getSelfDescription()) on null
+			// Object returns String "null", this is a temporary fix
+			// TODO fix MultipartMessageProcessor.serializeToJsonLD(getSelfDescription()) so
+			// that it returns proper null if something fails
 			return sd.equals("null") ? null : sd;
 		} catch (IOException e) {
 			logger.error("Could not serialize self description", e);
 		}
 		return null;
 	}
-	
+
 	private String getRequestedElement(URI requestedElement, Connector connector) {
 		for (ResourceCatalog catalog : connector.getResourceCatalog()) {
 			for (Resource offeredResource : catalog.getOfferedResource()) {
@@ -326,23 +326,21 @@ public class MessageUtil {
 		logger.error("Requested element not found.");
 		return null;
 	}
-	
+
 	public Message getResponseHeader(Message header) {
 		Message output = null;
 		if (null == header || null == header.getId() || header.getId().toString().isEmpty())
-			header = new NotificationMessageBuilder()
-			._securityToken_(UtilMessageService.getDynamicAttributeToken())
-			._senderAgent_(whoIAmEngRDProvider())
-			.build();
+			header = new NotificationMessageBuilder()._securityToken_(UtilMessageService.getDynamicAttributeToken())
+					._senderAgent_(whoIAmEngRDProvider()).build();
 		if (header instanceof ArtifactRequestMessage) {
 			output = createArtifactResponseMessage((ArtifactRequestMessage) header);
 		} else if (header instanceof ContractRequestMessage) {
-			if(contractNegotiationDemo) {
+			if (contractNegotiationDemo) {
 				logger.info("Returning default contract agreement");
 				output = createContractAgreementMessage((ContractRequestMessage) header);
 			} else {
 				logger.info("Creating processed notification, contract agreement needs evaluation");
-				output= createProcessNotificationMessage(null);
+				output = createProcessNotificationMessage(null);
 			}
 		} else if (header instanceof ContractAgreementMessage) {
 			output = createProcessNotificationMessage(header);
@@ -353,144 +351,115 @@ public class MessageUtil {
 		}
 		return output;
 	}
-	
+
 	public Message createResultMessage(Message header) {
-		return new ResultMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._senderAgent_(whoIAmEngRDProvider())
+		return new ResultMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				.build();
+				._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
 	}
 
 	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
-		// Need to set transferCotract from original message, it will be used in policy enforcement
-		return new ArtifactResponseMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._transferContract_(header.getTransferContract())
+		// Need to set transferCotract from original message, it will be used in policy
+		// enforcement
+		return new ArtifactResponseMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)._transferContract_(header.getTransferContract())
 				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				.build();
+				._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
 	}
-	
+
 	public Message createContractAgreementMessage(ContractRequestMessage header) {
-		return new ContractAgreementMessageBuilder()
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
+		return new ContractAgreementMessageBuilder()._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._transferContract_(header.getTransferContract())
-				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._issued_(DateUtil.now())
-				._issuerConnector_(whoIAmEngRDProvider())
-				._senderAgent_(whoIAmEngRDProvider())
+				._correlationMessage_(header != null ? header.getId() : whoIAm())._issued_(DateUtil.now())
+				._issuerConnector_(whoIAmEngRDProvider())._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(Util.asList(header != null ? header.getIssuerConnector() : whoIAm()))
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();
 	}
-	
+
 	private Message createDescriptionResponseMessage(DescriptionRequestMessage header) {
-		return new DescriptionResponseMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
+		return new DescriptionResponseMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();
 	}
 
 	public Message createRejectionMessage(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
+		return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.MALFORMED_MESSAGE)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();
 	}
 
 	public Message createRejectionToken(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
+		return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.NOT_AUTHENTICATED)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();
 	}
 
 	private URI whoIAm() {
 		return URI.create("http://auto-generated");
 	}
-	
+
 	private URI whoIAmEngRDProvider() {
 		return URI.create(issueConnector);
 	}
-	
+
 	private Message createProcessNotificationMessage(Message header) {
-		return new MessageProcessedNotificationMessageBuilder()
-				._issued_(DateUtil.now())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
-				._issuerConnector_(whoIAmEngRDProvider())
+		return new MessageProcessedNotificationMessageBuilder()._issued_(DateUtil.now())
+				._modelVersion_(UtilMessageService.MODEL_VERSION)._issuerConnector_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();
-	}	
+	}
 
 	public Message createRejectionNotFound(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
+		return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.NOT_FOUND)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();
 	}
-	
+
 	public Message createRejectionInternalRecipientError(Message header) {
-		return new RejectionMessageBuilder()
-				._issuerConnector_(whoIAmEngRDProvider())
-				._issued_(DateUtil.now())
+		return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._rejectionReason_(RejectionReason.INTERNAL_RECIPIENT_ERROR)
-				._securityToken_(UtilMessageService.getDynamicAttributeToken())
-				._senderAgent_(whoIAmEngRDProvider())
+				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();
 	}
-	
+
 	/**
 	 * 
 	 * @param header
 	 * @param payload
-	 * @param payloadContentType if is null, using default - application/json, otherwise using the one that is passed as in param
+	 * @param payloadContentType if is null, using default - application/json,
+	 *                           otherwise using the one that is passed as in param
 	 * @return
 	 */
 	public HttpEntity createMultipartMessageForm(String header, String payload, ContentType payloadContentType) {
-		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create()
-				.setStrictMode();
-		
-		ContentType payloadCT =  ContentType.TEXT_PLAIN;
-		
+		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create().setStrictMode();
+
+		ContentType payloadCT = ContentType.TEXT_PLAIN;
+
 		if (payloadContentType == null) {
 			if (isValidJSON(payload)) {
 				payloadCT = ContentType.APPLICATION_JSON;
@@ -498,7 +467,7 @@ public class MessageUtil {
 		} else {
 			payloadCT = payloadContentType;
 		}
-		
+
 		try {
 			FormBodyPart bodyHeaderPart;
 			ContentBody headerBody = new StringBody(header, ContentType.create("application/ld+json"));
@@ -519,14 +488,14 @@ public class MessageUtil {
 		}
 		return multipartEntityBuilder.build();
 	}
-	
+
 	public boolean isValidJSON(String json) {
-	    try {
-	        JsonParser.parseString(json);
-	    } catch (JsonSyntaxException e) {
-	        return false;
-	    }
-	    return true;
+		try {
+			JsonParser.parseString(json);
+		} catch (JsonSyntaxException e) {
+			return false;
+		}
+		return true;
 	}
 
 	public static MultiValueMap<String, String> REMOVE_IDS_MESSAGE_HEADERS(HttpHeaders headers) {
@@ -534,7 +503,7 @@ public class MessageUtil {
 		newHeaders.putAll(headers);
 		for (Iterator<String> iterator = newHeaders.keySet().iterator(); iterator.hasNext();) {
 			String key = iterator.next();
-			//String.contains is case sensitive so this should have minimal margin of error
+			// String.contains is case sensitive so this should have minimal margin of error
 			if (key.contains("IDS-")) {
 				iterator.remove();
 			}

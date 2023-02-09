@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>it.eng.idsa</groupId>
 	<artifactId>market4.0-data-app</artifactId>
-	<version>0.1.14-SNAPSHOT</version>
+	<version>0.2.0-SNAPSHOT</version>
 	<name>market4.0-data-app</name>
 	<description>The project for market4.0-data-app</description>
 
@@ -195,7 +195,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.8</version>
+			<version>1.10.0</version>
 		</dependency>
 
 		<!-- gson -->

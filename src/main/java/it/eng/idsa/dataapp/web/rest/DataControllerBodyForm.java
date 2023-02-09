@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -19,10 +20,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import de.fraunhofer.iais.eis.ContractRequestMessage;
-import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Message;
-import de.fraunhofer.iais.eis.RejectionMessage;
+import it.eng.idsa.dataapp.handler.DataAppMessageHandler;
+import it.eng.idsa.dataapp.handler.MessageHandlerFactory;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
@@ -32,17 +32,19 @@ public class DataControllerBodyForm {
 	private static final Logger logger = LoggerFactory.getLogger(DataControllerBodyForm.class);
 
 	private MessageUtil messageUtil;
-	
-	public DataControllerBodyForm(MessageUtil messageUtil) {
-		this.messageUtil= messageUtil;
-    }
-	
+	private MessageHandlerFactory factory;
+
+	public DataControllerBodyForm(MessageUtil messageUtil, MessageHandlerFactory factory) {
+		this.messageUtil = messageUtil;
+		this.factory = factory;
+	}
+
 	/**
 	 * 
 	 * @param httpHeaders
 	 * @param header
 	 * @param responseType
-	 * @param payload Could be MultipartFile or plain String
+	 * @param payload      Could be MultipartFile or plain String
 	 * @return
 	 * @throws UnsupportedOperationException
 	 * @throws IOException
@@ -64,7 +66,7 @@ public class DataControllerBodyForm {
 		} else {
 			logger.info("Payload is empty");
 		}
-		
+
 		if (payload instanceof MultipartFile) {
 			MultipartFile file = (MultipartFile) payload;
 			try (FileOutputStream fos = new FileOutputStream(file.getOriginalFilename())) {
@@ -72,43 +74,29 @@ public class DataControllerBodyForm {
 				fos.write(decoder);
 			}
 		}
-		
+
 		Message message = MultipartMessageProcessor.getMessage(header);
 
-		Message headerResponse = messageUtil.getResponseHeader(message);
-		String responsePayload = null;
-		if (!(headerResponse instanceof RejectionMessage)) {
-			responsePayload = messageUtil.createResponsePayload(message, payload != null ? payload.toString() : null);
-		}
-		if(responsePayload == null && message instanceof ContractRequestMessage) {
-			logger.info("Creating rejection message since contract agreement was not found");
-			headerResponse = messageUtil.createRejectionNotFound(message);
-		}
-		if(responsePayload == null && message instanceof DescriptionRequestMessage) {
-			logger.info("Creating rejection message since self description could not be fetched");
-			headerResponse = messageUtil.createRejectionInternalRecipientError(message);
-		}	
-		if (responsePayload != null && responsePayload.contains("ids:rejectionReason")) {
-			headerResponse = MultipartMessageProcessor.getMessage(responsePayload);
-			responsePayload = null;
-		}
-
+		// Create handler based on type of message and get map with header and payload
+		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
+		Map<String, Object> responseMap = handler.handleMessage(message, payload);
+		Object responseHeader = responseMap.get(DataAppMessageHandler.HEADER);
+		Object responsePayload = responseMap.get(DataAppMessageHandler.PAYLOAD);
 		ContentType payloadContentType = ContentType.TEXT_PLAIN;
-		if(responsePayload != null && messageUtil.isValidJSON(responsePayload)) {
+
+		if (responsePayload != null && messageUtil.isValidJSON(responsePayload.toString())) {
 			payloadContentType = ContentType.APPLICATION_JSON;
 		}
 		// prepare body response - multipart message.
 		HttpEntity resultEntity = messageUtil.createMultipartMessageForm(
-				MultipartMessageProcessor.serializeToJsonLD(headerResponse),
-				responsePayload,
-				payloadContentType);
-		
+				MultipartMessageProcessor.serializeToJsonLD(responseHeader),
+				responsePayload != null ? responsePayload.toString() : null, payloadContentType);
+
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        resultEntity.writeTo(outStream);
-        outStream.flush();
-		
-		return ResponseEntity.ok()
-				.header("foo", "bar")
+		resultEntity.writeTo(outStream);
+		outStream.flush();
+
+		return ResponseEntity.ok().header("foo", "bar")
 				.contentType(MediaType.parseMediaType(resultEntity.getContentType().getValue()))
 				.body(outStream.toString());
 	}
