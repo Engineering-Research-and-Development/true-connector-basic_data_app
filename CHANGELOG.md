@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
  - Instead of returning null in different scenarios, and then building rejection messages, the proper exceptions are now thrown 
  - All Data Controllers are refactored according to the new logic
  - Java runtime from openjdk:11.0.15-jre to eclipse-temurin:11-jre-alpine in Dockerfile
+ - Multipart message library upgrade from 1.0.14-SNAPSHOT to 1.0.15-SNAPSHOT (memory cleaner in MMP)
+ - WebSocket Message Streamer library upgrade from 1.0.15-SNAPSHOT to 1.0.16-SNAPSHOT (memory cleaner in MMP)
 
 ## [0.1.13-SNAPSHOT] - 2022-12-22
 
