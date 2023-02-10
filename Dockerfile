@@ -5,21 +5,15 @@ FROM eclipse-temurin:11-jre-alpine
 # Add Maintainer Info
 LABEL maintainer="gabriele.deluca@eng.it"
 
-# Install whois service
-# RUN yum install -y whois
-
-# Add a volume pointing to /tmp
-#VOLUME /tmp 
-
 # Make port 8083 available to the world outside this container
 EXPOSE 8083
 
 # Create non-privileged user directory, and make it as workable directory
-RUN mkdir -p /home/nobody/app
-WORKDIR /home/nobody
-
+RUN mkdir -p /home/nobody/app && mkdir -p /home/nobody/data
 # Create directory for logs
 RUN mkdir /var/log/dataapp
+
+WORKDIR /home/nobody
 
 # The application's jar file
 # ARG JAR_FILE=target/*.jar

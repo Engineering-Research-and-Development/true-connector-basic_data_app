@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
  - Global Exception handler and exceptions related to all types of IDS Rejection Reasons (BAD_PARAMETERS, INTERNAL_RECIPIENT_ERROR, MALFORMED_MESSAGE, MESSAGE_TYPE_NOT_SUPPORTED, METHOD_NOT_SUPPORTED, NOT_AUTHENTICATED, NOT_AUTHORIZED, NOT_FOUND, TEMPORARILY_NOT_AVAILABLE, TOO_MANY_RESULTS, VERSION_NOT_SUPPORTED)
  - SelfDescriptionService - service that holds business logic related to self-description
  - Non-privileged user and log support in Dockerfile
+ - /home/nobody/data should be used as volume on consumer side to avoid permission errors when writing file to disk
  - Multipart message library upgrade from 1.0.14-SNAPSHOT to 1.0.15-SNAPSHOT (memory cleaner in MMP)
  - WebSocket Message Streamer library upgrade from 1.0.15-SNAPSHOT to 1.0.16-SNAPSHOT (memory cleaner in MMP)
  
