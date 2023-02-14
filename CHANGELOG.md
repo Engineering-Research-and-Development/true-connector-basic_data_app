@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.1-SNAPSHOT] - 2023-02-14
+
+### Added
+
+ - Jacoco plugin support for evaluating test code coverage in DataApp
+
 ## [0.2.0-SNAPSHOT] - 2023-02-09
 
 ### Added
