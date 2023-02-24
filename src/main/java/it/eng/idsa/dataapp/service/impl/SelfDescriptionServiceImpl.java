@@ -12,12 +12,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.Connector;
+import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.Representation;
+import de.fraunhofer.iais.eis.RepresentationInstance;
+import de.fraunhofer.iais.eis.Resource;
+import de.fraunhofer.iais.eis.ResourceCatalog;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.service.SelfDescriptionService;
 import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
+import it.eng.idsa.dataapp.web.rest.exceptions.NotFoundException;
 import it.eng.idsa.dataapp.web.rest.exceptions.TemporarilyNotAvailableException;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
 
@@ -87,5 +94,45 @@ public class SelfDescriptionServiceImpl implements SelfDescriptionService {
 
 			throw new InternalRecipientException("Could not serialize self description", message);
 		}
+	}
+
+	@Override
+	public boolean artifactRequestedElementExist(ArtifactRequestMessage message, Connector connector) {
+		for (ResourceCatalog catalog : connector.getResourceCatalog()) {
+			for (Resource offeredResource : catalog.getOfferedResource()) {
+				for (Representation representation : offeredResource.getRepresentation()) {
+					for (RepresentationInstance instance : representation.getInstance()) {
+						if (message.getRequestedArtifact().equals(instance.getId())) {
+							return true;
+						}
+					}
+				}
+			}
+
+		}
+		logger.error("Requested element not found.");
+
+		throw new NotFoundException("Requested element not found", message);
+	}
+
+	@Override
+	public String getRequestedElement(DescriptionRequestMessage message, Connector connector) {
+		for (ResourceCatalog catalog : connector.getResourceCatalog()) {
+			for (Resource offeredResource : catalog.getOfferedResource()) {
+				if (message.getRequestedElement().equals(offeredResource.getId())) {
+					try {
+
+						return MultipartMessageProcessor.serializeToJsonLD(offeredResource);
+					} catch (IOException e) {
+						logger.error("Could not serialize requested element.", e);
+
+						throw new InternalRecipientException("Could not serialize requested element", message);
+					}
+				}
+			}
+		}
+		logger.error("Requested element not found.");
+
+		throw new NotFoundException("Requested element not found", message);
 	}
 }
