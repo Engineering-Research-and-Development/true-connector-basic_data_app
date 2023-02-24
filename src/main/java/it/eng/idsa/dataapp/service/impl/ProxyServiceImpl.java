@@ -257,7 +257,14 @@ public class ProxyServiceImpl implements ProxyService {
 		
 		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
 		requestEntity = new HttpEntity<>(map, httpHeaders);
-		return sendMultipartRequest(thirdPartyApi, requestEntity);
+		ResponseEntity<String> re = sendMultipartRequest(thirdPartyApi, requestEntity);
+		try {
+			saveFileToDisk(re.getBody(), requestMessage);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return re;
 	}
 	
 	@Override
