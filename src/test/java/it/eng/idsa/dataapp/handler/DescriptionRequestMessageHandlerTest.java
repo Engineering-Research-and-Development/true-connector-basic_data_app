@@ -20,6 +20,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import de.fraunhofer.iais.eis.Connector;
+import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.service.SelfDescriptionService;
@@ -65,11 +66,11 @@ class DescriptionRequestMessageHandlerTest {
 	void handleMessageNotFoundRequestedElementTest() throws URISyntaxException, IOException {
 
 		message = UtilMessageService.getDescriptionRequestMessage(new URI("http://www.google.com"));
-		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
-		String selfDescriptionAsString = serializer.serialize(baseConnector);
-		when(selfDescriptionService.getSelfDescriptionAsString(message)).thenReturn(selfDescriptionAsString);
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
 
+		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
+		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
+		when(selfDescriptionService.getRequestedElement((DescriptionRequestMessage) message, baseConnector))
+				.thenThrow(new NotFoundException("Requested element not found"));
 		NotFoundException exception = assertThrows(NotFoundException.class, () -> {
 			responseMap = descriptionRequestMessageHandler.handleMessage(message, "asdsad");
 		});
