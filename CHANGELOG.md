@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.2-SNAPSHOT] - 2023-02-24
+
+### Changed
+
+ - Changed logic in ArtifactMessage handler. The requested artifact is now mandatory. In the case that is not present, the BadParameters will be thrown. Also, an additional check for search in self-description is added, so the case the requested element doesn't exist, the NotFoundException will be thrown.
+
 ## [0.2.1-SNAPSHOT] - 2023-02-14
 
 ### Added
