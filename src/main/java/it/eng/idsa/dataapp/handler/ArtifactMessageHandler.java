@@ -20,7 +20,10 @@ import com.google.gson.GsonBuilder;
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
+import it.eng.idsa.dataapp.service.SelfDescriptionService;
 import it.eng.idsa.dataapp.util.BigPayload;
+import it.eng.idsa.dataapp.web.rest.exceptions.BadParametersException;
+import it.eng.idsa.dataapp.web.rest.exceptions.NotFoundException;
 import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
 
@@ -30,31 +33,47 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 	@Value("#{new Boolean('${application.encodePayload:false}')}")
 	private Boolean encodePayload;
 
+	private SelfDescriptionService selfDescriptionService;
+
 	private static final Logger logger = LoggerFactory.getLogger(ArtifactMessageHandler.class);
 
+	public ArtifactMessageHandler(SelfDescriptionService selfDescriptionService) {
+		this.selfDescriptionService = selfDescriptionService;
+	}
+
 	@Override
-	public Map<String, Object> handleMessage(Message artifactRequest, Object payload) {
+	public Map<String, Object> handleMessage(Message message, Object payload) {
 		logger.info("Handling header through ArtifactMessageHandler");
 
-		ArtifactRequestMessage arm = (ArtifactRequestMessage) artifactRequest;
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
 		Message artifactResponseMessage = null;
 		Map<String, Object> response = new HashMap<>();
 
 		if (arm.getRequestedArtifact() != null) {
+
 			logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact());
 
-			if (isBigPayload(arm.getRequestedArtifact().toString())) {
-				payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
-						: BigPayload.BIG_PAYLOAD;
+			// Check if requested artifact exist in self description
+			if (selfDescriptionService.artifactRequestedElementExist(arm,
+					selfDescriptionService.getSelfDescription(message))) {
+				if (isBigPayload(arm.getRequestedArtifact().toString())) {
+					payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
+							: BigPayload.BIG_PAYLOAD;
+				} else {
+					payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
+							: createResponsePayload();
+				}
 			} else {
-				payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
-						: createResponsePayload();
+				logger.error("Artifact requestedElement not exist in self description", message);
+
+				throw new NotFoundException("Artifact requestedElement not found in self description",
+						message);
+
 			}
 		} else {
-			logger.debug("Handling message without requestedElement");
+			logger.error("Artifact requestedElement not provided", message);
 
-			payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
-					: createResponsePayload();
+			throw new BadParametersException("Artifact requestedElement not provided", message);
 		}
 
 		artifactResponseMessage = createArtifactResponseMessage(arm);
@@ -106,4 +125,5 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
 	}
+
 }
