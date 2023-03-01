@@ -57,7 +57,20 @@ class ArtifactMessageHandlerTest {
 
 	@Test
 	void handleMessageTest() {
-		
+		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
+		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
+
+		responseMap = artifactMessageHandler.handleMessage(message, "asdsad");
+
+		assertNotNull(responseMap.get("header"));
+		assertNotNull(responseMap.get("payload"));
+		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
+	}
+
+	@Test
+	void handleMessageEncodedPayloadTest() {
+		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
 		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
 		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
 				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
@@ -71,7 +84,7 @@ class ArtifactMessageHandlerTest {
 
 	@Test
 	void handleMessageBigPayloadTest() throws URISyntaxException {
-		
+		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
 		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
 		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
 				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
@@ -85,6 +98,22 @@ class ArtifactMessageHandlerTest {
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
 	}
 
+	@Test
+	void handleMessageBigPayloadEndodedTest() throws URISyntaxException {
+		
+		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
+		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
+		
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
+		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
+		responseMap = artifactMessageHandler.handleMessage(arm, "asdsad");
+		
+		assertNotNull(responseMap.get("header"));
+		assertNotNull(responseMap.get("payload"));
+		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
+	}
+	
 	@Test
 	void handleMessageTestRequestedArtifactNull() {
 
@@ -108,54 +137,5 @@ class ArtifactMessageHandlerTest {
 			responseMap = artifactMessageHandler.handleMessage(message, "asdsad");
 		});
 		assertEquals("Artifact requestedElement not found in self description", exception.getMessage());
-	}
-
-	@Test
-	public void isBigPayloadTest() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-
-		String pathWithBig = "http://w3id.org/engrd/connector/artifact/big";
-		String pathWithoutBig = "http://w3id.org/engrd/connector/artifact/1";
-		Method isBigPayload = ArtifactMessageHandler.class.getDeclaredMethod("isBigPayload", String.class);
-		isBigPayload.setAccessible(true);
-
-		assertTrue((boolean) isBigPayload.invoke(artifactMessageHandler, pathWithBig));
-		assertFalse((boolean) isBigPayload.invoke(artifactMessageHandler, pathWithoutBig));
-	}
-
-	@Test
-	public void createResponsePayloadTest() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-
-		Method createResponsePayload = ArtifactMessageHandler.class.getDeclaredMethod("createResponsePayload");
-		createResponsePayload.setAccessible(true);
-
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		String formattedDate = dateFormat.format(date);
-
-		Map<String, String> expectedPayload = new HashMap<>();
-		expectedPayload.put("firstName", "John");
-		expectedPayload.put("lastName", "Doe");
-		expectedPayload.put("dateOfBirth", formattedDate);
-		expectedPayload.put("address", "591  Franklin Street, Pennsylvania");
-		expectedPayload.put("checksum", "ABC123 " + formattedDate);
-
-		String expectedJson = new GsonBuilder().create().toJson(expectedPayload);
-		String actualJson = (String) createResponsePayload.invoke(artifactMessageHandler);
-
-		assertEquals(expectedJson, actualJson);
-	}
-
-	@Test
-	public void encodePayloadTest() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-
-		Method encodePayload = ArtifactMessageHandler.class.getDeclaredMethod("encodePayload", byte[].class);
-		encodePayload.setAccessible(true);
-
-		byte[] payload = { 0x01, 0x02, 0x03 };
-
-		assertNotNull((String) encodePayload.invoke(artifactMessageHandler, payload));
 	}
 }

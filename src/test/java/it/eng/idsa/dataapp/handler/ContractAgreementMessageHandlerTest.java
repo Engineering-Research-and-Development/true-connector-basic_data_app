@@ -41,4 +41,13 @@ class ContractAgreementMessageHandlerTest {
 		assertNull(responseMap.get("payload"));
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
 	}
+
+	@Test
+	void handleMessageHeaderNullTest() {
+
+		responseMap = agreementMessageHandler.handleMessage(null, null);
+
+		assertNotNull(responseMap.get("header"));
+		assertNull(responseMap.get("payload"));
+	}
 }
