@@ -39,17 +39,14 @@ class ArtifactMessageHandlerTest {
 	private String issuerConnector = "http://w3id.org/engrd/connector/";
 	private Boolean encodePayload = false;
 	private Connector baseConnector;
-	private ArtifactRequestMessage arm;
 
 	@BeforeEach
-	public void init() throws Exception {
+	public void init() {
 
 		MockitoAnnotations.initMocks(this);
 		ReflectionTestUtils.setField(artifactMessageHandler, "issuerConnector", issuerConnector);
 		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", encodePayload);
 		message = UtilMessageService.getArtifactRequestMessage();
-		arm = (ArtifactRequestMessage) message;
-		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
 		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
 		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
@@ -81,6 +78,8 @@ class ArtifactMessageHandlerTest {
 	void handleMessageBigPayloadTest() throws URISyntaxException {
 		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
 
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
+		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
 		responseMap = artifactMessageHandler.handleMessage(arm, "asdsad");
 
 		assertNotNull(responseMap.get("header"));
@@ -91,6 +90,8 @@ class ArtifactMessageHandlerTest {
 	@Test
 	void handleMessageBigPayloadEndodedTest() throws URISyntaxException {
 
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
+		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
 		responseMap = artifactMessageHandler.handleMessage(arm, "asdsad");
 
 		assertNotNull(responseMap.get("header"));
@@ -101,6 +102,7 @@ class ArtifactMessageHandlerTest {
 	@Test
 	void handleMessageTestRequestedArtifactNull() {
 
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
 		arm.setRequestedArtifact(null);
 
 		BadParametersException exception = assertThrows(BadParametersException.class, () -> {
