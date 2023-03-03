@@ -51,7 +51,6 @@ class DataControllerHttpHeaderTest {
 		when(responseMap.get(DataAppMessageHandler.PAYLOAD)).thenReturn("payload");
 		when(factory.createMessageHandler(any())).thenReturn(handler);
 		when(messageUtil.isValidJSON(responseMap.get(DataAppMessageHandler.PAYLOAD).toString())).thenReturn(true);
-
 	}
 
 	@Test

@@ -1,8 +1,10 @@
 package it.eng.idsa.dataapp.handler;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
-
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -37,23 +39,25 @@ class ArtifactMessageHandlerTest {
 	private String issuerConnector = "http://w3id.org/engrd/connector/";
 	private Boolean encodePayload = false;
 	private Connector baseConnector;
+	private ArtifactRequestMessage arm;
 
 	@BeforeEach
-	public void init() {
+	public void init() throws Exception {
 
 		MockitoAnnotations.initMocks(this);
 		ReflectionTestUtils.setField(artifactMessageHandler, "issuerConnector", issuerConnector);
 		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", encodePayload);
 		message = UtilMessageService.getArtifactRequestMessage();
+		arm = (ArtifactRequestMessage) message;
+		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
-
+		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
+		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
 	}
 
 	@Test
 	void handleMessageTest() {
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
-		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
 
 		responseMap = artifactMessageHandler.handleMessage(message, "asdsad");
 
@@ -65,12 +69,9 @@ class ArtifactMessageHandlerTest {
 	@Test
 	void handleMessageEncodedPayloadTest() {
 		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
-		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
 
-		responseMap = artifactMessageHandler.handleMessage(message, "asdsad" );
-		
+		responseMap = artifactMessageHandler.handleMessage(message, "asdsad");
+
 		assertNotNull(responseMap.get("header"));
 		assertNotNull(responseMap.get("payload"));
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
@@ -79,14 +80,9 @@ class ArtifactMessageHandlerTest {
 	@Test
 	void handleMessageBigPayloadTest() throws URISyntaxException {
 		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
-		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
-		
-		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
-		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
+
 		responseMap = artifactMessageHandler.handleMessage(arm, "asdsad");
-		
+
 		assertNotNull(responseMap.get("header"));
 		assertNotNull(responseMap.get("payload"));
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
@@ -94,24 +90,17 @@ class ArtifactMessageHandlerTest {
 
 	@Test
 	void handleMessageBigPayloadEndodedTest() throws URISyntaxException {
-		
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
-		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
-		
-		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
-		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
+
 		responseMap = artifactMessageHandler.handleMessage(arm, "asdsad");
-		
+
 		assertNotNull(responseMap.get("header"));
 		assertNotNull(responseMap.get("payload"));
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
 	}
-	
+
 	@Test
 	void handleMessageTestRequestedArtifactNull() {
 
-		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
 		arm.setRequestedArtifact(null);
 
 		BadParametersException exception = assertThrows(BadParametersException.class, () -> {
@@ -124,7 +113,6 @@ class ArtifactMessageHandlerTest {
 	@Test
 	void handleMessageRequestElementNotPresentInSelfDescription() {
 		
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
 		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,selfDescriptionService.getSelfDescription(message))).thenReturn(false);
 
 		NotFoundException exception = assertThrows(NotFoundException.class, () -> {

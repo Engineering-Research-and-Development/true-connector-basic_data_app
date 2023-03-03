@@ -1,6 +1,8 @@
 package it.eng.idsa.dataapp.handler;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +15,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import de.fraunhofer.iais.eis.Message;
-
 import it.eng.idsa.multipart.util.UtilMessageService;
 
 class ContractAgreementMessageHandlerTest {

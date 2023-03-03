@@ -58,7 +58,6 @@ public class DataControllerBodyBinaryTest {
 		when(handler.handleMessage(message, payload)).thenReturn(responseMap);
 		when(responseMap.get(DataAppMessageHandler.HEADER)).thenReturn("header");
 		when(responseMap.get(DataAppMessageHandler.PAYLOAD)).thenReturn("payload");
-
 		when(messageUtil.isValidJSON(responseMap.get(DataAppMessageHandler.PAYLOAD).toString())).thenReturn(true);
 		when(factory.createMessageHandler(any())).thenReturn(handler);
 		when(messageUtil.createMultipartMessageForm(any(), any(), any())).thenReturn(entity);

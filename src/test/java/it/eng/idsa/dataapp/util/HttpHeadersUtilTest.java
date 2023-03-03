@@ -20,7 +20,6 @@ class HttpHeadersUtilTest {
 
 	@InjectMocks
 	HttpHeadersUtil headersUtil;
-	@Mock
 	private HttpHeaders htppHeaders;
 
 	@BeforeEach
@@ -38,10 +37,8 @@ class HttpHeadersUtilTest {
 		htppHeaders.add("ids-securitytoken-type", "ids:DynamicAttributeToken");
 		htppHeaders.add("ids-securitytoken-id",
 				"https://w3id.org/idsa/autogen/dynamicAttributeToken/5f6ed0a4-417f-47bf-82eb-b70cd468e702");
-
 		htppHeaders.add("foo", "bar");
 		htppHeaders.add("Forward-To", "https://forwardToURL");
-
 	}
 
 	@Test

@@ -1,6 +1,9 @@
 package it.eng.idsa.dataapp.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -16,6 +19,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
@@ -62,7 +66,6 @@ class SelfDescriptionServiceTest {
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
 		selfDescriptionAsString = serializer.serialize(baseConnector);
 		when(response.getBody()).thenReturn(selfDescriptionAsString);
-
 	}
 
 	@Test
