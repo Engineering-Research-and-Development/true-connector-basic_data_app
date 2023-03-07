@@ -1,9 +1,14 @@
 package it.eng.idsa.dataapp.handler;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,6 +26,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.Message;
+import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.service.SelfDescriptionService;
 import it.eng.idsa.dataapp.web.rest.exceptions.BadParametersException;
 import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
@@ -43,12 +49,12 @@ class ContractRequestMessageHandlerTest {
 	private String usageControlVersionMyData = "mydata";
 	private Path dataLakeDirectory;
 	private Connector baseConnector;
+	private Serializer serializer = new Serializer();
 
 	@BeforeEach
 	public void init() throws IOException, URISyntaxException {
 
 		MockitoAnnotations.initMocks(this);
-
 		ReflectionTestUtils.setField(contractRequestMessageHandler, "issuerConnector", issuerConnector);
 		ReflectionTestUtils.setField(contractRequestMessageHandler, "contractNegotiationDemo", contractNegotiationDemo);
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
@@ -77,13 +83,14 @@ class ContractRequestMessageHandlerTest {
 	}
 
 	@Test
-	void handleMessagePlatoonNotFoundExceptionTest() {
+	void handleMessagePlatoonNotFoundExceptionTest() throws IOException {
+		String contractAgreement = serializer.serialize(UtilMessageService
+				.getContractRequest(URI.create("https://artifact.id"), URI.create("https://permission.id")));
 
 		ReflectionTestUtils.setField(contractRequestMessageHandler, "usageControlVersion", usageControlVersionPlatoon);
 		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
 		NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-			responseMap = contractRequestMessageHandler.handleMessage(message,
-					"{\"ids:consumer\":{\"@id\":\"http://w3id.org/engrd/connector/consumer\"},\"@type\":\"ids:ContractRequest\",\"ids:provider\":{\"@id\":\"https://w3id.org/engrd/connector/\"},\"ids:permission\":[{\"ids:postDuty\":[],\"ids:action\":[{\"@id\":\"https://w3id.org/idsa/code/USE\"}],\"ids:constraint\":[],\"ids:assignee\":[],\"@type\":\"ids:Permission\",\"ids:title\":[{\"@value\":\"Example Usage Policy\",\"@type\":\"http://www.w3.org/2001/XMLSchema#string\"}],\"ids:preDuty\":[],\"ids:description\":[{\"@value\":\"provide-access\",\"@type\":\"http://www.w3.org/2001/XMLSchema#string\"}],\"ids:target\":{\"@id\":\"http://w3id.org/engrd/connector/artifact/1\"},\"@id\":\"https://w3id.org/idsa/autogen/permission/5c5b8374-2597-4c5e-b694-494ccaa68136\",\"ids:assigner\":[]}],\"@id\":\"https://w3id.org/idsa/autogen/contractOffer/008c7957-1e12-4538-9ba0-22d49216e578\",\"ids:prohibition\":[],\"ids:obligation\":[],\"@context\":{\"ids\":\"https://w3id.org/idsa/core/\",\"idsc\":\"https://w3id.org/idsa/code/\"}}");
+			responseMap = contractRequestMessageHandler.handleMessage(message, contractAgreement);
 		});
 
 		assertEquals("Could not find contract offer that match with request - permissionId and target",
