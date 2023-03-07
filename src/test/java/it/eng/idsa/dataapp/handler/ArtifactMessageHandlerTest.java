@@ -1,15 +1,13 @@
 package it.eng.idsa.dataapp.handler;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,8 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import com.google.gson.GsonBuilder;
 
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.Connector;
@@ -43,6 +39,7 @@ class ArtifactMessageHandlerTest {
 	private String issuerConnector = "http://w3id.org/engrd/connector/";
 	private Boolean encodePayload = false;
 	private Connector baseConnector;
+	static final String PAYLOAD = "asdsad";
 
 	@BeforeEach
 	public void init() {
@@ -52,18 +49,27 @@ class ArtifactMessageHandlerTest {
 		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", encodePayload);
 		message = UtilMessageService.getArtifactRequestMessage();
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
-
+		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
+		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message, baseConnector))
+				.thenReturn(true);
 	}
 
 	@Test
 	void handleMessageTest() {
-		
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
-		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
 
-		responseMap = artifactMessageHandler.handleMessage(message, "asdsad" );
-		
+		responseMap = artifactMessageHandler.handleMessage(message, PAYLOAD);
+
+		assertNotNull(responseMap.get("header"));
+		assertNotNull(responseMap.get("payload"));
+		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
+	}
+
+	@Test
+	void handleMessageEncodedPayloadTest() {
+		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
+
+		responseMap = artifactMessageHandler.handleMessage(message, PAYLOAD);
+
 		assertNotNull(responseMap.get("header"));
 		assertNotNull(responseMap.get("payload"));
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
@@ -71,15 +77,24 @@ class ArtifactMessageHandlerTest {
 
 	@Test
 	void handleMessageBigPayloadTest() throws URISyntaxException {
-		
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
-		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-				selfDescriptionService.getSelfDescription(message))).thenReturn(true);
-		
+		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
+
 		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
 		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
-		responseMap = artifactMessageHandler.handleMessage(arm, "asdsad");
-		
+		responseMap = artifactMessageHandler.handleMessage(arm, PAYLOAD);
+
+		assertNotNull(responseMap.get("header"));
+		assertNotNull(responseMap.get("payload"));
+		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
+	}
+
+	@Test
+	void handleMessageBigPayloadEndodedTest() throws URISyntaxException {
+
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
+		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
+		responseMap = artifactMessageHandler.handleMessage(arm, PAYLOAD);
+
 		assertNotNull(responseMap.get("header"));
 		assertNotNull(responseMap.get("payload"));
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get("header").toString(), message.getId().toString()));
@@ -92,7 +107,7 @@ class ArtifactMessageHandlerTest {
 		arm.setRequestedArtifact(null);
 
 		BadParametersException exception = assertThrows(BadParametersException.class, () -> {
-			responseMap = artifactMessageHandler.handleMessage(message, "asdsad");
+			responseMap = artifactMessageHandler.handleMessage(message, PAYLOAD);
 		});
 
 		assertEquals("Artifact requestedElement not provided", exception.getMessage());
@@ -101,61 +116,11 @@ class ArtifactMessageHandlerTest {
 	@Test
 	void handleMessageRequestElementNotPresentInSelfDescription() {
 		
-		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
 		when(selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,selfDescriptionService.getSelfDescription(message))).thenReturn(false);
 
 		NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-			responseMap = artifactMessageHandler.handleMessage(message, "asdsad");
+			responseMap = artifactMessageHandler.handleMessage(message, PAYLOAD);
 		});
 		assertEquals("Artifact requestedElement not found in self description", exception.getMessage());
-	}
-
-	@Test
-	public void isBigPayloadTest() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-
-		String pathWithBig = "http://w3id.org/engrd/connector/artifact/big";
-		String pathWithoutBig = "http://w3id.org/engrd/connector/artifact/1";
-		Method isBigPayload = ArtifactMessageHandler.class.getDeclaredMethod("isBigPayload", String.class);
-		isBigPayload.setAccessible(true);
-
-		assertTrue((boolean) isBigPayload.invoke(artifactMessageHandler, pathWithBig));
-		assertFalse((boolean) isBigPayload.invoke(artifactMessageHandler, pathWithoutBig));
-	}
-
-	@Test
-	public void createResponsePayloadTest() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-
-		Method createResponsePayload = ArtifactMessageHandler.class.getDeclaredMethod("createResponsePayload");
-		createResponsePayload.setAccessible(true);
-
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		String formattedDate = dateFormat.format(date);
-
-		Map<String, String> expectedPayload = new HashMap<>();
-		expectedPayload.put("firstName", "John");
-		expectedPayload.put("lastName", "Doe");
-		expectedPayload.put("dateOfBirth", formattedDate);
-		expectedPayload.put("address", "591  Franklin Street, Pennsylvania");
-		expectedPayload.put("checksum", "ABC123 " + formattedDate);
-
-		String expectedJson = new GsonBuilder().create().toJson(expectedPayload);
-		String actualJson = (String) createResponsePayload.invoke(artifactMessageHandler);
-
-		assertEquals(expectedJson, actualJson);
-	}
-
-	@Test
-	public void encodePayloadTest() throws NoSuchMethodException, SecurityException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException {
-
-		Method encodePayload = ArtifactMessageHandler.class.getDeclaredMethod("encodePayload", byte[].class);
-		encodePayload.setAccessible(true);
-
-		byte[] payload = { 0x01, 0x02, 0x03 };
-
-		assertNotNull((String) encodePayload.invoke(artifactMessageHandler, payload));
 	}
 }

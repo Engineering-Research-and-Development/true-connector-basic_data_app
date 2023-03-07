@@ -5,15 +5,19 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationContext;
 
-import de.fraunhofer.iais.eis.Message;
-import it.eng.idsa.multipart.util.UtilMessageService;
+import de.fraunhofer.iais.eis.ArtifactRequestMessageImpl;
+import de.fraunhofer.iais.eis.ContractAgreementMessageImpl;
+import de.fraunhofer.iais.eis.ContractRequestMessageImpl;
+import de.fraunhofer.iais.eis.DescriptionRequestMessageImpl;
 
 class MessageHandlerFactoryTest {
 
-	@Mock
+	@InjectMocks
 	private MessageHandlerFactory factory;
 	@Mock
 	private DescriptionRequestMessageHandler descriptionRequestMessageHandler;
@@ -24,56 +28,30 @@ class MessageHandlerFactoryTest {
 	@Mock
 	private ArtifactMessageHandler artifactMessageHandler;
 
+	@Mock
+	private ApplicationContext context;
+
 	@BeforeEach
 	public void init() {
 		MockitoAnnotations.initMocks(this);
 	}
 
 	@Test
-	void createMessageHandler_DescriptionRequestMessage() {
-		Message message = UtilMessageService.getDescriptionRequestMessage(null);
-
-		when(factory.createMessageHandler(message.getClass())).thenReturn(descriptionRequestMessageHandler);
-
-		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
-
-		assertNotNull(handler);
-		assertTrue(handler instanceof DescriptionRequestMessageHandler);
-	}
-
-	@Test
-	void createMessageHandler_ContractRequestMessageHandler() {
-		Message message = UtilMessageService.getContractRequestMessage();
-
-		when(factory.createMessageHandler(message.getClass())).thenReturn(contractRequestMessageHandler);
-
-		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
-
-		assertNotNull(handler);
-		assertTrue(handler instanceof ContractRequestMessageHandler);
-	}
-
-	@Test
-	void createMessageHandler_ContractAgreementMessageHandler() {
-		Message message = UtilMessageService.getContractAgreementMessage();
-
-		when(factory.createMessageHandler(message.getClass())).thenReturn(contractAgreementMessageHandler);
-
-		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
-
-		assertNotNull(handler);
-		assertTrue(handler instanceof ContractAgreementMessageHandler);
-	}
-
-	@Test
-	void createMessageHandler_ArtifactMessageHandler() {
-		Message message = UtilMessageService.getArtifactRequestMessage();
-
-		when(factory.createMessageHandler(message.getClass())).thenReturn(artifactMessageHandler);
-
-		DataAppMessageHandler handler = factory.createMessageHandler(message.getClass());
-
-		assertNotNull(handler);
-		assertTrue(handler instanceof ArtifactMessageHandler);
-	}
+    public void testCreateMessageHandler() {
+		
+ 	   when(context.getBean(ArtifactMessageHandler.class)).thenReturn(artifactMessageHandler);
+       when(context.getBean(DescriptionRequestMessageHandler.class)).thenReturn(descriptionRequestMessageHandler);
+       when(context.getBean(ContractRequestMessageHandler.class)).thenReturn(contractRequestMessageHandler);
+       when(context.getBean(ContractAgreementMessageHandler.class)).thenReturn(contractAgreementMessageHandler);
+       
+       DataAppMessageHandler artifactRequestHandler = factory.createMessageHandler(ArtifactRequestMessageImpl.class);
+       DataAppMessageHandler descriptionRequestHandler = factory.createMessageHandler(DescriptionRequestMessageImpl.class);
+       DataAppMessageHandler contractRequestHandler = factory.createMessageHandler(ContractRequestMessageImpl.class);
+       DataAppMessageHandler contractAgreementHandler = factory.createMessageHandler(ContractAgreementMessageImpl.class);
+       
+       assertEquals(artifactMessageHandler, artifactRequestHandler);
+       assertEquals(descriptionRequestMessageHandler, descriptionRequestHandler);
+       assertEquals(contractRequestMessageHandler, contractRequestHandler);
+       assertEquals(contractAgreementMessageHandler, contractAgreementHandler);
+    }
 }
