@@ -90,13 +90,13 @@ public class ProxyServiceImpl implements ProxyService {
 	 * 
 	 * Use this as an example how to setup RestTemplate with RestTemplateBuilder
 	 * 
-	 * @param restTemplateBuilder
-	 * @param eccProperties
-	 * @param recreateFileService
-	 * @param dataLakeDirectory
-	 * @param issuerConnector
-	 * @param encodePayload
-	 * @param extractPayloadFromResponse
+	 * @param restTemplateBuilder REST Template builder
+	 * @param eccProperties properties for ECC configuration
+	 * @param recreateFileService RecreateFileService for wss communication
+	 * @param dataLakeDirectory Data lake directory for file persistence
+	 * @param issuerConnector  issuer connector Id
+	 * @param encodePayload encode payload
+	 * @param extractPayloadFromResponse extract payload from multipart
 	 */
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder,  ECCProperties eccProperties, RecreateFileService recreateFileService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory,

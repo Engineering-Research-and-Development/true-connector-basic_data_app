@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
  - Junit tests for controllers, services, exceptions
+ - Support for GitHub Workflow (release process, docker image signing)
  
 ### Changed
 

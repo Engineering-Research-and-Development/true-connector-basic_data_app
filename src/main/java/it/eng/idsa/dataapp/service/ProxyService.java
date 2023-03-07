@@ -12,8 +12,8 @@ public interface ProxyService {
 	 * Creates multipart-mixed request and sends it to Sender ECC
 	 * @param proxyRequest - contains message type, payload and other required data for flow
 	 * @param httpHeaders - original headers from request; will be forwarded as-is
-	 * @return
-	 * @throws URISyntaxException
+	 * @return Response entity
+	 * @throws URISyntaxException exception
 	 */
 	ResponseEntity<String> proxyMultipartMix(ProxyRequest proxyRequest, HttpHeaders httpHeaders) throws URISyntaxException;
 	
@@ -21,8 +21,8 @@ public interface ProxyService {
 	 * Creates multipart-form request and sends it to Sender ECC
 	 * @param proxyRequest - contains message type, payload and other required data for flow
 	 * @param httpHeaders - original headers from request; will be forwarded as-is
-	 * @return
-	 * @throws URISyntaxException
+	 * @return Response entity
+	 * @throws URISyntaxException exception
 	 */
 	ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders) throws URISyntaxException;
 	
@@ -30,8 +30,8 @@ public interface ProxyService {
 	 * Creates http-header request and sends it to Sender ECC
 	 * @param proxyRequest - contains message type, payload and other required data for flow
 	 * @param httpHeaders - original headers from request; will be forwarded as-is
-	 * @return
-	 * @throws URISyntaxException
+	 * @return Response entity
+	 * @throws URISyntaxException exception
 	 */
 	ResponseEntity<String> proxyHttpHeader(ProxyRequest proxyRequest, HttpHeaders httpHeaders) throws URISyntaxException;
 	

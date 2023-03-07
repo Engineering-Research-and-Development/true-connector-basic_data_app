@@ -104,17 +104,6 @@ public class FileSenderResource {
 
 	}
 	
-	
-	/**
-	 * This method should not be used, check instead {@link it.eng.idsa.dataapp.web.rest.ProxyController#proxyRequest(HttpHeaders,
-			 String, HttpMethod, HttpServletRequest, HttpServletResponse)}
-	 * @param forwardToInternal
-	 * @param forwardTo
-	 * @param requestedArtifact
-	 * @param payload
-	 * @return
-	 * @throws Exception
-	 */
 	@PostMapping("/artifactRequestMessage")
 	@ResponseBody
 	@Deprecated

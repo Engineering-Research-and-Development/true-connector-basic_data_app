@@ -29,13 +29,11 @@ public class ProxyController {
 
 	/**
 	 * Unique entry point in data App for proxying multipart mixed, multipart form, http-header and wss requestss towards ECC
-	 * @param httpHeaders
-	 * @param body - json representation containing information needed for correct forwarding
-	 * @param method
-	 * @param request
-	 * @param response
-	 * @return
-	 * @throws Exception
+	 * @param httpHeaders http headers
+	 * @param body json representation containing information needed for correct forwarding
+	 * @param method HTTP method
+	 * @return Response entity
+	 * @throws Exception exception
 	 */
 	@RequestMapping("/proxy")
 	public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
