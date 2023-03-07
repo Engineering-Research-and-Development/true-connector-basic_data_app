@@ -448,12 +448,12 @@ public class MessageUtil {
 	}
 
 	/**
-	 * 
-	 * @param header
-	 * @param payload
+	 * Create HttpEntity from header and payload
+	 * @param header Header part
+	 * @param payload Payload part
 	 * @param payloadContentType if is null, using default - application/json,
 	 *                           otherwise using the one that is passed as in param
-	 * @return
+	 * @return HttpEntity
 	 */
 	public HttpEntity createMultipartMessageForm(String header, String payload, ContentType payloadContentType) {
 		MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create().setStrictMode();

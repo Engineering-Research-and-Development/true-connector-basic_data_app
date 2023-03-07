@@ -40,14 +40,14 @@ public class DataControllerBodyForm {
 	}
 
 	/**
-	 * 
-	 * @param httpHeaders
-	 * @param header
-	 * @param responseType
-	 * @param payload      Could be MultipartFile or plain String
-	 * @return
-	 * @throws UnsupportedOperationException
-	 * @throws IOException
+	 * Multipart/form controller handler
+	 * @param httpHeaders Http header
+	 * @param header Multipart header part
+	 * @param responseType response type
+	 * @param payload Could be MultipartFile or plain String
+	 * @return Response entity
+	 * @throws UnsupportedOperationException UnsupportedOperationException
+	 * @throws IOException IOException
 	 */
 	@PostMapping(value = "/data")
 	public ResponseEntity<?> routerForm(@RequestHeader HttpHeaders httpHeaders,

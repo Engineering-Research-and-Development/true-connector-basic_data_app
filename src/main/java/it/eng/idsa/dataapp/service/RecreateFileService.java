@@ -16,16 +16,16 @@ public interface RecreateFileService {
 	
 	/**
 	 * Save file using default fileName and path
-	 * @param payload
-	 * @throws IOException
+	 * @param payload payload
+	 * @throws IOException exception
 	 */
 	void recreateTheFile(String payload) throws IOException;
 	
 	/**
 	 * Save file with provided fileName and path
-	 * @param payload
-	 * @param targetFile
-	 * @throws IOException
+	 * @param payload payload
+	 * @param targetFile target file
+	 * @throws IOException exception
 	 */
 	void recreateTheFile(String payload, File targetFile) throws IOException;
 
