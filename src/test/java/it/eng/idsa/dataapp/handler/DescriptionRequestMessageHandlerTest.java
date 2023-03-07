@@ -39,19 +39,22 @@ class DescriptionRequestMessageHandlerTest {
 	private Serializer serializer = new Serializer();
 	private Connector baseConnector;
 	private String issuerConnector = "http://w3id.org/engrd/connector/";
+	private String selfDescriptionAsString;
 
 	@BeforeEach
 	public void init() throws IOException, URISyntaxException {
 
 		MockitoAnnotations.initMocks(this);
 		ReflectionTestUtils.setField(descriptionRequestMessageHandler, "issuerConnector", issuerConnector);
+		message = UtilMessageService.getDescriptionRequestMessage(null);
+		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
+		selfDescriptionAsString = serializer.serialize(baseConnector);
+
 	}
 
 	@Test
 	void handleMessageTest() throws IOException {
-		message = UtilMessageService.getDescriptionRequestMessage(null);
-		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
-		String selfDescriptionAsString = serializer.serialize(baseConnector);
+
 		when(selfDescriptionService.getSelfDescriptionAsString(message)).thenReturn(selfDescriptionAsString);
 		when(selfDescriptionService.getSelfDescription(message)).thenReturn(baseConnector);
 
