@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.service.ProxyService;
 
-@ExtendWith(MockitoExtension.class)
 public class ProxyControllerTest {
 
 	@InjectMocks
