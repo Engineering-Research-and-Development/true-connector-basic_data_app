@@ -2,6 +2,9 @@ package it.eng.idsa.dataapp.handler;
 
 import static de.fraunhofer.iais.eis.util.Util.asList;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -21,6 +24,7 @@ import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
 import it.eng.idsa.dataapp.service.SelfDescriptionService;
+import it.eng.idsa.dataapp.service.ThreadService;
 import it.eng.idsa.dataapp.util.BigPayload;
 import it.eng.idsa.dataapp.web.rest.exceptions.BadParametersException;
 import it.eng.idsa.dataapp.web.rest.exceptions.NotFoundException;
@@ -30,15 +34,23 @@ import it.eng.idsa.multipart.util.UtilMessageService;
 @Component
 public class ArtifactMessageHandler extends DataAppMessageHandler {
 
-	@Value("#{new Boolean('${application.encodePayload:false}')}")
 	private Boolean encodePayload;
-
 	private SelfDescriptionService selfDescriptionService;
+	private ThreadService threadService;
+	private Path dataLakeDirectory;
+	private Boolean contractNegotiationDemo;
 
 	private static final Logger logger = LoggerFactory.getLogger(ArtifactMessageHandler.class);
 
-	public ArtifactMessageHandler(SelfDescriptionService selfDescriptionService) {
+	public ArtifactMessageHandler(SelfDescriptionService selfDescriptionService, ThreadService threadService,
+			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
+			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
+			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
 		this.selfDescriptionService = selfDescriptionService;
+		this.threadService = threadService;
+		this.dataLakeDirectory = dataLakeDirectory;
+		this.contractNegotiationDemo = contractNegotiationDemo;
+		this.encodePayload = encodePayload;
 	}
 
 	@Override
@@ -53,22 +65,13 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 
 			logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact());
 
-			// Check if requested artifact exist in self description
-			if (selfDescriptionService.artifactRequestedElementExist(arm,
-					selfDescriptionService.getSelfDescription(message))) {
-				if (isBigPayload(arm.getRequestedArtifact().toString())) {
-					payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
-							: BigPayload.BIG_PAYLOAD;
-				} else {
-					payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
-							: createResponsePayload();
-				}
+			if (((Boolean) threadService.getThreadLocalValue("wss") != null
+					&& (Boolean) threadService.getThreadLocalValue("wss"))) {
+				logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact() + " in WSS flow");
+				payload = handleWssFlow(message);
 			} else {
-				logger.error("Artifact requestedElement not exist in self description", message);
-
-				throw new NotFoundException("Artifact requestedElement not found in self description",
-						message);
-
+				logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact() + " in REST flow");
+				payload = handleRestFlow(message);
 			}
 		} else {
 			logger.error("Artifact requestedElement not provided", message);
@@ -126,4 +129,59 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 				._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
 	}
 
+	private String readFile(String requestedArtifact, Message message) {
+		logger.info("Reading file {} from datalake", requestedArtifact);
+		byte[] fileContent;
+		try {
+			fileContent = Files.readAllBytes(dataLakeDirectory.resolve(requestedArtifact));
+		} catch (IOException e) {
+			logger.error("Could't read the file {} from datalake", requestedArtifact, message);
+
+			throw new NotFoundException("Could't read the file from datalake", message);
+
+		}
+		String base64EncodedFile = Base64.getEncoder().encodeToString(fileContent);
+		logger.info("File read from disk.");
+		return base64EncodedFile;
+	}
+
+	private String handleWssFlow(Message message) {
+		String reqArtifact = ((ArtifactRequestMessage) message).getRequestedArtifact().getPath();
+		String requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
+
+		if (contractNegotiationDemo) {
+			logger.info("WSS Demo, reading directly from data lake");
+			return readFile(requestedArtifact, message);
+		} else {
+			if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+					selfDescriptionService.getSelfDescription(message))) {
+				return readFile(requestedArtifact, message);
+			} else {
+				logger.error("Artifact requestedElement not exist in self description", message);
+
+				throw new NotFoundException("Artifact requestedElement not found in self description", message);
+			}
+		}
+	}
+
+	private String handleRestFlow(Message message) {
+		String payload = null;
+		// Check if requested artifact exist in self description
+		if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+				selfDescriptionService.getSelfDescription(message))) {
+			if (isBigPayload(((ArtifactRequestMessage) message).getRequestedArtifact().toString())) {
+				payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
+						: BigPayload.BIG_PAYLOAD;
+				return payload;
+			} else {
+				payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
+						: createResponsePayload();
+				return payload;
+			}
+		} else {
+			logger.error("Artifact requestedElement not exist in self description", message);
+
+			throw new NotFoundException("Artifact requestedElement not found in self description", message);
+		}
+	}
 }
