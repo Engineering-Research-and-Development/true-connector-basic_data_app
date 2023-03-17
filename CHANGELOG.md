@@ -1,6 +1,25 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.3-SNAPSHOT] - 2023-03-20
+
+### Added
+
+ - ThreadService for storing different type of objects in HashMap stored in ThreadLocal
+ - Test for ThreadService
+
+### Changed
+
+ - IncomingDataAppResourceOverWs - WS flow can use the message handlers
+ - ProxyController - small fix when checking WSS proxy request
+ - ArtifactMessageHandler - distinguish REST and WS flow, and add support for reading files from data lake
+ - ProxyServiceImplementation - add handleWssResponse method for handling wss responses based on extractPayloadFromResponse boolean
+ - MessageUtil - deleted unused methods which are now part of Message handlers
+ - ECCProperties - add wssPort and wssSelfDescriptionPort
+ - application.properties - add application.ecc.wss-port
+ - Modified existing test to suit refactored bussiness logic
+ 
+ 
 ## [0.2.2-SNAPSHOT] - 2023-02-24
 
 ### Added
