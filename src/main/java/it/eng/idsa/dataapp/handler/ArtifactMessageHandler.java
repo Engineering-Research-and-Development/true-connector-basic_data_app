@@ -64,9 +64,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 		if (arm.getRequestedArtifact() != null) {
 
 			logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact());
-
-			if (((Boolean) threadService.getThreadLocalValue("wss") != null
-					&& (Boolean) threadService.getThreadLocalValue("wss"))) {
+			if (Boolean.TRUE.equals(((Boolean) threadService.getThreadLocalValue("wss")))) {
 				logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact() + " in WSS flow");
 				payload = handleWssFlow(message);
 			} else {
@@ -84,6 +82,62 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 		response.put(DataAppMessageHandler.PAYLOAD, payload);
 
 		return response;
+	}
+
+	private String handleWssFlow(Message message) {
+		String reqArtifact = ((ArtifactRequestMessage) message).getRequestedArtifact().getPath();
+		String requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
+
+		if (contractNegotiationDemo) {
+			logger.info("WSS Demo, reading directly from data lake");
+			return readFile(requestedArtifact, message);
+		} else {
+			if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+					selfDescriptionService.getSelfDescription(message))) {
+				return readFile(requestedArtifact, message);
+			} else {
+				logger.error("Artifact requestedElement not exist in self description", message);
+
+				throw new NotFoundException("Artifact requestedElement not found in self description", message);
+			}
+		}
+	}
+
+	private String readFile(String requestedArtifact, Message message) {
+		logger.info("Reading file {} from datalake", requestedArtifact);
+		byte[] fileContent;
+		try {
+			fileContent = Files.readAllBytes(dataLakeDirectory.resolve(requestedArtifact));
+		} catch (IOException e) {
+			logger.error("Could't read the file {} from datalake", requestedArtifact, message);
+
+			throw new NotFoundException("Could't read the file from datalake", message);
+
+		}
+		String base64EncodedFile = Base64.getEncoder().encodeToString(fileContent);
+		logger.info("File read from disk.");
+		return base64EncodedFile;
+	}
+
+	private String handleRestFlow(Message message) {
+		String payload = null;
+		// Check if requested artifact exist in self description
+		if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+				selfDescriptionService.getSelfDescription(message))) {
+			if (isBigPayload(((ArtifactRequestMessage) message).getRequestedArtifact().toString())) {
+				payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
+						: BigPayload.BIG_PAYLOAD;
+				return payload;
+			} else {
+				payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
+						: createResponsePayload();
+				return payload;
+			}
+		} else {
+			logger.error("Artifact requestedElement not exist in self description", message);
+
+			throw new NotFoundException("Artifact requestedElement not found in self description", message);
+		}
 	}
 
 	private boolean isBigPayload(String path) {
@@ -118,7 +172,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 		return gson.toJson(jsonObject);
 	}
 
-	public Message createArtifactResponseMessage(ArtifactRequestMessage header) {
+	private Message createArtifactResponseMessage(ArtifactRequestMessage header) {
 		// Need to set transferCotract from original message, it will be used in policy
 		// enforcement
 		return new ArtifactResponseMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
@@ -127,61 +181,5 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
-	}
-
-	private String readFile(String requestedArtifact, Message message) {
-		logger.info("Reading file {} from datalake", requestedArtifact);
-		byte[] fileContent;
-		try {
-			fileContent = Files.readAllBytes(dataLakeDirectory.resolve(requestedArtifact));
-		} catch (IOException e) {
-			logger.error("Could't read the file {} from datalake", requestedArtifact, message);
-
-			throw new NotFoundException("Could't read the file from datalake", message);
-
-		}
-		String base64EncodedFile = Base64.getEncoder().encodeToString(fileContent);
-		logger.info("File read from disk.");
-		return base64EncodedFile;
-	}
-
-	private String handleWssFlow(Message message) {
-		String reqArtifact = ((ArtifactRequestMessage) message).getRequestedArtifact().getPath();
-		String requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
-
-		if (contractNegotiationDemo) {
-			logger.info("WSS Demo, reading directly from data lake");
-			return readFile(requestedArtifact, message);
-		} else {
-			if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-					selfDescriptionService.getSelfDescription(message))) {
-				return readFile(requestedArtifact, message);
-			} else {
-				logger.error("Artifact requestedElement not exist in self description", message);
-
-				throw new NotFoundException("Artifact requestedElement not found in self description", message);
-			}
-		}
-	}
-
-	private String handleRestFlow(Message message) {
-		String payload = null;
-		// Check if requested artifact exist in self description
-		if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-				selfDescriptionService.getSelfDescription(message))) {
-			if (isBigPayload(((ArtifactRequestMessage) message).getRequestedArtifact().toString())) {
-				payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
-						: BigPayload.BIG_PAYLOAD;
-				return payload;
-			} else {
-				payload = encodePayload == true ? encodePayload(createResponsePayload().getBytes())
-						: createResponsePayload();
-				return payload;
-			}
-		} else {
-			logger.error("Artifact requestedElement not exist in self description", message);
-
-			throw new NotFoundException("Artifact requestedElement not found in self description", message);
-		}
 	}
 }

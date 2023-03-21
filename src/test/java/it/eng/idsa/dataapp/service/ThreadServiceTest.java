@@ -37,7 +37,6 @@ class ThreadServiceTest {
 		threadService.setThreadLocalValue(KEY, VALUE);
 		threadService.removeThreadLocalValue(KEY);
 		assertNull(threadService.getThreadLocalValue(KEY));
-		assertEquals(threadService.getThreadLocalValue(KEY), null);
 	}
 
 	@Test

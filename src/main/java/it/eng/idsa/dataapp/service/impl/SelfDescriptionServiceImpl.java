@@ -54,9 +54,9 @@ public class SelfDescriptionServiceImpl implements SelfDescriptionService {
 	public Connector getSelfDescription(Message message) {
 		URI eccURI = null;
 
-		int eccPort = ((Boolean) threadService.getThreadLocalValue("wss") != null
-				&& (Boolean) threadService.getThreadLocalValue("wss")) ? eccProperties.getWssSelfDescriptionPort()
-						: eccProperties.getPort();
+		int eccPort = (Boolean.TRUE.equals(((Boolean) threadService.getThreadLocalValue("wss"))))
+				? eccProperties.getWssSelfDescriptionPort()
+				: eccProperties.getPort();
 		try {
 			eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccPort,
 					eccProperties.getSelfdescriptionContext(), null, null);

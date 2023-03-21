@@ -167,6 +167,11 @@ application.dataLakeDirectory=
 ```
 Use application.dataLakeDirectory= property to pint where files are located that needs to be exchanged over wss.
 
+```
+application.ecc.wss-port=8098
+```
+Use application.ecc.wss-port= property to set the ECC Sender WSS port.
+
 In ECC property file to use Web Socket between ECC:
 
 ```

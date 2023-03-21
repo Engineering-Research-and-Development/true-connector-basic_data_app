@@ -66,8 +66,8 @@ public class MessageUtilTest {
 		httpEntity.writeTo(outStream);
 		outStream.flush();
 
-		String bigMultipartResponse = new String(outStream.toByteArray(), StandardCharsets.UTF_8);
-		assertNotNull(bigMultipartResponse);
+		String genericResponse = new String(outStream.toByteArray(), StandardCharsets.UTF_8);
+		assertNotNull(genericResponse);
 	}
 
 	@Test
