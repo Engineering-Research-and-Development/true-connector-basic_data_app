@@ -2,20 +2,51 @@
 
 [![License: AGPL](https://img.shields.io/github/license/Engineering-Research-and-Development/true-connector-basic_data_app.svg)](https://opensource.org/licenses/AGPL-3.0)
 
-## Building dataApp
+* Open-source project designed by ENG. It represents a trivial data application for generating and consuming data on top of the ECC component.
 
-**Requirement:**
+## Table of Contents
+
+* [Building dataApp](#buildingdataapp)
+  * [Requirements](#requirements)
+  * [Solution 1](#solution1)
+  * [Solution 2](#solution2)
+  * [Creating docker image](#creatingdockerimage)
+  * [Component overview](#componentoverview)
+* [Dedicated endpoint in dataApp](#proxyendpoint)
+* [Customizing DataApp](#customizingdataapp)
+  * [Consumer side modification](#consumersidemodification)
+  * [Provider side modification](#providersidemodification)
+  * [Testing DataApp Provider endoint](#testingdataappproviderendoint)
+* [WebSocket file exchange](#websocketfileexchange)
+* [REST requests](#restrequests)
+  * [Mixed](#mixed)
+  * [Form](#form)
+  * [Http-header](#httpheader)
+* [Broker interaction](#brokerinteraction)
+  * [Register/Update connector to Broker](#registeupdateconnectortobroker)
+  * [Unregister/passivate connector to Broker](#unregisterpassivateconnectortobroker)
+  * [Query broker](#querybroker)
+* [Contract Negotiation - simple flow](#contractnegotiationsimpleflow)
+* [Description Request/Response Message](#descriptionrequestresponsemessage)
+* [Payload configuration](#payloadconfig)
+  * [Base64 encoded payload](#base64encodedpayload)
+  * [Extract payload from response](#extractpayloadfromresponse)
+
+
+## Building dataApp <a name="buildingdataapp"></a>
+
+**Requirements:** <a name="requirements"></a>
 
  `Java11` `Apache Maven`
  
 To build dataApp you will have to do one of the following:
 
-**Solution 1**
+**Solution 1** <a name="solution1"></a>
 
  * Clone [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) 
- * Once this project is cloned, run mvn clean install
+ * Once this project is cloned, run `mvn clean install`
  * Clone [WebSocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer)
- * Once this project is cloned, run mvn clean install
+ * Once this project is cloned, run `mvn clean install`
 
 This will install 2 internal libraries that are needed by DataApp project.
 
@@ -23,7 +54,7 @@ After that you can run mvn clean package in the root of the dataApp project, to 
 
 ---
 
-**Solution 2**
+**Solution 2** <a name="solution2"></a>
 
 Use provided libraries on GitHub Package. To do so, you will have to modify Apache Maven settings.xml file like following:
 
@@ -41,7 +72,7 @@ Add in servers section:
 
 How to get GH PAT, you can check following [link](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
-### Creating docker image
+### Creating docker image <a name="creatingdockerimage"></a>
 
 Once you build dataApp, if required, you can build docker image, by executing following command, from terminal, inside the root of the project:
 
@@ -49,7 +80,32 @@ Once you build dataApp, if required, you can build docker image, by executing fo
 docker build -t some_tag .
 ```
 
-## Dedicated endpoint in dataApp <a name="proxyendpoint"></a>
+
+### Component overview <a name="componentoverview"></a>
+
+Basic DataApp is build using Java11, and use following libraries:
+
+| Component | Version |
+| --- | --- |
+| [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) | 1.0.16 |
+| [Websocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer) | 1.0.16 |
+| [Information model](https://github.com/International-Data-Spaces-Association/InformationModel) | 4.1.1 | 
+| SpringBoot | 2.2.5.RELEASE |
+| Tomcat | 9.0.27 |
+| Maven | 3.6.3 |
+| com.squareup.okhttp3 | 3.4.17 |
+| apache.commons commons-text | 1.10.0 |  
+| io.springfox  Swagger 2, Swagger UI| 2.9.2 | 
+| logback | 1.2.3 |
+| com.h2database | 1.4.200 |
+| javax.validation validation-api | 2.0.1 |
+| org.apache.httpcomponents httpmime | 4.5.1 |
+| com.googlecode.json-simple | 1.1.1 |
+| com.googlecode.gson | 2.8.6 |
+| org.jacoco | 0.8.8 |
+
+
+## Dedicated endpoint in DataApp <a name="proxyendpoint"></a>
 
 ```
 @RequestMapping("/proxy")
@@ -60,11 +116,11 @@ public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
 This methods is used in both REST and WSS flows.
 
 
-## Customizing DataApp
+## Customizing DataApp <a name="customizingdataapp"></a>
 
-If you need to modify dataApp, you can perform such modification in 2 places: consumer side or provider.
+If you need to modify dataApp, you can perform such modification in 2 places: Consumer or Provider side.
 
-### Consumer side modification
+### Consumer side modification <a name="consumersidemodification"></a>
 
 Following class is used as entry point for consumer side:
 
@@ -76,40 +132,67 @@ This class is the entry point of [proxy request](#proxyendpoint). Business logic
 
 This class wraps up logic for creating proper IDS Message, and proper request, based on the configuration (mixed, form or header) and sends request to consumer ECC.
 
-Once response is received, it will just log request. If you need to do something else with the response - check following method:
+Once response is received, it will just log request. If you need to do something else with the response - check one of the following methods:
 
-**handleResponse(ResponseEntity<String> resp, MultipartMessage mm)**
+* **handleResponse(ResponseEntity<String> resp, MultipartMessage mm) (REST Flow)**
+* **handleWssResponse(MultipartMessage mm) (WSS Flow)**
 
-### Provider side modification
+
+### Provider side modification <a name="providersidemodification"></a>
 
 For making modification when dataApp is in provider role, one of the following controllers can be used as starting point
 
-**it.eng.idsa.dataapp.web.rest.DataControllerBodyBinary**
+* **it.eng.idsa.dataapp.web.rest.DataControllerBodyBinary (REST Flow)** 
 
-**it.eng.idsa.dataapp.web.rest.DataControllerBodyForm**
+* **it.eng.idsa.dataapp.web.rest.DataControllerBodyForm (REST Flow)**
 
-**it.eng.idsa.dataapp.web.rest.DataControllerHttpHeader**
+* **it.eng.idsa.dataapp.web.rest.DataControllerHttpHeader (REST Flow)**
 
-Depending on the configuration, mixed, form or header.
+* **it.eng.idsa.dataapp.web.rest.IncomingDataAppResourceOverWs (WSS Flow)**
+
+
+Depending on the configuration, REST(mixed, form, header) or Web Socket Flow.
 
 This class (controller) is an entry point in Provider part of the dataApp, and it will receive request from Provider ECC.
-Depending on the IDS Message received it will execute predefined logic, and that should not be changed. Only modification should be made when ArtifactRequestMessage is received - when creating response payload. Code of interest can be found in following method:
+Depending on the IDS Message received it will execute predefined logic in Message Handlers, and that should not be changed. Only modification should be made when ArtifactRequestMessage is received - when creating response payload. Code of interest can be found in following class:
 
-**MessageUtil.it.eng.idsa.dataapp.util.createResponsePayload(Message requestHeader, String payload)**
+ **it.eng.idsa.dataapp.handler.ArtifactMessageHandler**
 
-```
-else if (requestHeader instanceof ArtifactRequestMessage && isBigPayload(((ArtifactRequestMessage) requestHeader).getRequestedArtifact().toString())) {
-	return encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes()) : BigPayload.BIG_PAYLOAD;
-	}
-	return  encodePayload == true ? encodePayload(createResponsePayload().getBytes()) : createResponsePayload();
-			
-```
+The entry method in this class is:
+
+**it.eng.idsa.dataapp.handler.ArtifactMessageHandler.handleMessage(Message message, Object payload)**
+
+Based in the type of flow (REST or WSS) the next methods are point of interest:
+
+* **it.eng.idsa.dataapp.handler.ArtifactMessageHandler.handleRestFlow(Message message) (REST flow)**
+
 Current example has 2 payloads, one small - json representing "John Doe" and other - big payload, that has several hundred lines of text. For your use case, you can simplify it and just handle *if (requestHeader instanceof ArtifactRequestMessage)* use case. 
 
 What is needed is to modify
 **private String createResponsePayload()** method and provide logic that will fit your needs. You can add here part to read from some DB, call API, read file from filesystem, anything you need.
 
-### Testing DataApp Provider endoint
+
+* **it.eng.idsa.dataapp.handler.ArtifactMessageHandler.handleWssFlow(Message message) (WSS flow)**
+
+
+What is needed is to modify
+**private String readFile(String requestedArtifact, Message message)** method and provide logic that will fit your needs. You can add here part to read from some DB, call API, read file from filesystem, anything you need.
+
+Beside previously mentioned ArtifactMessageHandler, in total there are 4 messsage handlers: <a name="handlers"></a>
+
+* ArtifactMessageHandler
+* ContractAgreementMessageHandler
+* ContractRequestMessageHandler
+* DescriptionRequestMessageHandler
+
+In case of adding new types of Message Handlers, the next steps should be taken:
+
+1. Create new class which must extend [**DataAppMessageHandler**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/handler/DataAppMessageHandler.java)
+2. Add new case for new handler in method **createMessageHandler(Class<? extends Message> clazz)** which can be found in [**MessageHandlerFactory**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/handler/MessageHandlerFactory.java)
+
+When adding a new type of Message handler, advice is to use [**DataAppExceptionHandler**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/web/rest/exceptions/DataAppExceptionHandler.java) for exception handling, which handles all type of IDS Message Rejection Reasons.
+
+### Testing DataApp Provider endoint <a name="testingdataappproviderendoint"></a>
 
 During development process, you can use following curl command (or import it in postman) to test custom logic you are working on. Provided example curl assumes you are using *form* configuration.
 
@@ -156,11 +239,13 @@ curl --location --request POST 'https://localhost:8083/data' \
 
 In payload you can provide any data that is needed for your backend system: DB query parameters, filter used in REST API call...
 
-## WebSocket file exchange
+## WebSocket file exchange <a name="websocketfileexchange"></a>
 
-To use wss flow on the egde and between ecc, do the following:
+To use WSS flow on the egde and between ECC, do the following:
 
-In dataApp property file:
+**Changes in DataApp**
+
+In application.properties file:
 
 ```
 application.dataLakeDirectory=
@@ -172,7 +257,18 @@ application.ecc.wss-port=8098
 ```
 Use application.ecc.wss-port= property to set the ECC Sender WSS port.
 
-In ECC property file to use Web Socket between ECC:
+In config.properties file
+
+```
+server.ssl.key-store=ssl-server.jks
+```
+
+Use server.ssl.key-store= property to provide full path to ssl-server.jks file, eg. `/home/user/etc`
+
+
+**Changes in ECC**
+
+In ECCs application.properties file both in RECEIVER and SENDER to use Web Socket between ECC:
 
 ```
 application.openDataAppReceiver=https://localhost:9000/incoming-data-app/routerBodyBinary
@@ -220,9 +316,9 @@ curl --location --request POST 'https://localhost:8083/proxy' \
     "requestedArtifact" : "test1.csv"
 }'
 ```
-## REST requests
+## REST requests <a name="restrequests"></a>
 
-### Mixed
+### Mixed <a name="mixed"></a>
 
 ```
 curl --location --request POST 'https://localhost:8083/proxy' \
@@ -241,8 +337,8 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 
 ```
 
-### Form
-
+### Form <a name="form"></a>
+ 
 ```
 curl --location --request POST 'https://localhost:8083/proxy' \
 --header 'fizz: buzz' \
@@ -260,7 +356,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 
 ```
 
-### Http-header
+### Http-header <a name="httpheader"></a>
 
 ```
 curl --location --request POST 'https://localhost:8083/proxy' \
@@ -279,8 +375,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 
 ```
 For <b>REST flow</b>, multipart field should be set to one of the following values: 'mixed', 'form' or 'http-header'.<br/>
-Based on multipart type, and messageType, dataApp will create dedicated message, and send request to connector. At the moment, 2 messages are supported - 'ArtifactRequestMessage' and 'ContractAgreementMessage'.
-Configuration regarding A-endpoint for data consumer is located in property file:
+Based on multipart type, and messageType, dataApp will create dedicated message in [Message handlers](#handlers), and send request to connector. 
 
 ```
 application.ecc.protocol=https
@@ -293,30 +388,7 @@ application.ecc.header-context=/incoming-data-app/multipartMessageHttpHeader
 
 Following properties are used to construct A-endpoint URL, http or https.
 
-# Contract Negotiation - simple flow
-
-DataApp will send ContractAgreementMessage once *ids:ContractRequestMessage* message is received as input message.</br>
-Payload for this response (ContractAgreement) will be fetch from Execution Core Container.
-
-Following properties are used to create URL for Self Description request:
-
-```
-application.ecc.host=
-application.ecc.RESTprotocol=
-application.ecc.RESTport=
-```
-
-For demo purposes, following property
-
-```
-application.contract.negotiation.demo=true
-
-```
-
-Can be left as is, but in production case, it should be set to false (which will send ProcessNotificationMessage upon receiving ContractRequestMessage, which will disable automatic acceptance of contract agreement.
-User can also modify code in dataApp, to externalize decision for accepting or declining contract offers.
-
-# Broker interaction
+## Broker interaction <a name="brokerinteraction"></a>
 
 For broker interaction, example requests are listed below:
 You can choose different multiparts - mixed, form or http-header - this is how will DataApp send request to Execution Core Container.
@@ -334,7 +406,7 @@ application.ecc.broker-querry-context=/selfRegistration/query
 
 NOTE: Broker might support (at the moment) only mixed/form, so double check how connector is configured to send request to destination B-endpoint.
 
-## Register/Update connector to Broker
+### Register/Update connector to Broker <a name="registeupdateconnectortobroker"></a>
 
 ```
 {
@@ -344,7 +416,7 @@ NOTE: Broker might support (at the moment) only mixed/form, so double check how 
 }
 ```
 
-## Unregister/passivate connector to Broker
+### Unregister/passivate connector to Broker  <a name="unregisterpassivateconnectortobroker"></a>
 
 ```
 {
@@ -354,7 +426,7 @@ NOTE: Broker might support (at the moment) only mixed/form, so double check how 
 }
 ```
 
-## Query broker
+### Query broker <a name="querybroker"></a>
 
 Payload is used to pass query to the Broker
 
@@ -384,7 +456,33 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 	"payload" : "SELECT ?connectorUri WHERE \{ ?connectorUri a ids:BaseConnector . \}"
 }'
 ```
-# Description Request/Response Message
+
+
+## Contract Negotiation - simple flow <a name="contractnegotiationsimpleflow"></a>
+
+DataApp will send ContractAgreementMessage once *ids:ContractRequestMessage* message is received as input message.</br>
+Payload for this response (ContractAgreement) will be fetch from Execution Core Container.
+
+Following properties are used to create URL for Self Description request:
+
+```
+application.ecc.host=
+application.ecc.RESTprotocol=
+application.ecc.RESTport=
+```
+
+For demo purposes, following property
+
+```
+application.contract.negotiation.demo=true
+
+```
+
+Can be left as is, but in production case, it should be set to false (which will send ProcessNotificationMessage upon receiving ContractRequestMessage, which will disable automatic acceptance of contract agreement.
+User can also modify code in DataApp, to externalize decision for accepting or declining contract offers.
+
+
+## Description Request/Response Message <a name="descriptionrequestresponsemessage"></a>
 
 When receiving a Description Request Message we are preparing a response by creating a Description Response Message for the header part and putting the whole Self Description(ids:BaseConnector) or requested element from Self Description (ids:Resource) in the payload.
 In both cases a GET request is sent to the ECC in order to fetch the Self Description. The following properties need to be configured and correspond the Self Description configuration from the ECC.
@@ -408,7 +506,9 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 
 ```
 
-# Base64 encoded payload
+## Payload configuration <a name="payloadconfig"></a>
+
+### Base64 encoded payload <a name="base64encodedpayload"></a>
 
 If you want the demo response from Data App to be Base64 encoded then set the following property to true:
 
@@ -416,7 +516,7 @@ If you want the demo response from Data App to be Base64 encoded then set the fo
 application.encodePayload=true
 ```
 
-# Extract payload from response
+### Extract payload from response <a name="extractpayloadfromresponse"></a>
 
 If you want the sender side Data App to extract only the payload from the received response set the following property to true:
 
