@@ -6,11 +6,9 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -105,6 +103,7 @@ public class ProxyControllerTest {
 	public void proxyRequestWithWssRequestedArtifactTest() throws Exception {
 		proxyRequest.setMultipart(ProxyRequest.WSS);
 		proxyRequest.setRequestedArtifact("/test1");
+		proxyRequest.setMessageType("ArtifactRequestMessage");
 		ResponseEntity<String> responseEntity = new ResponseEntity<>("response", HttpStatus.OK);
 
 		when(proxyService.parseIncommingProxyRequest(body)).thenReturn(proxyRequest);
