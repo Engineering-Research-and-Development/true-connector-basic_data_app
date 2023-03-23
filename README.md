@@ -322,6 +322,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
     "Forward-To-Internal": "wss://localhost:8887",
+    "messageType": "ArtifactRequestMessage",
     "requestedArtifact" : "http://w3id.org/engrd/connector/artifact/test1.csv"
 }'
 ```
