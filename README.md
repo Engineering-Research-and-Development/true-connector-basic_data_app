@@ -4,6 +4,9 @@
 
 * Open-source project designed by ENG. It represents a trivial data application for generating and consuming data on top of the ECC component.
 
+---
+
+
 ## Table of Contents
 
 * [Building dataApp](#buildingdataapp)
@@ -32,6 +35,8 @@
   * [Base64 encoded payload](#base64encodedpayload)
   * [Extract payload from response](#extractpayloadfromresponse)
 
+---
+
 
 ## Building dataApp <a name="buildingdataapp"></a>
 
@@ -42,19 +47,6 @@
 To build dataApp you will have to do one of the following:
 
 **Solution 1** <a name="solution1"></a>
-
- * Clone [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) 
- * Once this project is cloned, run `mvn clean install`
- * Clone [WebSocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer)
- * Once this project is cloned, run `mvn clean install`
-
-This will install 2 internal libraries that are needed by DataApp project.
-
-After that you can run mvn clean package in the root of the dataApp project, to build it.
-
----
-
-**Solution 2** <a name="solution2"></a>
 
 Use provided libraries on GitHub Package. To do so, you will have to modify Apache Maven settings.xml file like following:
 
@@ -72,6 +64,21 @@ Add in servers section:
 
 How to get GH PAT, you can check following [link](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
+
+**Solution 2** <a name="solution2"></a>
+
+ * Clone [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) 
+ * Once this project is cloned, run `mvn clean install`
+ * Clone [WebSocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer)
+ * Once this project is cloned, run `mvn clean install`
+
+This will install 2 internal libraries that are needed by DataApp project.
+
+After that you can run mvn clean package in the root of the dataApp project, to build it.
+
+
+**NOTE:** If you proceed with Solution 2, pay attention to Multipart Message Library and WebSocket Message Streamer versions in pom.xml files, and check if the same versions are used in DataApp pom.xml, if not modify them according to ones from pulled repositories.
+
 ### Creating docker image <a name="creatingdockerimage"></a>
 
 Once you build dataApp, if required, you can build docker image, by executing following command, from terminal, inside the root of the project:
@@ -79,7 +86,6 @@ Once you build dataApp, if required, you can build docker image, by executing fo
 ```
 docker build -t some_tag .
 ```
-
 
 ### Component overview <a name="componentoverview"></a>
 
@@ -95,7 +101,6 @@ Basic DataApp is build using Java11, and use following libraries:
 | Maven | 3.6.3 |
 | com.squareup.okhttp3 | 3.4.17 |
 | apache.commons commons-text | 1.10.0 |  
-| io.springfox  Swagger 2, Swagger UI| 2.9.2 | 
 | logback | 1.2.3 |
 | com.h2database | 1.4.200 |
 | javax.validation validation-api | 2.0.1 |
@@ -103,6 +108,8 @@ Basic DataApp is build using Java11, and use following libraries:
 | com.googlecode.json-simple | 1.1.1 |
 | com.googlecode.gson | 2.8.6 |
 | org.jacoco | 0.8.8 |
+
+---
 
 
 ## Dedicated endpoint in DataApp <a name="proxyendpoint"></a>
@@ -115,6 +122,8 @@ public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
 ```
 This methods is used in both REST and WSS flows.
 
+---
+
 
 ## Customizing DataApp <a name="customizingdataapp"></a>
 
@@ -124,11 +133,11 @@ If you need to modify dataApp, you can perform such modification in 2 places: Co
 
 Following class is used as entry point for consumer side:
 
-**it.eng.idsa.dataapp.web.rest.ProxyController**
+[**it.eng.idsa.dataapp.web.rest.ProxyController**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/web/rest/ProxyController.java)
 
 This class is the entry point of [proxy request](#proxyendpoint). Business logic for creating request is delegated to:
 
-**it.eng.idsa.dataapp.service.ProxyServiceImpl**
+[**it.eng.idsa.dataapp.service.ProxyServiceImpl**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/service/impl/ProxyServiceImpl.java)
 
 This class wraps up logic for creating proper IDS Message, and proper request, based on the configuration (mixed, form or header) and sends request to consumer ECC.
 
@@ -137,18 +146,17 @@ Once response is received, it will just log request. If you need to do something
 * **handleResponse(ResponseEntity<String> resp, MultipartMessage mm) (REST Flow)**
 * **handleWssResponse(MultipartMessage mm) (WSS Flow)**
 
-
 ### Provider side modification <a name="providersidemodification"></a>
 
 For making modification when dataApp is in provider role, one of the following controllers can be used as starting point
 
-* **it.eng.idsa.dataapp.web.rest.DataControllerBodyBinary (REST Flow)** 
+* [**it.eng.idsa.dataapp.web.rest.DataControllerBodyBinary (REST Flow)**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/web/rest/DataControllerBodyBinary.java) 
 
-* **it.eng.idsa.dataapp.web.rest.DataControllerBodyForm (REST Flow)**
+* [**it.eng.idsa.dataapp.web.rest.DataControllerBodyForm (REST Flow)**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/web/rest/DataControllerBodyForm.java)
 
-* **it.eng.idsa.dataapp.web.rest.DataControllerHttpHeader (REST Flow)**
+* [**it.eng.idsa.dataapp.web.rest.DataControllerHttpHeader (REST Flow)**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/web/rest/DataControllerHttpHeader.java)
 
-* **it.eng.idsa.dataapp.web.rest.IncomingDataAppResourceOverWs (WSS Flow)**
+* [**it.eng.idsa.dataapp.web.rest.IncomingDataAppResourceOverWs (WSS Flow)**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/web/rest/IncomingDataAppResourceOverWs.java)
 
 
 Depending on the configuration, REST(mixed, form, header) or Web Socket Flow.
@@ -156,7 +164,7 @@ Depending on the configuration, REST(mixed, form, header) or Web Socket Flow.
 This class (controller) is an entry point in Provider part of the dataApp, and it will receive request from Provider ECC.
 Depending on the IDS Message received it will execute predefined logic in Message Handlers, and that should not be changed. Only modification should be made when ArtifactRequestMessage is received - when creating response payload. Code of interest can be found in following class:
 
- **it.eng.idsa.dataapp.handler.ArtifactMessageHandler**
+ [**it.eng.idsa.dataapp.handler.ArtifactMessageHandler**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/handler/ArtifactMessageHandler.java)
 
 The entry method in this class is:
 
@@ -171,19 +179,17 @@ Current example has 2 payloads, one small - json representing "John Doe" and oth
 What is needed is to modify
 **private String createResponsePayload()** method and provide logic that will fit your needs. You can add here part to read from some DB, call API, read file from filesystem, anything you need.
 
-
 * **it.eng.idsa.dataapp.handler.ArtifactMessageHandler.handleWssFlow(Message message) (WSS flow)**
-
 
 What is needed is to modify
 **private String readFile(String requestedArtifact, Message message)** method and provide logic that will fit your needs. You can add here part to read from some DB, call API, read file from filesystem, anything you need.
 
 Beside previously mentioned ArtifactMessageHandler, in total there are 4 messsage handlers: <a name="handlers"></a>
 
-* ArtifactMessageHandler
-* ContractAgreementMessageHandler
-* ContractRequestMessageHandler
-* DescriptionRequestMessageHandler
+* [ArtifactMessageHandler](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/handler/ArtifactMessageHandler.java)
+* [ContractAgreementMessageHandler](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/handler/ContractAgreementMessageHandler.java)
+* [ContractRequestMessageHandler](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/handler/ContractRequestMessageHandler.java)
+* [DescriptionRequestMessageHandler](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/handler/DescriptionRequestMessageHandler.java)
 
 In case of adding new types of Message Handlers, the next steps should be taken:
 
@@ -239,6 +245,9 @@ curl --location --request POST 'https://localhost:8083/data' \
 
 In payload you can provide any data that is needed for your backend system: DB query parameters, filter used in REST API call...
 
+---
+
+
 ## WebSocket file exchange <a name="websocketfileexchange"></a>
 
 To use WSS flow on the egde and between ECC, do the following:
@@ -260,10 +269,10 @@ Use application.ecc.wss-port= property to set the ECC Sender WSS port.
 In config.properties file
 
 ```
-server.ssl.key-store=ssl-server.jks
+server.ssl.key-store=/home/user/etc/ssl-server.jks
 ```
 
-Use server.ssl.key-store= property to provide full path to ssl-server.jks file, eg. `/home/user/etc`
+Use server.ssl.key-store= property to provide full path to ssl-server.jks file stored locally, eg. `/home/user/etc/ssl-server.jks`
 
 
 **Changes in ECC**
@@ -313,9 +322,13 @@ curl --location --request POST 'https://localhost:8083/proxy' \
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
     "Forward-To-Internal": "wss://localhost:8887",
-    "requestedArtifact" : "test1.csv"
+    "requestedArtifact" : "http://w3id.org/engrd/connector/artifact/test1.csv"
 }'
 ```
+
+---
+
+
 ## REST requests <a name="restrequests"></a>
 
 ### Mixed <a name="mixed"></a>
@@ -388,6 +401,9 @@ application.ecc.header-context=/incoming-data-app/multipartMessageHttpHeader
 
 Following properties are used to construct A-endpoint URL, http or https.
 
+---
+
+
 ## Broker interaction <a name="brokerinteraction"></a>
 
 For broker interaction, example requests are listed below:
@@ -457,6 +473,8 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 }'
 ```
 
+---
+
 
 ## Contract Negotiation - simple flow <a name="contractnegotiationsimpleflow"></a>
 
@@ -481,7 +499,6 @@ application.contract.negotiation.demo=true
 Can be left as is, but in production case, it should be set to false (which will send ProcessNotificationMessage upon receiving ContractRequestMessage, which will disable automatic acceptance of contract agreement.
 User can also modify code in DataApp, to externalize decision for accepting or declining contract offers.
 
-
 ## Description Request/Response Message <a name="descriptionrequestresponsemessage"></a>
 
 When receiving a Description Request Message we are preparing a response by creating a Description Response Message for the header part and putting the whole Self Description(ids:BaseConnector) or requested element from Self Description (ids:Resource) in the payload.
@@ -490,7 +507,6 @@ In both cases a GET request is sent to the ECC in order to fetch the Self Descri
 application.ecc.RESTprotocol=http|https
 application.ecc.RESTport=8081|8443
 ```
-
 
 Example for Description RequestMessage:
 
@@ -505,6 +521,11 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 }'
 
 ```
+
+Remark: requestedElement field can be omitted. In that case, description response will contain whole self description document; otherwise it will contain just the part for requested element.
+
+---
+
 
 ## Payload configuration <a name="payloadconfig"></a>
 
@@ -523,5 +544,3 @@ If you want the sender side Data App to extract only the payload from the receiv
 ```
 application.extractPayloadFromResponse=true
 ```
-
-Remark: requestedElement field can be omitted. In that case, description response will contain whole self description document; otherwise it will contain just the part for requested element.
