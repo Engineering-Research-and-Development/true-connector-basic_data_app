@@ -74,10 +74,10 @@ How to get GH PAT, you can check following [link](https://docs.github.com/en/aut
 
 This will install 2 internal libraries that are needed by DataApp project.
 
-After that you can run mvn clean package in the root of the dataApp project, to build it.
+After that you can run `mvn clean package` in the root of the dataApp project, to build it.
 
 
-**NOTE:** If you proceed with Solution 2, pay attention to Multipart Message Library and WebSocket Message Streamer versions in pom.xml files, and check if the same versions are used in DataApp pom.xml, if not modify them according to ones from pulled repositories.
+**NOTE:** If you proceed with Solution 2, pay attention to Multipart Message Library and WebSocket Message Streamer versions in pom.xml files, and check if the same versions are used in DataApp pom.xml, if not modify them according to ones from cloned repositories.
 
 ### Creating docker image <a name="creatingdockerimage"></a>
 
