@@ -107,7 +107,7 @@ public class ProxyControllerTest {
 		ResponseEntity<String> responseEntity = new ResponseEntity<>("response", HttpStatus.OK);
 
 		when(proxyService.parseIncommingProxyRequest(body)).thenReturn(proxyRequest);
-		when(proxyService.requestArtifact(proxyRequest)).thenReturn(responseEntity);
+		when(proxyService.proxyWSSRequest(proxyRequest)).thenReturn(responseEntity);
 
 		ResponseEntity<?> response = proxyController.proxyRequest(httpHeaders, body, method);
 
