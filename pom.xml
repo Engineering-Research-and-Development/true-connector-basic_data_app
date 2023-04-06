@@ -9,7 +9,7 @@
 	</parent>
 	<groupId>it.eng.idsa</groupId>
 	<artifactId>market4.0-data-app</artifactId>
-	<version>0.2.2</version>
+	<version>0.2.3-SNAPSHOT</version>
 	<name>market4.0-data-app</name>
 	<description>The project for market4.0-data-app</description>
 	<properties>
@@ -41,7 +41,7 @@
 		<connection>scm:git:git://github.com/Engineering-Research-and-Development/true-connector-basic_data_app.git</connection>
 		<developerConnection>scm:git:git@github.com:Engineering-Research-and-Development/true-connector-basic_data_app.git</developerConnection>
 		<url>https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app.git</url>
-		<tag>0.2.2</tag>
+		<tag>HEAD</tag>
 	</scm>
 	<distributionManagement>
 		<repository>
