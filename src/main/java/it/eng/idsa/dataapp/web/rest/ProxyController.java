@@ -68,12 +68,7 @@ public class ProxyController {
 			return proxyService.proxyHttpHeader(proxyRequest, httpHeaders);
 		case ProxyRequest.WSS:
 			logger.info("Forwarding request using {}", ProxyRequest.WSS);
-			if (StringUtils.isNotBlank(proxyRequest.getRequestedArtifact())
-					&& StringUtils.equals(proxyRequest.getMessageType(), "ArtifactRequestMessage")) {
-				return proxyService.requestArtifact(proxyRequest);
-			} else {
-				return proxyService.proxyWSSRequest(proxyRequest);
-			}
+			return proxyService.proxyWSSRequest(proxyRequest);
 		default:
 			logger.info("Wrong value for multipart field '{}'", proxyRequest.getMultipart());
 			return new ResponseEntity<>(

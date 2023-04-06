@@ -47,7 +47,6 @@ import de.fraunhofer.iais.eis.QueryMessage;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import de.fraunhofer.iais.eis.RejectionReason;
 import de.fraunhofer.iais.eis.TokenFormat;
-import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import de.fraunhofer.iais.eis.util.Util;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
@@ -404,7 +403,7 @@ public class ProxyServiceImpl implements ProxyService {
 					proxyRequest.getTransferContract() != null ? proxyRequest.getTransferContract()
 							: UtilMessageService.TRANSFER_CONTRACT.toString());
 		}
-		httpHeaders.add("IDS-Issued", DateUtil.normalizedDateTime().toXMLFormat());
+		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
 		httpHeaders.add("IDS-IssuerConnector", issueConnector);
 		httpHeaders.add("IDS-SenderAgent", issueConnector);
 		httpHeaders.add("IDS-CorrelationMessage", "http://correlationMessage");
@@ -415,48 +414,6 @@ public class ProxyServiceImpl implements ProxyService {
 		httpHeaders.add("IDS-SecurityToken-TokenValue", UtilMessageService.TOKEN_VALUE);
 
 		return httpHeaders;
-	}
-
-	@Override
-	public ResponseEntity<String> requestArtifact(ProxyRequest proxyRequest) {
-		String forwardToInternal = proxyRequest.getForwardToInternal();
-		String forwardTo = proxyRequest.getForwardTo();
-		logger.info("Proxying wss ArtifactRequestMessage...");
-
-		if (StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
-			return ResponseEntity.badRequest().body("Missing required fields Forward-To or Forward-To-Internal");
-		}
-		Message artifactRequestMessage;
-		try {
-			URI transferContract = null;
-			if (proxyRequest.getTransferContract() != null) {
-				transferContract = URI.create(proxyRequest.getTransferContract());
-			}
-			artifactRequestMessage = new ArtifactRequestMessageBuilder()._issued_(DateUtil.normalizedDateTime())
-					._issuerConnector_(URI.create(issueConnector))._modelVersion_(UtilMessageService.MODEL_VERSION)
-					._requestedArtifact_(URI.create(proxyRequest.getRequestedArtifact()))
-					._securityToken_(UtilMessageService.getDynamicAttributeToken())
-					._senderAgent_(UtilMessageService.SENDER_AGENT)._transferContract_(transferContract).build();
-
-			Serializer serializer = new Serializer();
-			String requestMessage = serializer.serialize(artifactRequestMessage);
-			logger.debug("Artifact request message {}", requestMessage);
-			FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
-			String responseMessage = WebSocketClientManager.getMessageWebSocketSender()
-					.sendMultipartMessageWebSocketOverHttps(requestMessage, proxyRequest.getPayload(),
-							forwardToInternal);
-
-			String fileNameSaved = saveFileToDisk(responseMessage, artifactRequestMessage);
-
-			if (fileNameSaved != null) {
-				return ResponseEntity.ok("{​​\"message\":\"File '" + fileNameSaved + "' created successfully\"}");
-			}
-			return ResponseEntity.ok(responseMessage);
-		} catch (Exception exc) {
-			logger.error("Error while processing request {}", exc);
-			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-					"Error while processing request, check logs for more details", exc);
-		}
 	}
 
 	private void logHttpHeadersResponse(ResponseEntity<String> resp) {
@@ -508,6 +465,7 @@ public class ProxyServiceImpl implements ProxyService {
 	public ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest) {
 		String forwardToInternal = proxyRequest.getForwardToInternal();
 		String forwardTo = proxyRequest.getForwardTo();
+		Message requestMessage = null;
 		logger.info("Proxying wss request ...");
 		if (StringUtils.isEmpty(forwardTo) || StringUtils.isEmpty(forwardToInternal)) {
 			return ResponseEntity.badRequest().body("Missing required fields Forward-To or Forward-To-Internal");
@@ -516,7 +474,7 @@ public class ProxyServiceImpl implements ProxyService {
 		FileRecreatorBeanExecutor.getInstance().setForwardTo(forwardTo);
 		String responseMessage = null;
 		try {
-			Message requestMessage = createRequestMessage(proxyRequest);
+			requestMessage = createRequestMessage(proxyRequest);
 			responseMessage = WebSocketClientManager.getMessageWebSocketSender().sendMultipartMessageWebSocketOverHttps(
 					UtilMessageService.getMessageAsString(requestMessage), proxyRequest.getPayload(),
 					forwardToInternal);
@@ -527,7 +485,22 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 		MultipartMessage mm = MultipartMessageProcessor.parseMultipartMessage(responseMessage);
 
-		return handleWssResponse(mm);
+		if (mm.getHeaderContent() instanceof ArtifactResponseMessage) {
+			try {
+				String fileNameSaved = saveFileToDisk(responseMessage, requestMessage);
+				if (fileNameSaved != null) {
+					return ResponseEntity.ok("{​​\"message\":\"File '" + fileNameSaved + "' created successfully\"}");
+				}
+				return ResponseEntity.ok(responseMessage);
+			} catch (IOException e) {
+				logger.error("Error while processing request {}", e);
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+						"Error while processing request, check logs for more details", e);
+			}
+
+		} else {
+			return handleWssResponse(mm);
+		}
 	}
 
 	private ResponseEntity<String> sendMultipartRequest(URI thirdPartyApi, HttpEntity<?> requestEntity) {
