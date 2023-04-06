@@ -95,7 +95,7 @@ Basic DataApp is build using Java11, and use following libraries:
 | --- | --- |
 | [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) | 1.0.16 |
 | [Websocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer) | 1.0.16 |
-| [Information model](https://github.com/International-Data-Spaces-Association/InformationModel) | 4.1.1 | 
+| [Information model](https://github.com/International-Data-Spaces-Association/InformationModel) | 4.2.7 | 
 | SpringBoot | 2.2.5.RELEASE |
 | Tomcat | 9.0.27 |
 | Maven | 3.6.3 |
@@ -214,7 +214,7 @@ curl --location --request POST 'https://localhost:8083/data' \
   "ids:requestedArtifact" : {
     "@id" : "http://w3id.org/engrd/connector/artifact/1"
   },
-  "ids:modelVersion" : "4.1.0",
+  "ids:modelVersion" : "4.2.7",
   "ids:issued" : {
     "@value" : "2022-11-02T14:22:06.935Z",
     "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"

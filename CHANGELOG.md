@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 
-## [0.2.2] - 2023-02-24
+## [0.2.2] - 2023-03-24
 
 ### Added
  - Support for storing different type of objects in HashMap stored in ThreadLocal 
@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
  - WSS flow now supports use of Message handlers
  - Distinguished REST and WSS flow in message handlers, with additional checks releated to requested element
  - Cleaned unused code after refactoring
+ - Multipart message library upgrade from 1.0.17
+ - infomodel dependency now managed via Multipart Library
 
 
 ## [0.2.1-SNAPSHOT] - 2023-02-14

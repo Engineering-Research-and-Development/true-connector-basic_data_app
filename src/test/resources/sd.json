@@ -161,7 +161,7 @@
   },
   "ids:hasEndpoint" : [ ],
   "ids:extendedGuarantee" : [ ],
-  "ids:outboundModelVersion" : "4.1.0",
+  "ids:outboundModelVersion" : "4.2.7",
   "ids:hasDefaultEndpoint" : {
     "@type" : "ids:ConnectorEndpoint",
     "@id" : "https://192.168.0.12:8443/",
@@ -171,5 +171,5 @@
     "ids:endpointInformation" : [ ],
     "ids:endpointDocumentation" : [ ]
   },
-  "ids:inboundModelVersion" : [ "4.1.0" ]
+  "ids:inboundModelVersion" : [ "4.2.7" ]
 }

@@ -404,7 +404,7 @@ public class ProxyServiceImpl implements ProxyService {
 					proxyRequest.getTransferContract() != null ? proxyRequest.getTransferContract()
 							: UtilMessageService.TRANSFER_CONTRACT.toString());
 		}
-		httpHeaders.add("IDS-Issued", DateUtil.now().toXMLFormat());
+		httpHeaders.add("IDS-Issued", DateUtil.normalizedDateTime().toXMLFormat());
 		httpHeaders.add("IDS-IssuerConnector", issueConnector);
 		httpHeaders.add("IDS-SenderAgent", issueConnector);
 		httpHeaders.add("IDS-CorrelationMessage", "http://correlationMessage");
@@ -432,7 +432,7 @@ public class ProxyServiceImpl implements ProxyService {
 			if (proxyRequest.getTransferContract() != null) {
 				transferContract = URI.create(proxyRequest.getTransferContract());
 			}
-			artifactRequestMessage = new ArtifactRequestMessageBuilder()._issued_(DateUtil.now())
+			artifactRequestMessage = new ArtifactRequestMessageBuilder()._issued_(DateUtil.normalizedDateTime())
 					._issuerConnector_(URI.create(issueConnector))._modelVersion_(UtilMessageService.MODEL_VERSION)
 					._requestedArtifact_(URI.create(proxyRequest.getRequestedArtifact()))
 					._securityToken_(UtilMessageService.getDynamicAttributeToken())
