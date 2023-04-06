@@ -210,7 +210,7 @@ public class DataAppExceptionHandler extends ResponseEntityExceptionHandler {
 
 	private Message createErrorMessage(Message header, RejectionReason rejectionReason) {
 
-		return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
+		return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.normalizedDateTime())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())._rejectionReason_(rejectionReason)

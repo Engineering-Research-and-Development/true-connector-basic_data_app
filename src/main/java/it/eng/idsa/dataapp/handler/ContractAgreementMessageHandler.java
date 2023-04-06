@@ -38,7 +38,7 @@ public class ContractAgreementMessageHandler extends DataAppMessageHandler {
 	}
 
 	private Message createProcessNotificationMessage(Message header) {
-		return new MessageProcessedNotificationMessageBuilder()._issued_(DateUtil.now())
+		return new MessageProcessedNotificationMessageBuilder()._issued_(DateUtil.normalizedDateTime())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)._issuerConnector_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())

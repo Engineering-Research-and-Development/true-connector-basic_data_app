@@ -175,7 +175,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 	private Message createArtifactResponseMessage(ArtifactRequestMessage header) {
 		// Need to set transferCotract from original message, it will be used in policy
 		// enforcement
-		return new ArtifactResponseMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.now())
+		return new ArtifactResponseMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.normalizedDateTime())
 				._modelVersion_(UtilMessageService.MODEL_VERSION)._transferContract_(header.getTransferContract())
 				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
