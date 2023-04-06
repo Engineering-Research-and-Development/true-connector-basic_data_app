@@ -23,6 +23,7 @@ import de.fraunhofer.iais.eis.ResourceCatalog;
 import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.service.SelfDescriptionService;
+import it.eng.idsa.dataapp.service.ThreadService;
 import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
 import it.eng.idsa.dataapp.web.rest.exceptions.NotFoundException;
 import it.eng.idsa.dataapp.web.rest.exceptions.TemporarilyNotAvailableException;
@@ -39,18 +40,25 @@ public class SelfDescriptionServiceImpl implements SelfDescriptionService {
 	}
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
+	private ThreadService threadService;
 
-	public SelfDescriptionServiceImpl(RestTemplateBuilder restTemplateBuilder, ECCProperties eccProperties) {
+	public SelfDescriptionServiceImpl(RestTemplateBuilder restTemplateBuilder, ECCProperties eccProperties,
+			ThreadService threadService) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
+		this.threadService = threadService;
+
 	}
 
 	@Override
 	public Connector getSelfDescription(Message message) {
 		URI eccURI = null;
 
+		int eccPort = (Boolean.TRUE.equals(((Boolean) threadService.getThreadLocalValue("wss"))))
+				? eccProperties.getWssSelfDescriptionPort()
+				: eccProperties.getPort();
 		try {
-			eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccProperties.getPort(),
+			eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccPort,
 					eccProperties.getSelfdescriptionContext(), null, null);
 			logger.info("Fetching self description from ECC {}.", eccURI.toString());
 
