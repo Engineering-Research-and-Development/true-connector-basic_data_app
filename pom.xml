@@ -39,6 +39,12 @@
 			</snapshots>
 		</repository>
 	</repositories>
+	<scm>
+		<connection>scm:git:git://github.com/Engineering-Research-and-Development/true-connector-basic_data_app.git</connection>
+		<developerConnection>scm:git:git@github.com:Engineering-Research-and-Development/true-connector-basic_data_app.git</developerConnection>
+		<url>https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app.git</url>
+		<tag>HEAD</tag>
+	</scm>
 	<distributionManagement>
 		<repository>
 			<id>github</id>
