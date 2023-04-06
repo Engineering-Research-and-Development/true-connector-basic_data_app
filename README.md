@@ -93,8 +93,8 @@ Basic DataApp is build using Java11, and use following libraries:
 
 | Component | Version |
 | --- | --- |
-| [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) | 1.0.16 |
-| [Websocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer) | 1.0.16 |
+| [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) | 1.0.17 |
+| [Websocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer) | 1.0.17 |
 | [Information model](https://github.com/International-Data-Spaces-Association/InformationModel) | 4.2.7 | 
 | SpringBoot | 2.2.5.RELEASE |
 | Tomcat | 9.0.27 |
