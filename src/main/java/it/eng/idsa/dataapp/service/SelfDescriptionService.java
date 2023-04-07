@@ -10,8 +10,8 @@ public interface SelfDescriptionService {
 	/**
 	 * Get connector self-description
 	 * 
-	 * @param Message message - used for logging potential error
-	 * @return Connector connector
+	 * @param message - used for logging potential error
+	 * @return connector
 	 * 
 	 */
 	Connector getSelfDescription(Message message);
@@ -19,8 +19,8 @@ public interface SelfDescriptionService {
 	/**
 	 * Get connector self-description as string
 	 * 
-	 * @param Message message - used for logging potential error
-	 * @return String connector
+	 * @param message - used for logging potential error
+	 * @return connector
 	 * 
 	 */
 	String getSelfDescriptionAsString(Message message);
@@ -28,9 +28,9 @@ public interface SelfDescriptionService {
 	/**
 	 * Checks if requested element exist in self-description
 	 * 
-	 * @param ArtifactRequestMessage requestedElement - IDS request message
-	 * @param Connector              connector - self-description
-	 * @return boolean exists
+	 * @param requestedElement - IDS request message
+	 * @param connector - self-description
+	 * @return exists
 	 * 
 	 */
 	boolean artifactRequestedElementExist(ArtifactRequestMessage requestedElement, Connector connector);
@@ -38,9 +38,9 @@ public interface SelfDescriptionService {
 	/**
 	 * Checks if requested element exist in self description
 	 * 
-	 * @param DescriptionRequestMessage message - IDS request message
-	 * @param Connector                 connector - self-description
-	 * @return String requestedElement
+	 * @param message - IDS request message
+	 * @param connector - self-description
+	 * @return requestedElement
 	 * 
 	 */
 	String getRequestedElement(DescriptionRequestMessage message, Connector connector);
