@@ -47,7 +47,7 @@
 		<repository>
 			<id>github</id>
 			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/Engineering-Research-and-Development/market4.0-data_app_test_BE</url>
+			<url>https://maven.pkg.github.com/Engineering-Research-and-Development/true-connector-basic_data_app</url>
 		</repository>
 	</distributionManagement>
 	<dependencies>
