@@ -250,16 +250,118 @@ In payload you can provide any data that is needed for your backend system: DB q
 
 ## WebSocket file exchange <a name="websocketfileexchange"></a>
 
+Using WebSocket configuration, you can exchange files that are read from dataLake property.
+
+```
+application.dataLakeDirectory=
+```
+
+One difference, is that if following property is set to true (default value):
+
+```
+application.contract.negotiation.demo=true
+```
+
+Then file will be read from dataLake, without checking if such file (resource) is defined in connector Self Description document.
+
+If property is set to *false*, then user must define following resource in Self Description document (using connector Self Description API), since check will be made if such resource is present, like:
+
+```
+{
+      "@type" : "ids:DataResource",
+      "@id" : "https://w3id.org/idsa/autogen/dataResource/08f0feff-a142-4511-8334-1d66663c385f",
+      "ids:contractOffer" : [ {
+        "@type" : "ids:ContractOffer",
+        "@id" : "https://w3id.org/idsa/autogen/contractOffer/dfced843-998c-41c1-809e-40050f7a1b9b",
+        "ids:contractStart" : {
+          "@value" : "2023-04-20T07:07:02.589Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        },
+        "ids:contractDate" : {
+          "@value" : "2023-04-20T07:07:03.897Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        },
+        "ids:provider" : {
+          "@id" : "https://w3id.org/engrd/connector/provider"
+        },
+        "ids:permission" : [ {
+          "@type" : "ids:Permission",
+          "@id" : "https://w3id.org/idsa/autogen/permission/5e1f4d1e-8dca-4780-b7ca-d4e6cca409a2",
+          "ids:action" : [ {
+            "@id" : "https://w3id.org/idsa/code/USE"
+          } ],
+          "ids:description" : [ {
+            "@value" : "provide-access",
+            "@type" : "http://www.w3.org/2001/XMLSchema#string"
+          } ],
+          "ids:title" : [ {
+            "@value" : "Example Usage Policy",
+            "@type" : "http://www.w3.org/2001/XMLSchema#string"
+          } ],
+          "ids:target" : {
+            "@id" : "http://w3id.org/engrd/connector/artifact/test1.csv"
+          }
+        } ]
+      } ],
+      "ids:representation" : [ {
+        "@type" : "ids:TextRepresentation",
+        "@id" : "https://w3id.org/idsa/autogen/textRepresentation/82f3b21a-2b8d-44a0-841f-6df48c24d091",
+        "ids:created" : {
+          "@value" : "2023-04-20T07:07:03.990Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        },
+        "ids:instance" : [ {
+          "@type" : "ids:Artifact",
+          "@id" : "http://w3id.org/engrd/connector/artifact/test1.csv",
+          "ids:creationDate" : {
+            "@value" : "2023-04-20T07:07:01.903Z",
+            "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+          }
+        } ],
+        "ids:language" : {
+          "@id" : "https://w3id.org/idsa/code/EN"
+        }
+      } ],
+      "ids:keyword" : [ {
+        "@value" : "Engineering Ingegneria Informatica SpA",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      }, {
+        "@value" : "TRUEConnector",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:modified" : {
+        "@value" : "2023-04-20T07:07:03.798Z",
+        "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+      },
+      "ids:created" : {
+        "@value" : "2023-04-20T07:07:03.798Z",
+        "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+      },
+      "ids:description" : [ {
+        "@value" : "Used to verify wss flow",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:contentType" : {
+        "@id" : "https://w3id.org/idsa/code/SCHEMA_DEFINITION"
+      },
+      "ids:version" : "1.0.0",
+      "ids:title" : [ {
+        "@value" : "CSV resource",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:language" : [ {
+        "@id" : "https://w3id.org/idsa/code/EN"
+      }, {
+        "@id" : "https://w3id.org/idsa/code/IT"
+      } ]
+    }
+```
+
 To use WSS flow on the egde and between ECC, do the following:
 
 **Changes in DataApp**
 
 In application.properties file:
-
-```
-application.dataLakeDirectory=
-```
-Use application.dataLakeDirectory= property to pint where files are located that needs to be exchanged over wss.
 
 ```
 application.ecc.wss-port=8098
