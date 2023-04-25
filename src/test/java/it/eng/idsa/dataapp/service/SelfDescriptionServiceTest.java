@@ -63,7 +63,7 @@ class SelfDescriptionServiceTest {
 		when(eccProperties.getProtocol()).thenReturn("http");
 		when(eccProperties.getPort()).thenReturn(1234);
 		when(restTemplateBuilder.build()).thenReturn(restTemplate);
-		selfDescriptionService = new SelfDescriptionServiceImpl(restTemplateBuilder, eccProperties, threadService);
+		selfDescriptionService = new SelfDescriptionServiceImpl(restTemplateBuilder, eccProperties);
 
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
 		selfDescriptionAsString = serializer.serialize(baseConnector);
