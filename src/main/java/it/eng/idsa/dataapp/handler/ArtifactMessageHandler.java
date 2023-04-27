@@ -122,7 +122,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 	private String handleRestFlow(Message message) {
 		String payload = null;
 		// Check if requested artifact exist in self description
-		if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+		if (contractNegotiationDemo || selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
 				selfDescriptionService.getSelfDescription(message))) {
 			if (isBigPayload(((ArtifactRequestMessage) message).getRequestedArtifact().toString())) {
 				payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())

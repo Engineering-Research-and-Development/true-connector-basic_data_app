@@ -361,13 +361,6 @@ To use WSS flow on the egde and between ECC, do the following:
 
 **Changes in DataApp**
 
-In application.properties file:
-
-```
-application.ecc.wss-port=8098
-```
-Use application.ecc.wss-port= property to set the ECC Sender WSS port.
-
 In config.properties file
 
 ```
@@ -584,14 +577,6 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 DataApp will send ContractAgreementMessage once *ids:ContractRequestMessage* message is received as input message.</br>
 Payload for this response (ContractAgreement) will be fetch from Execution Core Container.
 
-Following properties are used to create URL for Self Description request:
-
-```
-application.ecc.host=
-application.ecc.RESTprotocol=
-application.ecc.RESTport=
-```
-
 For demo purposes, following property
 
 ```
@@ -606,9 +591,13 @@ User can also modify code in DataApp, to externalize decision for accepting or d
 
 When receiving a Description Request Message we are preparing a response by creating a Description Response Message for the header part and putting the whole Self Description(ids:BaseConnector) or requested element from Self Description (ids:Resource) in the payload.
 In both cases a GET request is sent to the ECC in order to fetch the Self Description. The following properties need to be configured and correspond the Self Description configuration from the ECC.
+
+Following properties are used to create URL for internal Self Description request from Data App to ECC:
+
 ```
-application.ecc.RESTprotocol=http|https
-application.ecc.RESTport=8081|8443
+application.ecc.protocol=
+application.ecc.host=
+application.ecc.selfdescription-port=
 ```
 
 Example for Description RequestMessage:

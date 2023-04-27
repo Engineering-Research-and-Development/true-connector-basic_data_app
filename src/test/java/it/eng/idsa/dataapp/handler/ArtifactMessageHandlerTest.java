@@ -132,6 +132,22 @@ class ArtifactMessageHandlerTest {
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get(DataAppMessageHandler.HEADER).toString(),
 				message.getId().toString()));
 	}
+	
+	@Test
+	void handleMessageContractNegotiationDemoRestTest() throws URISyntaxException {
+		
+		ReflectionTestUtils.setField(artifactMessageHandler, "contractNegotiationDemo", true);
+		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
+
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
+		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/1"));
+		responseMap = artifactMessageHandler.handleMessage(arm, PAYLOAD);
+
+		assertNotNull(responseMap.get("header"));
+		assertNotNull(responseMap.get("payload"));
+		assertTrue(StringUtils.containsIgnoreCase(responseMap.get(DataAppMessageHandler.HEADER).toString(),
+				message.getId().toString()));
+	}
 
 	@Test
 	void handleMessageTestRequestedArtifactNullTest() {
