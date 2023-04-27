@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.6] - 2023-04-24
+
+### Added
+
+ - Property application.ecc.selfdescription-port required for getting the selfdescription from ecc
+ - Security basic Authorization for /proxy endpoint
+ - New "proxy" port (application.proxyPort) and logic for filtering "proxy" vs "non proxy" requests based on port
+
+### Removed
+
+ - Property application.ecc.wss-port no longer needed for WSS flow
+ - Property application.ecc.selfdescription-context=/internal/sd ; now hardcoded
+
 
 ## [0.2.2] - 2023-04-06
 
