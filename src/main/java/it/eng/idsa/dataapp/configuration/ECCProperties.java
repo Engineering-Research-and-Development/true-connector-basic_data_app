@@ -1,25 +1,39 @@
 package it.eng.idsa.dataapp.configuration;
 
+import javax.validation.constraints.NotEmpty;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @Component
 @ConfigurationProperties("application.ecc")
 public class ECCProperties {
+	
+	@NotEmpty
 	private String protocol;
+	@NotEmpty
 	private String host;
 	private int port;
+	@NotEmpty
 	private String mixContext;
+	@NotEmpty
 	private String formContext;
+	@NotEmpty
 	private String headerContext;
-
-	private int selfdescriptionPort;
-	private String selfdescriptionContext;
 	
+	private int selfdescriptionPort;
+	
+	@NotEmpty
 	private String brokerRegisterContext;
+	@NotEmpty
 	private String brokerUpdateContext;
+	@NotEmpty
 	private String brokerDeleteContext;
+	@NotEmpty
 	private String brokerPassivateContext;
+	@NotEmpty
 	private String brokerQuerryContext;
 	
 	public String getProtocol() {
@@ -66,12 +80,6 @@ public class ECCProperties {
 		this.selfdescriptionPort = selfdescriptionPort;
 	}
 	
-	public String getSelfdescriptionContext() {
-		return selfdescriptionContext;
-	}
-	public void setSelfdescriptionContext(String selfdescriptionContext) {
-		this.selfdescriptionContext = selfdescriptionContext;
-	}
 	public String getBrokerRegisterContext() {
 		return brokerRegisterContext;
 	}
@@ -102,7 +110,4 @@ public class ECCProperties {
 	public void setBrokerQuerryContext(String brokerQuerryContext) {
 		this.brokerQuerryContext = brokerQuerryContext;
 	}
-
-	
-	
 }

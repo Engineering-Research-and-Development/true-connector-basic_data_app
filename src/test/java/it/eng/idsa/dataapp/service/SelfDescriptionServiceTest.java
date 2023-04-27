@@ -110,7 +110,7 @@ class SelfDescriptionServiceTest {
 
 	@Test
 	void getSelfDescriptionURISyntaxExceptionTest() {
-		when(eccProperties.getHost()).thenReturn(null);
+		when(eccProperties.getProtocol()).thenReturn("\\");
 		
 		InternalRecipientException exception = assertThrows(InternalRecipientException.class, () -> {
 			selfDescriptionService.getSelfDescription(message);

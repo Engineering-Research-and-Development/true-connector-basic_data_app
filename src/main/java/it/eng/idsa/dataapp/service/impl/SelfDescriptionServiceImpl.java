@@ -52,8 +52,8 @@ public class SelfDescriptionServiceImpl implements SelfDescriptionService {
 
 		try {
 			eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccProperties.getSelfdescriptionPort(),
-					eccProperties.getSelfdescriptionContext(), null, null);
-			logger.info("Fetching self description from ECC {}.", eccURI.toString());
+					"/internal/sd", null, null);
+			logger.info("Fetching self description from ECC {}", eccURI.toString());
 
 			ResponseEntity<String> response = restTemplate.exchange(eccURI, HttpMethod.GET, null, String.class);
 			if (response != null) {

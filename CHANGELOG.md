@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 
  - Property application.ecc.wss-port no longer needed for WSS flow
+ - Property application.ecc.selfdescription-context=/internal/sd ; now hardcoded
 
 
 ## [0.2.2] - 2023-04-06

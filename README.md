@@ -598,7 +598,6 @@ Following properties are used to create URL for internal Self Description reques
 application.ecc.protocol=
 application.ecc.host=
 application.ecc.selfdescription-port=
-application.ecc.selfdescription-context=/internal/sd
 ```
 
 Example for Description RequestMessage:
