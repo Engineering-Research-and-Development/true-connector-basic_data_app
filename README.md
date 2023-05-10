@@ -176,7 +176,6 @@ If you need to modify dataApp, you can perform such modification in 2 places: Co
 
 Following class is used as entry point for consumer side:
 
-v
 This class is the entry point of [proxy request](#proxyendpoint). Business logic for creating request is delegated to:
 
 [**it.eng.idsa.dataapp.service.ProxyServiceImpl**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/service/impl/ProxyServiceImpl.java)
@@ -454,7 +453,7 @@ wss://localhost:8887
 wss://localhost:8086
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --data-raw '{
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
@@ -472,7 +471,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Mixed <a name="mixed"></a>
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -491,7 +490,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Form <a name="form"></a>
  
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -510,7 +509,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Http-header <a name="httpheader"></a>
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -597,7 +596,7 @@ Payload is used to pass query to the Broker
 Curl command:
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -645,7 +644,7 @@ application.ecc.selfdescription-port=
 Example for Description RequestMessage:
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "form",
