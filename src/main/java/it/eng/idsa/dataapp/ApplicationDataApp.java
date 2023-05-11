@@ -7,6 +7,8 @@ import java.util.Arrays;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.Http11NioProtocol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -36,6 +38,8 @@ public class ApplicationDataApp {
 	private int proxyPort;
 	@Value("${server.ssl.enabled:true}")
 	private Boolean sslEnabled;
+	
+	private static final Logger logger = LoggerFactory.getLogger(ApplicationDataApp.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(ApplicationDataApp.class, args);
@@ -56,9 +60,11 @@ public class ApplicationDataApp {
 	private Connector createSslConnector(int port) {
 	    Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
 	    Http11NioProtocol protocol = (Http11NioProtocol) connector.getProtocolHandler();
+	    logger.info("Creating additional connector for port {}", port);
 	    try {
 	    	if(sslEnabled) {
 	    		File ks = new ClassPathResource(Paths.get(keystore).getFileName().toString()).getFile();
+	    		logger.info("TLS enabled, adding to new connector");
 //	        File truststore = new ClassPathResource("truststore.jks").getFile();
 	    		connector.setScheme("https");
 	    		connector.setSecure(true);
