@@ -15,7 +15,11 @@
   * [Solution 2](#solution2)
   * [Creating docker image](#creatingdockerimage)
   * [Component overview](#componentoverview)
-* [Dedicated endpoint in dataApp](#proxyendpoint)
+* [Security](#security)  
+* [Dedicated endpoint in dataApp](#endpoint)
+  * [Proxy Endpoint](#proxyendpoint)
+  * [Data Endpoint](#dataendpoint)
+  * [WebSocket Endpoint](#websocketendpoint)
 * [Customizing DataApp](#customizingdataapp)
   * [Consumer side modification](#consumersidemodification)
   * [Provider side modification](#providersidemodification)
@@ -111,8 +115,33 @@ Basic DataApp is build using Java11, and use following libraries:
 
 ---
 
+## Security <a name="security"></a>
 
-## Dedicated endpoint in DataApp <a name="proxyendpoint"></a>
+Since /proxy endpoint is exposed to the outside world, there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
+For configuring credentials, please take a look at following properties:
+
+```
+application.security.username=proxy
+# encoded 'password'
+application.security.password=$2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUubrqdGTFCH3m
+```
+
+If you want to change password, please use endpoint provided in Execution Core Container project.
+
+## Dedicated endpoint in DataApp <a name="endpoint"></a>
+
+### Proxy Endpoint <a name="proxyendpoint"></a>
+
+Following endpoint is exposed on separate port:
+
+```
+application.proxyPort=8183
+```
+
+Reason for this is that this port will be exposed via docker configuration to the outside world, while other port will not, and will be used only internally, between ECC and DataApp services. 
+
+Logic used to filter requests can be found in
+[**it.eng.idsa.dataapp.configuration.CustomWebMvcConfigurer**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/configuration/CustomWebMvcConfigurer.java)
 
 ```
 @RequestMapping("/proxy")
@@ -124,6 +153,20 @@ This methods is used in both REST and WSS flows.
 
 ---
 
+### Data endpoint <a name="dataendpoint"></a>
+
+Dedicated endpoint for receiving request from Execution Core Container. Intended to be used internally.
+
+```
+server.port=8083
+```
+
+### WebSocket endpoint <a name="websocketendpoint"></a>
+
+[**it.eng.idsa.dataapp.web.rest.IncomingDataAppResourceOverWs**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/eng/idsa/dataapp/web/rest/IncomingDataAppResourceOverWs.java)
+
+This class listens on websocket port and once property is changed (message is received) it will recreate message and continue with message handling.
+
 
 ## Customizing DataApp <a name="customizingdataapp"></a>
 
@@ -132,8 +175,6 @@ If you need to modify dataApp, you can perform such modification in 2 places: Co
 ### Consumer side modification <a name="consumersidemodification"></a>
 
 Following class is used as entry point for consumer side:
-
-[**it.eng.idsa.dataapp.web.rest.ProxyController**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/web/rest/ProxyController.java)
 
 This class is the entry point of [proxy request](#proxyendpoint). Business logic for creating request is delegated to:
 
@@ -412,7 +453,7 @@ wss://localhost:8887
 wss://localhost:8086
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --data-raw '{
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
@@ -430,7 +471,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Mixed <a name="mixed"></a>
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -449,7 +490,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Form <a name="form"></a>
  
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -468,7 +509,7 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Http-header <a name="httpheader"></a>
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -555,7 +596,7 @@ Payload is used to pass query to the Broker
 Curl command:
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -603,7 +644,7 @@ application.ecc.selfdescription-port=
 Example for Description RequestMessage:
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "form",
