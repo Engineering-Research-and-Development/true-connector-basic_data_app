@@ -8,10 +8,10 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>it.eng.idsa</groupId>
-	<artifactId>market4.0-data-app</artifactId>
+	<artifactId>true-connector-data-app</artifactId>
 	<version>0.2.5-SNAPSHOT</version>
-	<name>market4.0-data-app</name>
-	<description>The project for market4.0-data-app</description>
+	<name>true-connector-data-app</name>
+	<description>TRUE Connector data app</description>
 	<properties>
 		<java.version>11</java.version>
 		<tomcat.version>9.0.27</tomcat.version>
