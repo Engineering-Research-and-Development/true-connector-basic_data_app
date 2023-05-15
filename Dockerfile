@@ -17,7 +17,6 @@ WORKDIR /home/nobody
 COPY target/dependency-jars /home/nobody/app/dependency-jars
 
 # Add the application's jar to the container
-# ADD ${JAR_FILE} market4.0-data-app.jar
 ADD target/application.jar /home/nobody/app/application.jar
 
 # Change ownership of non-privileged user directory and logs directories
