@@ -117,7 +117,7 @@ Basic DataApp is build using Java11, and use following libraries:
 
 ## Security <a name="security"></a>
 
-Since /proxy endpoint is exposed to the outside world, there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
+Since /proxy endpoint is exposed to the outside world, on separate port (default 8183) there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
 For configuring credentials, please take a look at following properties:
 
 ```
@@ -140,6 +140,8 @@ application.proxyPort=8183
 
 Reason for this is that this port will be exposed via docker configuration to the outside world, while other port will not, and will be used only internally, between ECC and DataApp services. 
 
+This endpoint also requires basic authorization when sending request. Please check [security](#security).
+
 Logic used to filter requests can be found in
 [**it.eng.idsa.dataapp.configuration.CustomWebMvcConfigurer**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/configuration/CustomWebMvcConfigurer.java)
 
@@ -155,7 +157,7 @@ This methods is used in both REST and WSS flows.
 
 ### Data endpoint <a name="dataendpoint"></a>
 
-Dedicated endpoint for receiving request from Execution Core Container. Intended to be used internally.
+Dedicated endpoint for receiving request from Execution Core Container. Intended to be used internally. Since it is used internally, between ECC and Data App, does not require authorization.
 
 ```
 server.port=8083
@@ -244,7 +246,8 @@ When adding a new type of Message handler, advice is to use [**DataAppExceptionH
 During development process, you can use following curl command (or import it in postman) to test custom logic you are working on. Provided example curl assumes you are using *form* configuration.
 
 ```
-curl --location --request POST 'https://localhost:8083/data' \
+curl --location --request POST 'https://localhost:8183/data' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --form 'header={
   "@context" : {
     "ids" : "https://w3id.org/idsa/core/",
@@ -454,6 +457,7 @@ wss://localhost:8086
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --data-raw '{
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
@@ -472,6 +476,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -491,6 +496,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
  
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -510,6 +516,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -597,6 +604,7 @@ Curl command:
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -636,15 +644,16 @@ In both cases a GET request is sent to the ECC in order to fetch the Self Descri
 Following properties are used to create URL for internal Self Description request from Data App to ECC:
 
 ```
-application.ecc.protocol=
-application.ecc.host=
-application.ecc.selfdescription-port=
+application.ecc.protocol=https
+application.ecc.host=localhost
+application.ecc.selfdescription-port=8100
 ```
 
 Example for Description RequestMessage:
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "form",
