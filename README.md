@@ -457,7 +457,7 @@ wss://localhost:8086
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' 
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --data-raw '{
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
@@ -476,7 +476,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' 
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -496,7 +496,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
  
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' 
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -516,7 +516,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' 
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
