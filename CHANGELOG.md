@@ -5,18 +5,18 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
- - Property application.ecc.selfdescription-port required for getting the selfdescription from ecc
+ - Property application.ecc.selfdescription-port required for getting the Self Description from ecc
  - Security basic Authorization for /proxy endpoint
  - New "proxy" port (application.proxyPort) and logic for filtering "proxy" vs "non proxy" requests based on port
 
 ### Removed
 
  - Property application.ecc.wss-port no longer needed for WSS flow
- - Property application.ecc.selfdescription-context=/internal/sd ; now hardcoded
+ - Property application.ecc.selfdescription-context=/internal/sd ; now hard-coded
  
 ### Changed
  
- - improved logic when extracting and decoding payload in response flow; fixed Postman timout
+ - improved logic when extracting and decoding payload in response flow; fixed Postman timeout
 
 
 ## [0.2.2] - 2023-04-06
@@ -29,11 +29,11 @@ All notable changes to this project will be documented in this file.
  
 ### Changed
  - WSS flow now supports use of Message handlers
- - Distinguished REST and WSS flow in message handlers, with additional checks releated to requested element
+ - Distinguished REST and WSS flow in message handlers, with additional checks related to requested element
  - Cleaned unused code after refactoring
  - Multipart message library upgraded to 1.0.17
  - Websocket library upgraded to 1.0.17
- - infomodel dependency now managed via Multipart Library
+ - Infomodel dependency now managed via Multipart Library
 
 
 ## [0.2.1-SNAPSHOT] - 2023-02-14
