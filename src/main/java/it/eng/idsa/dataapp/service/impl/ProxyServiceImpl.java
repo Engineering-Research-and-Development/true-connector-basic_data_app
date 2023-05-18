@@ -6,9 +6,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.entity.ContentType;
 import org.apache.http.protocol.HTTP;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -523,22 +525,27 @@ public class ProxyServiceImpl implements ProxyService {
 			}
 			return RejectionUtil.HANDLE_REJECTION(((RejectionMessage) mm.getHeaderContent()).getRejectionReason());
 		}
+		String responsePayload = mm.getPayloadContent();
+		if (encodePayload && mm.getHeaderContent() instanceof ArtifactResponseMessage) {
+			responsePayload = new String(Base64.getDecoder().decode(mm.getPayloadContent()));
+		} 
 
 		if (extractPayloadFromResponse) {
-			MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-
-			headers.putAll(resp.getHeaders());
-			// replacing Content Type and Length headers from original message with the ones
-			// from payload part
-			headers.set(HTTP.CONTENT_TYPE, mm.getPayloadHeader().get(HTTP.CONTENT_TYPE));
-			headers.set(HTTP.CONTENT_LEN, mm.getPayloadHeader().get(HTTP.CONTENT_LEN));
-			headers.remove(HTTP.TRANSFER_ENCODING);
-
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.putAll(resp.getHeaders());
+			String payloadContentType = mm.getPayloadHeader().get(HTTP.CONTENT_TYPE) != null ?
+					mm.getPayloadHeader().get(HTTP.CONTENT_TYPE) :
+					ContentType.TEXT_PLAIN.getMimeType();
+			httpHeaders.put(HTTP.CONTENT_TYPE, List.of(payloadContentType));
+			httpHeaders.put(HTTP.CONTENT_LEN, List.of(String.valueOf(responsePayload.length())));
+			httpHeaders.remove(HTTP.TRANSFER_ENCODING);
+			
 			if (mm.getHeaderContent() instanceof MessageProcessedNotificationMessage) {
-				return new ResponseEntity<String>("MessageProcessedNotificationMessage", headers, HttpStatus.OK);
+				httpHeaders.put(HTTP.CONTENT_TYPE, List.of(mm.getPayloadHeader().get(HTTP.CONTENT_TYPE)));
+				httpHeaders.put(HTTP.CONTENT_LEN, List.of(String.valueOf("MessageProcessedNotificationMessage".length())));
+				return ResponseEntity.status(HttpStatus.OK).headers(httpHeaders).body("MessageProcessedNotificationMessage");
 			}
-
-			return new ResponseEntity<String>(mm.getPayloadContent(), headers, HttpStatus.OK);
+			return ResponseEntity.status(HttpStatus.OK).headers(httpHeaders).body(responsePayload);
 		}
 		return resp;
 	}

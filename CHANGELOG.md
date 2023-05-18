@@ -13,6 +13,10 @@ All notable changes to this project will be documented in this file.
 
  - Property application.ecc.wss-port no longer needed for WSS flow
  - Property application.ecc.selfdescription-context=/internal/sd ; now hardcoded
+ 
+### Changed
+ 
+ - improved logic when extracting and decoding payload in response flow; fixed Postman timout
 
 
 ## [0.2.2] - 2023-04-06
