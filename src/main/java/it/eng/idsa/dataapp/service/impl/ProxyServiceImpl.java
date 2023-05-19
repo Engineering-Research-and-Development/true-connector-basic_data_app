@@ -525,28 +525,33 @@ public class ProxyServiceImpl implements ProxyService {
 			}
 			return RejectionUtil.HANDLE_REJECTION(((RejectionMessage) mm.getHeaderContent()).getRejectionReason());
 		}
-		String responsePayload = mm.getPayloadContent();
-		if (encodePayload && mm.getHeaderContent() instanceof ArtifactResponseMessage) {
-			responsePayload = new String(Base64.getDecoder().decode(mm.getPayloadContent()));
-		} 
 
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.putAll(resp.getHeaders());
+
+		String responsePayload = null;
+		httpHeaders.remove(HTTP.TRANSFER_ENCODING);
 		if (extractPayloadFromResponse) {
-			HttpHeaders httpHeaders = new HttpHeaders();
-			httpHeaders.putAll(resp.getHeaders());
-			String payloadContentType = mm.getPayloadHeader().get(HTTP.CONTENT_TYPE) != null ?
-					mm.getPayloadHeader().get(HTTP.CONTENT_TYPE) :
-					ContentType.TEXT_PLAIN.getMimeType();
+			String payloadContentType = ContentType.TEXT_PLAIN.getMimeType();
+			if(StringUtils.isNotBlank(mm.getPayloadContent())) {
+				logger.info("Extracting payload");
+				responsePayload = mm.getPayloadContent();
+				if (encodePayload && mm.getHeaderContent() instanceof ArtifactResponseMessage) {
+					responsePayload = new String(Base64.getDecoder().decode(mm.getPayloadContent()));
+				} 
+				if(mm.getPayloadHeader().get(HTTP.CONTENT_TYPE) != null) {
+					payloadContentType = mm.getPayloadHeader().get(HTTP.CONTENT_TYPE);
+				}
+			} else {
+				logger.info("Payload is null or empty - returning message");
+				// payload null or empty
+				responsePayload = mm.getHeaderContent().getClass().getSimpleName().replace("Impl", "");
+			}
 			httpHeaders.put(HTTP.CONTENT_TYPE, List.of(payloadContentType));
 			httpHeaders.put(HTTP.CONTENT_LEN, List.of(String.valueOf(responsePayload.length())));
-			httpHeaders.remove(HTTP.TRANSFER_ENCODING);
-			
-			if (mm.getHeaderContent() instanceof MessageProcessedNotificationMessage) {
-				httpHeaders.put(HTTP.CONTENT_TYPE, List.of(mm.getPayloadHeader().get(HTTP.CONTENT_TYPE)));
-				httpHeaders.put(HTTP.CONTENT_LEN, List.of(String.valueOf("MessageProcessedNotificationMessage".length())));
-				return ResponseEntity.status(HttpStatus.OK).headers(httpHeaders).body("MessageProcessedNotificationMessage");
-			}
 			return ResponseEntity.status(HttpStatus.OK).headers(httpHeaders).body(responsePayload);
 		}
+			
 		return resp;
 	}
 
