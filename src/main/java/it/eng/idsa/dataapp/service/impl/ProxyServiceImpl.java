@@ -501,7 +501,7 @@ public class ProxyServiceImpl implements ProxyService {
 			}
 
 		} else {
-			return handleWssResponse(mm);
+			return handleResponse(null, mm);
 		}
 	}
 
@@ -527,7 +527,9 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.putAll(resp.getHeaders());
+		if(resp != null) {
+			httpHeaders.putAll(resp.getHeaders());
+		}
 
 		String responsePayload = null;
 		httpHeaders.remove(HTTP.TRANSFER_ENCODING);
