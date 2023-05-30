@@ -15,7 +15,11 @@
   * [Solution 2](#solution2)
   * [Creating docker image](#creatingdockerimage)
   * [Component overview](#componentoverview)
-* [Dedicated endpoint in dataApp](#proxyendpoint)
+* [Security](#security)  
+* [Dedicated endpoint in dataApp](#endpoint)
+  * [Proxy Endpoint](#proxyendpoint)
+  * [Data Endpoint](#dataendpoint)
+  * [WebSocket Endpoint](#websocketendpoint)
 * [Customizing DataApp](#customizingdataapp)
   * [Consumer side modification](#consumersidemodification)
   * [Provider side modification](#providersidemodification)
@@ -111,8 +115,35 @@ Basic DataApp is build using Java11, and use following libraries:
 
 ---
 
+## Security <a name="security"></a>
 
-## Dedicated endpoint in DataApp <a name="proxyendpoint"></a>
+Since /proxy endpoint is exposed to the outside world, on separate port (default 8183) there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
+For configuring credentials, please take a look at following properties:
+
+```
+application.security.username=proxy
+# encoded 'password'
+application.security.password=$2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUubrqdGTFCH3m
+```
+
+If you want to change password, please use endpoint provided in Execution Core Container project.
+
+## Dedicated endpoint in DataApp <a name="endpoint"></a>
+
+### Proxy Endpoint <a name="proxyendpoint"></a>
+
+Following endpoint is exposed on separate port:
+
+```
+application.proxyPort=8183
+```
+
+Reason for this is that this port will be exposed via docker configuration to the outside world, while other port will not, and will be used only internally, between ECC and DataApp services. 
+
+This endpoint also requires basic authorization when sending request. Please check [security](#security).
+
+Logic used to filter requests can be found in
+[**it.eng.idsa.dataapp.configuration.CustomWebMvcConfigurer**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/configuration/CustomWebMvcConfigurer.java)
 
 ```
 @RequestMapping("/proxy")
@@ -124,6 +155,20 @@ This methods is used in both REST and WSS flows.
 
 ---
 
+### Data endpoint <a name="dataendpoint"></a>
+
+Dedicated endpoint for receiving request from Execution Core Container. Intended to be used internally. Since it is used internally, between ECC and Data App, does not require authorization.
+
+```
+server.port=8083
+```
+
+### WebSocket endpoint <a name="websocketendpoint"></a>
+
+[**it.eng.idsa.dataapp.web.rest.IncomingDataAppResourceOverWs**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/eng/idsa/dataapp/web/rest/IncomingDataAppResourceOverWs.java)
+
+This class listens on websocket port and once property is changed (message is received) it will recreate message and continue with message handling.
+
 
 ## Customizing DataApp <a name="customizingdataapp"></a>
 
@@ -132,8 +177,6 @@ If you need to modify dataApp, you can perform such modification in 2 places: Co
 ### Consumer side modification <a name="consumersidemodification"></a>
 
 Following class is used as entry point for consumer side:
-
-[**it.eng.idsa.dataapp.web.rest.ProxyController**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/web/rest/ProxyController.java)
 
 This class is the entry point of [proxy request](#proxyendpoint). Business logic for creating request is delegated to:
 
@@ -203,7 +246,8 @@ When adding a new type of Message handler, advice is to use [**DataAppExceptionH
 During development process, you can use following curl command (or import it in postman) to test custom logic you are working on. Provided example curl assumes you are using *form* configuration.
 
 ```
-curl --location --request POST 'https://localhost:8083/data' \
+curl --location --request POST 'https://localhost:8183/data' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --form 'header={
   "@context" : {
     "ids" : "https://w3id.org/idsa/core/",
@@ -250,21 +294,116 @@ In payload you can provide any data that is needed for your backend system: DB q
 
 ## WebSocket file exchange <a name="websocketfileexchange"></a>
 
-To use WSS flow on the egde and between ECC, do the following:
-
-**Changes in DataApp**
-
-In application.properties file:
+Using WebSocket configuration, you can exchange files that are read from dataLake property.
 
 ```
 application.dataLakeDirectory=
 ```
-Use application.dataLakeDirectory= property to pint where files are located that needs to be exchanged over wss.
+
+One difference, is that if following property is set to true (default value):
 
 ```
-application.ecc.wss-port=8098
+application.contract.negotiation.demo=true
 ```
-Use application.ecc.wss-port= property to set the ECC Sender WSS port.
+
+Then file will be read from dataLake, without checking if such file (resource) is defined in connector Self Description document.
+
+If property is set to *false*, then user must define following resource in Self Description document (using connector Self Description API), since check will be made if such resource is present, like:
+
+```
+{
+      "@type" : "ids:DataResource",
+      "@id" : "https://w3id.org/idsa/autogen/dataResource/08f0feff-a142-4511-8334-1d66663c385f",
+      "ids:contractOffer" : [ {
+        "@type" : "ids:ContractOffer",
+        "@id" : "https://w3id.org/idsa/autogen/contractOffer/dfced843-998c-41c1-809e-40050f7a1b9b",
+        "ids:contractStart" : {
+          "@value" : "2023-04-20T07:07:02.589Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        },
+        "ids:contractDate" : {
+          "@value" : "2023-04-20T07:07:03.897Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        },
+        "ids:provider" : {
+          "@id" : "https://w3id.org/engrd/connector/provider"
+        },
+        "ids:permission" : [ {
+          "@type" : "ids:Permission",
+          "@id" : "https://w3id.org/idsa/autogen/permission/5e1f4d1e-8dca-4780-b7ca-d4e6cca409a2",
+          "ids:action" : [ {
+            "@id" : "https://w3id.org/idsa/code/USE"
+          } ],
+          "ids:description" : [ {
+            "@value" : "provide-access",
+            "@type" : "http://www.w3.org/2001/XMLSchema#string"
+          } ],
+          "ids:title" : [ {
+            "@value" : "Example Usage Policy",
+            "@type" : "http://www.w3.org/2001/XMLSchema#string"
+          } ],
+          "ids:target" : {
+            "@id" : "http://w3id.org/engrd/connector/artifact/test1.csv"
+          }
+        } ]
+      } ],
+      "ids:representation" : [ {
+        "@type" : "ids:TextRepresentation",
+        "@id" : "https://w3id.org/idsa/autogen/textRepresentation/82f3b21a-2b8d-44a0-841f-6df48c24d091",
+        "ids:created" : {
+          "@value" : "2023-04-20T07:07:03.990Z",
+          "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+        },
+        "ids:instance" : [ {
+          "@type" : "ids:Artifact",
+          "@id" : "http://w3id.org/engrd/connector/artifact/test1.csv",
+          "ids:creationDate" : {
+            "@value" : "2023-04-20T07:07:01.903Z",
+            "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+          }
+        } ],
+        "ids:language" : {
+          "@id" : "https://w3id.org/idsa/code/EN"
+        }
+      } ],
+      "ids:keyword" : [ {
+        "@value" : "Engineering Ingegneria Informatica SpA",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      }, {
+        "@value" : "TRUEConnector",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:modified" : {
+        "@value" : "2023-04-20T07:07:03.798Z",
+        "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+      },
+      "ids:created" : {
+        "@value" : "2023-04-20T07:07:03.798Z",
+        "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+      },
+      "ids:description" : [ {
+        "@value" : "Used to verify wss flow",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:contentType" : {
+        "@id" : "https://w3id.org/idsa/code/SCHEMA_DEFINITION"
+      },
+      "ids:version" : "1.0.0",
+      "ids:title" : [ {
+        "@value" : "CSV resource",
+        "@type" : "http://www.w3.org/2001/XMLSchema#string"
+      } ],
+      "ids:language" : [ {
+        "@id" : "https://w3id.org/idsa/code/EN"
+      }, {
+        "@id" : "https://w3id.org/idsa/code/IT"
+      } ]
+    }
+```
+
+To use WSS flow on the egde and between ECC, do the following:
+
+**Changes in DataApp**
 
 In config.properties file
 
@@ -317,7 +456,8 @@ wss://localhost:8887
 wss://localhost:8086
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --data-raw '{
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
@@ -335,7 +475,8 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Mixed <a name="mixed"></a>
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -354,7 +495,8 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Form <a name="form"></a>
  
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -373,7 +515,8 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 ### Http-header <a name="httpheader"></a>
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -460,7 +603,8 @@ Payload is used to pass query to the Broker
 Curl command:
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -482,14 +626,6 @@ curl --location --request POST 'https://localhost:8083/proxy' \
 DataApp will send ContractAgreementMessage once *ids:ContractRequestMessage* message is received as input message.</br>
 Payload for this response (ContractAgreement) will be fetch from Execution Core Container.
 
-Following properties are used to create URL for Self Description request:
-
-```
-application.ecc.host=
-application.ecc.RESTprotocol=
-application.ecc.RESTport=
-```
-
 For demo purposes, following property
 
 ```
@@ -504,15 +640,20 @@ User can also modify code in DataApp, to externalize decision for accepting or d
 
 When receiving a Description Request Message we are preparing a response by creating a Description Response Message for the header part and putting the whole Self Description(ids:BaseConnector) or requested element from Self Description (ids:Resource) in the payload.
 In both cases a GET request is sent to the ECC in order to fetch the Self Description. The following properties need to be configured and correspond the Self Description configuration from the ECC.
+
+Following properties are used to create URL for internal Self Description request from Data App to ECC:
+
 ```
-application.ecc.RESTprotocol=http|https
-application.ecc.RESTport=8081|8443
+application.ecc.protocol=https
+application.ecc.host=localhost
+application.ecc.selfdescription-port=8100
 ```
 
 Example for Description RequestMessage:
 
 ```
-curl --location --request POST 'https://localhost:8083/proxy' \
+curl --location --request POST 'https://localhost:8183/proxy' \
+--header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "form",

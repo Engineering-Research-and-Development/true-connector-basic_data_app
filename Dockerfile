@@ -5,9 +5,6 @@ FROM eclipse-temurin:11-jre-alpine
 # Add Maintainer Info
 LABEL maintainer="gabriele.deluca@eng.it"
 
-# Make port 8083 available to the world outside this container
-EXPOSE 8083
-
 # Create non-privileged user directory, and make it as workable directory
 RUN mkdir -p /home/nobody/app && mkdir -p /home/nobody/data
 # Create directory for logs
@@ -20,7 +17,6 @@ WORKDIR /home/nobody
 COPY target/dependency-jars /home/nobody/app/dependency-jars
 
 # Add the application's jar to the container
-# ADD ${JAR_FILE} market4.0-data-app.jar
 ADD target/application.jar /home/nobody/app/application.jar
 
 # Change ownership of non-privileged user directory and logs directories

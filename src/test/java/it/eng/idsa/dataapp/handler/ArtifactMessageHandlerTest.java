@@ -31,6 +31,7 @@ import it.eng.idsa.multipart.util.UtilMessageService;
 
 class ArtifactMessageHandlerTest {
 
+	private static final URI ARTIFACT_BIG = URI.create("http://w3id.org/engrd/connector/artifact/big");
 	private ArtifactMessageHandler artifactMessageHandler;
 	@Mock
 	private SelfDescriptionService selfDescriptionService;
@@ -111,7 +112,7 @@ class ArtifactMessageHandlerTest {
 		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
 
 		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
-		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
+		arm.setRequestedArtifact(ARTIFACT_BIG);
 		responseMap = artifactMessageHandler.handleMessage(arm, PAYLOAD);
 
 		assertNotNull(responseMap.get("header"));
@@ -124,7 +125,23 @@ class ArtifactMessageHandlerTest {
 	void handleMessageBigPayloadEndodedRestTest() throws URISyntaxException {
 
 		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
-		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/big"));
+		arm.setRequestedArtifact(ARTIFACT_BIG);
+		responseMap = artifactMessageHandler.handleMessage(arm, PAYLOAD);
+
+		assertNotNull(responseMap.get("header"));
+		assertNotNull(responseMap.get("payload"));
+		assertTrue(StringUtils.containsIgnoreCase(responseMap.get(DataAppMessageHandler.HEADER).toString(),
+				message.getId().toString()));
+	}
+	
+	@Test
+	void handleMessageContractNegotiationDemoRestTest() throws URISyntaxException {
+		
+		ReflectionTestUtils.setField(artifactMessageHandler, "contractNegotiationDemo", true);
+		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
+
+		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
+		arm.setRequestedArtifact(UtilMessageService.REQUESTED_ARTIFACT);
 		responseMap = artifactMessageHandler.handleMessage(arm, PAYLOAD);
 
 		assertNotNull(responseMap.get("header"));
@@ -172,10 +189,10 @@ class ArtifactMessageHandlerTest {
 	}
 
 	@Test
-	void handleMessageNotReadFileWssTest() throws URISyntaxException {
+	void handleMessageNotReadFileWssTest() {
 
 		ArtifactRequestMessage arm = (ArtifactRequestMessage) message;
-		arm.setRequestedArtifact(new URI("http://w3id.org/engrd/connector/artifact/123"));
+		arm.setRequestedArtifact(URI.create("http://w3id.org/engrd/connector/artifact/123"));
 		when(threadService.getThreadLocalValue("wss")).thenReturn(true);
 
 		NotFoundException exception = assertThrows(NotFoundException.class, () -> {
