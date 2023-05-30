@@ -10,6 +10,7 @@ on:
 env:
   REGISTRY: hub.docker.com
   IMAGE_NAME: ids_be_data_app:v${{ github.event.inputs.versionName }}
+  TAG_VERSION: refs/tags/${{ github.event.inputs.versionName }}
 
 jobs:
   build:
@@ -22,6 +23,7 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: maven
+        ref: ${{ TAG_VERSION }}
     - name: Build with Maven
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

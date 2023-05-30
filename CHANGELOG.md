@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
  - Property application.ecc.selfdescription-port required for getting the Self Description from ecc
  - Security basic Authorization for /proxy endpoint
  - New "proxy" port (application.proxyPort) and logic for filtering "proxy" vs "non proxy" requests based on port
+ - when creating docker image, it requires GH tag to exists; bind java and docker versions
 
 ### Removed
 
