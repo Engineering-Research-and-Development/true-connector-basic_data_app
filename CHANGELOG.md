@@ -1,11 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.2.7] - 2023-06-17
+## [0.2.7] - 2023-06-19
 
 ### Removed
 
- - internal self description logic; now using default self description endpoint on ecc
+ - removed internal self description logic; now using default self description endpoint on ecc
 
 ## [0.2.6] - 2023-04-24
 
