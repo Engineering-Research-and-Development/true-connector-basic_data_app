@@ -33,8 +33,6 @@ public class SelfDescriptionServiceImpl implements SelfDescriptionService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SelfDescriptionServiceImpl.class);
 
-	private static final String INTERNAL_ENDPOINT = "/internal/sd";
-
 	private static Serializer serializer;
 	static {
 		serializer = new Serializer();
@@ -52,7 +50,7 @@ public class SelfDescriptionServiceImpl implements SelfDescriptionService {
 	public Connector getSelfDescription(Message message) {
 		try {
 			URI	eccURI = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccProperties.getSelfdescriptionPort(),
-					INTERNAL_ENDPOINT, null, null);
+					null, null, null);
 			logger.info("Fetching self description from ECC {}", eccURI.toString());
 
 			ResponseEntity<String> response = restTemplate.exchange(eccURI, HttpMethod.GET, null, String.class);
