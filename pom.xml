@@ -9,7 +9,7 @@
 	</parent>
 	<groupId>it.eng.idsa</groupId>
 	<artifactId>true-connector-basic_data_app</artifactId>
-	<version>0.2.7-SNAPSHOT</version>
+	<version>0.2.7</version>
 	<name>TRUE Connector Basic Data App</name>
 	<description>TRUE Connector Basic Data App - used to handle and process received requests and to add custom business logic</description>
 	<properties>
@@ -41,7 +41,7 @@
 		<connection>scm:git:git://github.com/Engineering-Research-and-Development/true-connector-basic_data_app.git</connection>
 		<developerConnection>scm:git:git@github.com:Engineering-Research-and-Development/true-connector-basic_data_app.git</developerConnection>
 		<url>https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app.git</url>
-		<tag>0.2.2</tag>
+		<tag>0.2.7</tag>
 	</scm>
 	<distributionManagement>
 		<repository>
