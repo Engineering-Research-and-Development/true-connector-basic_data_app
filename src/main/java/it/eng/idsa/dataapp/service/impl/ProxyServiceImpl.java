@@ -336,7 +336,7 @@ public class ProxyServiceImpl implements ProxyService {
 						proxyRequest.getTransferContract());
 			} else {
 				logger.info("Creating ArtifactRequest message with default transfer contract");
-				String artifactURI = proxyRequest.getRequestedArtifact() != null ? proxyRequest.getRequestedArtifact()
+				String artifactURI = StringUtils.isNoneBlank(proxyRequest.getRequestedArtifact()) ? proxyRequest.getRequestedArtifact()
 						: UtilMessageService.REQUESTED_ARTIFACT.toString();
 				return getArtifactRequestMessageWithTransferContract(artifactURI,
 						UtilMessageService.TRANSFER_CONTRACT.toString());
