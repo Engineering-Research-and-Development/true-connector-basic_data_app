@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.8] - 2023-06-20
+
+### Changed
+
+ - Fixed docker ci GitHub Action
+ - Fixed check if requestedArtifact is blank when creating ArtifactRequestMessage
+
 ## [0.2.7] - 2023-06-19
 
 ### Removed

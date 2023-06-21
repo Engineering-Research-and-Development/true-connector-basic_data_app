@@ -23,7 +23,7 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: maven
-        ref: ${{ TAG_VERSION }}
+        ref: ${{ env.TAG_VERSION }}
     - name: Build with Maven
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
