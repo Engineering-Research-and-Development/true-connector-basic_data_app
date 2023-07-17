@@ -34,6 +34,7 @@
   * [Unregister/passivate connector to Broker](#unregisterpassivateconnectortobroker)
   * [Query broker](#querybroker)
 * [Contract Negotiation - simple flow](#contractnegotiationsimpleflow)
+* [CheckSum verification](#checksumverification)
 * [Description Request/Response Message](#descriptionrequestresponsemessage)
 * [Payload configuration](#payloadconfig)
   * [Base64 encoded payload](#base64encodedpayload)
@@ -635,6 +636,27 @@ application.contract.negotiation.demo=true
 
 Can be left as is, but in production case, it should be set to false (which will send ProcessNotificationMessage upon receiving ContractRequestMessage, which will disable automatic acceptance of contract agreement.
 User can also modify code in DataApp, to externalize decision for accepting or declining contract offers.
+
+
+## CheckSum verification <a name="checksumverification"></a>
+
+DataApp supports checkSum verification of requested elements.
+If the consumer connector in self-description has a checkSum value, DataApp will verify that value with the current checkSum value in Artifact Response Message.
+
+If the values are identical, Artifact Response Message will be received, if not, the rejection message will be thrown informing the user that file integrity has been broken.
+
+If that requested element doesn't have a checksum in the self-description, DataApp will skip the verification even if turned on.
+
+CheckSum verification can be configured in the following properties
+
+```
+application.verifyCheckSum=true
+
+application.checkSumStorage=local
+```
+
+**Note:** Currently only local storage is available.
+
 
 ## Description Request/Response Message <a name="descriptionrequestresponsemessage"></a>
 
