@@ -1,5 +1,6 @@
 package it.eng.idsa.dataapp.service;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 
 import org.springframework.http.HttpHeaders;
@@ -18,7 +19,7 @@ public interface ProxyService {
 	 * @throws URISyntaxException exception
 	 */
 	ResponseEntity<String> proxyMultipartMix(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
-			throws URISyntaxException;
+			throws URISyntaxException, IOException;
 
 	/**
 	 * Creates multipart-form request and sends it to Sender ECC
@@ -30,7 +31,7 @@ public interface ProxyService {
 	 * @throws URISyntaxException exception
 	 */
 	ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
-			throws URISyntaxException;
+			throws URISyntaxException, IOException;
 
 	/**
 	 * Creates http-header request and sends it to Sender ECC
@@ -46,5 +47,5 @@ public interface ProxyService {
 
 	ProxyRequest parseIncommingProxyRequest(String body);
 
-	ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest);
+	ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest) throws IOException, URISyntaxException;
 }

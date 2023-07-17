@@ -32,6 +32,7 @@ import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionReason;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
+import it.eng.idsa.dataapp.service.impl.CheckSumServiceImpl;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
 import it.eng.idsa.dataapp.util.RejectionUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
@@ -59,23 +60,25 @@ public class ProxyServiceTest {
 	private ProxyRequest proxyRequest;
 	@Mock
 	private ResponseEntity<String> response;
-	
+
 	private String dataLakeDirectory;
-	
+
 	private String issuerConnector = "http://w3id.org/engrd/connector/";
-	
+
 	private Boolean encodePayload;
-	
+
 	private Boolean extractPayloadFromResponse;
-	
-	
+
+	private CheckSumService checkSumService = new CheckSumServiceImpl(null);
+
 	@BeforeEach
 	public void init() {
 		MockitoAnnotations.initMocks(this);
 		when(restTemplateBuilder.build()).thenReturn(restTemplate);
 		encodePayload = false;
 		extractPayloadFromResponse = false;
-		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, dataLakeDirectory, issuerConnector, encodePayload, extractPayloadFromResponse);
+		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, checkSumService,
+				dataLakeDirectory, issuerConnector, encodePayload, extractPayloadFromResponse);
 		messageType = ArtifactRequestMessage.class.getSimpleName();
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");
@@ -100,7 +103,7 @@ public class ProxyServiceTest {
 		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
 		assertEquals(multipartMessageString, testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartMix_Rejection() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_MIXED);
@@ -120,7 +123,7 @@ public class ProxyServiceTest {
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getStatusCode(), testResponse.getStatusCode());
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getBody(), testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartMix_NoRejectionReason() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_MIXED);
@@ -140,7 +143,7 @@ public class ProxyServiceTest {
 		assertEquals(HttpStatus.BAD_REQUEST, testResponse.getStatusCode());
 		assertEquals("Error while processing message", testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartMix_extractPayloadFromResponse() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_MIXED);
@@ -160,7 +163,7 @@ public class ProxyServiceTest {
 		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
 		assertEquals(PAYLOAD, testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartForm_Success() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_FORM);
@@ -178,7 +181,7 @@ public class ProxyServiceTest {
 		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
 		assertEquals(multipartMessageString, testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartForm_Rejection() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_FORM);
@@ -197,7 +200,7 @@ public class ProxyServiceTest {
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getStatusCode(), testResponse.getStatusCode());
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getBody(), testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartForm_NoRejectionReason() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_FORM);
@@ -216,7 +219,7 @@ public class ProxyServiceTest {
 		assertEquals(HttpStatus.BAD_REQUEST, testResponse.getStatusCode());
 		assertEquals("Error while processing message", testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartForm_extractPayloadFromResponse() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_FORM);
@@ -235,12 +238,10 @@ public class ProxyServiceTest {
 		verify(restTemplate).exchange(any(URI.class), any(HttpMethod.class), any(HttpEntity.class), eq(String.class));
 		assertEquals(PAYLOAD, testResponse.getBody());
 	}
-	
+
 	private String createMultipartMessageAsString(Message message) {
-		
-		MultipartMessage mm = new MultipartMessageBuilder()
-				.withHeaderContent(message)
-				.withPayloadContent(PAYLOAD)
+
+		MultipartMessage mm = new MultipartMessageBuilder().withHeaderContent(message).withPayloadContent(PAYLOAD)
 				.build();
 		return MultipartMessageProcessor.multipartMessagetoString(mm);
 	}
@@ -272,7 +273,7 @@ public class ProxyServiceTest {
 		assertEquals(messageHeaders.get("IDS-Messagetype"), testResponse.getHeaders().get("IDS-Messagetype"));
 		assertEquals(PAYLOAD, testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartHeader_Rejection() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_HEADER);
@@ -304,7 +305,7 @@ public class ProxyServiceTest {
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getStatusCode(), testResponse.getStatusCode());
 		assertEquals(RejectionUtil.HANDLE_REJECTION(RejectionReason.MALFORMED_MESSAGE).getBody(), testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartHeader_NoRejectionReason() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_HEADER);
@@ -340,7 +341,7 @@ public class ProxyServiceTest {
 		assertEquals(HttpStatus.BAD_REQUEST, testResponse.getStatusCode());
 		assertEquals("Error while processing message", testResponse.getBody());
 	}
-	
+
 	@Test
 	public void proxyMultipartHeader_extractPayloadFromResponse() throws URISyntaxException {
 		when(eccProperties.getMixContext()).thenReturn("/" + ProxyRequest.MULTIPART_HEADER);
@@ -369,19 +370,19 @@ public class ProxyServiceTest {
 		assertNull(testResponse.getHeaders().get("IDS-Messagetype"));
 		assertEquals(PAYLOAD, testResponse.getBody());
 	}
-	
+
 	private void mockResponse(HttpStatus status, String body) {
 		when(response.getStatusCode()).thenReturn(status);
 		when(response.getHeaders()).thenReturn(httpHeaders);
 		when(response.getBody()).thenReturn(body);
 	}
-	
+
 	private void mockResponseForHttpHeaders(HttpStatus status, String body, HttpHeaders headers) {
 		when(response.getStatusCode()).thenReturn(status);
 		when(response.getHeaders()).thenReturn(headers);
 		when(response.getBody()).thenReturn(body);
 	}
-	
+
 	@Test
 	public void parseIncommingProxyRequest() {
 		ProxyRequest pr = service.parseIncommingProxyRequest(getProxyRequest());
@@ -390,7 +391,7 @@ public class ProxyServiceTest {
 		assertNotNull(pr.getPayload());
 		assertNotNull(pr.getMessageType());
 	}
-	
+
 	@Test
 	public void parseIncommingProxyRequestWssRequestArtifact() {
 		ProxyRequest pr = service.parseIncommingProxyRequest(getProxyRequestRequestedArtifact());
@@ -400,7 +401,7 @@ public class ProxyServiceTest {
 		assertNull(pr.getPayload());
 		assertNull(pr.getMessageType());
 	}
-	
+
 	@Test
 	public void parseIncommingProxyRequestWssContractAgreement() {
 		ProxyRequest pr = service.parseIncommingProxyRequest(getProxyRequestContractRequest());
@@ -410,7 +411,7 @@ public class ProxyServiceTest {
 		assertNotNull(pr.getPayload());
 		assertEquals(ContractAgreementMessage.class.getSimpleName(), pr.getMessageType());
 	}
-	
+
 	@Test
 	public void parseJsonPayload() {
 		ProxyRequest pr = service.parseIncommingProxyRequest(getJsonPayload());
@@ -419,7 +420,7 @@ public class ProxyServiceTest {
 		assertNotNull(pr.getPayload());
 		assertEquals(ArtifactRequestMessage.class.getSimpleName(), pr.getMessageType());
 	}
-	
+
 	@Test
 	public void parseStringPayload() {
 		ProxyRequest pr = service.parseIncommingProxyRequest(getStringPayload());
@@ -431,54 +432,33 @@ public class ProxyServiceTest {
 	}
 
 	private String getProxyRequest() {
-		return "{\r\n" + 
-				"   \"multipart\": \"mixed\",\r\n" + 
-				"   \"messageType\": \"ArtifactRequestMessage\",\r\n" + 
-				"	\"payload\" : {\r\n" + 
-				"		\"catalog.offers.0.resourceEndpoints.path\":\"/pet2\"\r\n" + 
-				"		},\r\n" + 
-				"}";
+		return "{\r\n" + "   \"multipart\": \"mixed\",\r\n" + "   \"messageType\": \"ArtifactRequestMessage\",\r\n"
+				+ "	\"payload\" : {\r\n" + "		\"catalog.offers.0.resourceEndpoints.path\":\"/pet2\"\r\n"
+				+ "		},\r\n" + "}";
 	}
-	
+
 	private String getProxyRequestRequestedArtifact() {
-		return "{\r\n" + 
-				"    \"multipart\": \"wss\",\r\n" + 
-				"    \"requestedArtifact\": \"test.csv\",\r\n" + 
-				"}";
+		return "{\r\n" + "    \"multipart\": \"wss\",\r\n" + "    \"requestedArtifact\": \"test.csv\",\r\n" + "}";
 	}
-	
+
 	private String getProxyRequestContractRequest() {
-		return "{\r\n" + 
-				"    \"multipart\": \"wss\",\r\n" + 
-				"    \"Forward-To\": \"wss://localhost:8086\",\r\n" + 
-				"    \"Forward-To-Internal\": \"wss://localhost:8887\",\r\n" + 
-				"    \"messageType\": \"ContractAgreementMessage\",\r\n" + 
-				"\r\n" + 
-				"    \"payload\": "
-				+ 
-				UtilMessageService.getMessageAsString(
-						UtilMessageService.getContractAgreement()) 
-				+"\r\n" + 
-				"}\r\n";
+		return "{\r\n" + "    \"multipart\": \"wss\",\r\n" + "    \"Forward-To\": \"wss://localhost:8086\",\r\n"
+				+ "    \"Forward-To-Internal\": \"wss://localhost:8887\",\r\n"
+				+ "    \"messageType\": \"ContractAgreementMessage\",\r\n" + "\r\n" + "    \"payload\": "
+				+ UtilMessageService.getMessageAsString(UtilMessageService.getContractAgreement()) + "\r\n" + "}\r\n";
 	}
-	
+
 	private String getJsonPayload() {
-		return "{\r\n" + 
-				"    \"multipart\": \"http-header\",\r\n" + 
-				"    \"Forward-To\": \"https://ecc-provider:8086/data\",\r\n" + 
-				"    \"messageType\":\"ArtifactRequestMessage\",\r\n" + 
-				"	 \"payload\" : {\r\n" + 
-				"		\"catalog.offers.0.resourceEndpoints.path\":\"/pet2\"\r\n" + 
-				"		}\r\n" + 
-				"}";
+		return "{\r\n" + "    \"multipart\": \"http-header\",\r\n"
+				+ "    \"Forward-To\": \"https://ecc-provider:8086/data\",\r\n"
+				+ "    \"messageType\":\"ArtifactRequestMessage\",\r\n" + "	 \"payload\" : {\r\n"
+				+ "		\"catalog.offers.0.resourceEndpoints.path\":\"/pet2\"\r\n" + "		}\r\n" + "}";
 	}
-	
+
 	private String getStringPayload() {
-		return "{\r\n" + 
-				"    \"multipart\": \"http-header\",\r\n" + 
-				"    \"Forward-To\": \"https://ecc-provider:8086/data\",\r\n" + 
-				"    \"messageType\":\"ArtifactRequestMessage\",\r\n" + 
-				"	 \"payload\" : \"SELECT ?connectorUri WHERE \\{ ?connectorUri a ids:BaseConnector . \\}\"" + 
-				"}";
+		return "{\r\n" + "    \"multipart\": \"http-header\",\r\n"
+				+ "    \"Forward-To\": \"https://ecc-provider:8086/data\",\r\n"
+				+ "    \"messageType\":\"ArtifactRequestMessage\",\r\n"
+				+ "	 \"payload\" : \"SELECT ?connectorUri WHERE \\{ ?connectorUri a ids:BaseConnector . \\}\"" + "}";
 	}
 }
