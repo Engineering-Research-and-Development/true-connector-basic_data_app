@@ -122,8 +122,8 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 	private String handleRestFlow(Message message) {
 		String payload = null;
 		// Check if requested artifact exist in self description
-		if (contractNegotiationDemo || selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
-				selfDescriptionService.getSelfDescription(message))) {
+		if (contractNegotiationDemo || selfDescriptionService.artifactRequestedElementExist(
+				(ArtifactRequestMessage) message, selfDescriptionService.getSelfDescription(message))) {
 			if (isBigPayload(((ArtifactRequestMessage) message).getRequestedArtifact().toString())) {
 				payload = encodePayload == true ? encodePayload(BigPayload.BIG_PAYLOAD.getBytes())
 						: BigPayload.BIG_PAYLOAD;
@@ -157,7 +157,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 
 	private String createResponsePayload() {
 		// Put check sum in the payload
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		DateFormat dateFormat = new SimpleDateFormat("2023/07/13 12:34:56");
 		Date date = new Date();
 		String formattedDate = dateFormat.format(date);
 
@@ -175,9 +175,9 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 	private Message createArtifactResponseMessage(ArtifactRequestMessage header) {
 		// Need to set transferCotract from original message, it will be used in policy
 		// enforcement
-		return new ArtifactResponseMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.normalizedDateTime())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)._transferContract_(header.getTransferContract())
-				._senderAgent_(whoIAmEngRDProvider())
+		return new ArtifactResponseMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.normalizedDateTime())._modelVersion_(UtilMessageService.MODEL_VERSION)
+				._transferContract_(header.getTransferContract())._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())
 				._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
