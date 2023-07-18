@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,7 @@ import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionReason;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
+import it.eng.idsa.dataapp.repository.CheckSumRepository;
 import it.eng.idsa.dataapp.service.impl.CheckSumServiceImpl;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
 import it.eng.idsa.dataapp.util.RejectionUtil;
@@ -69,7 +71,10 @@ public class ProxyServiceTest {
 
 	private Boolean extractPayloadFromResponse;
 
-	private CheckSumService checkSumService = new CheckSumServiceImpl(null);
+	@Mock
+	private CheckSumRepository checkSumRepository;
+	
+	private Optional<CheckSumService> checkSumService = Optional.of(new CheckSumServiceImpl(checkSumRepository));
 
 	@BeforeEach
 	public void init() {

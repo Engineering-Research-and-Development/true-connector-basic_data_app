@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -95,7 +96,7 @@ public class ProxyServiceImpl implements ProxyService {
 	private String issueConnector;
 	private Boolean encodePayload;
 	private Boolean extractPayloadFromResponse;
-	private CheckSumService checkSumService;
+	private Optional<CheckSumService> checkSumService;
 
 	/**
 	 * 
@@ -112,7 +113,7 @@ public class ProxyServiceImpl implements ProxyService {
 	 * @param extractPayloadFromResponse extract payload from multipart
 	 */
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder, ECCProperties eccProperties,
-			RecreateFileService recreateFileService, CheckSumService checkSumService,
+			RecreateFileService recreateFileService, Optional<CheckSumService> checkSumService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory,
 			@Value("${application.ecc.issuer.connector}") String issuerConnector,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
@@ -654,9 +655,9 @@ public class ProxyServiceImpl implements ProxyService {
 			MultipartMessage mm = MultipartMessageProcessor.parseMultipartMessage(resp.getBody());
 			logMultipartResponse(resp, mm);
 
-			if (mm.getHeaderContent() instanceof ArtifactResponseMessage) {
+			if (mm.getHeaderContent() instanceof ArtifactResponseMessage && verifyCheckSum) {
 				return handleResponse(resp, mm, proxyRequest);
-			} else if (mm.getHeaderContent() instanceof DescriptionResponseMessage) {
+			} else if (mm.getHeaderContent() instanceof DescriptionResponseMessage && verifyCheckSum) {
 				String payloadContent = mm.getPayloadContent();
 				if (proxyRequest.getRequestedElement() != null) {
 					Resource resource = new Serializer().deserialize(payloadContent, Resource.class);
@@ -684,17 +685,15 @@ public class ProxyServiceImpl implements ProxyService {
 					logger.error("Following error occured: {}", e);
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 							"Error while processing request, check logs for more details", e);
-
 				}
 				String artifactId = artifact.getId().toString();
 
 				if (artifact.getCheckSum() != null) {
 					Long checkSum = Long.parseLong(artifact.getCheckSum());
-					checkSumService.addCheckSum(artifactId, checkSum);
+					checkSumService.ifPresent(service -> service.addCheckSum(artifactId, checkSum));
 					logger.info("CheckSum stored");
-
 				} else {
-					checkSumService.addCheckSum(artifactId, 0L);
+					checkSumService.ifPresent(service -> service.addCheckSum(artifactId, 0L));
 					logger.info("Artifact doesn't have checkSum");
 				}
 
@@ -713,22 +712,22 @@ public class ProxyServiceImpl implements ProxyService {
 
 		String responsePayload = null;
 
-		if (mm.getHeaderContent() instanceof ArtifactResponseMessage) {
+		if (mm.getHeaderContent() instanceof ArtifactResponseMessage && verifyCheckSum) {
 
 			if (encodePayload) {
 				responsePayload = new String(Base64.getDecoder().decode(mm.getPayloadContent()));
 			} else {
 				responsePayload = mm.getPayloadContent();
 			}
+			Long storedCheckSum = checkSumService
+					.map(service -> service.getCheckSumByArtifactId(proxyRequest.getRequestedArtifact())).orElse(null);
 
-			Long storedCheckSum = checkSumService.getCheckSumByArtifactId(proxyRequest.getRequestedArtifact());
 			if (storedCheckSum != null) {
 				if (storedCheckSum.equals(0L)) {
 					logger.info("Artifact doesn't have checksum, skipping verification");
 				} else {
 					logger.info("Verifying checkSum...");
-
-					Long payloadCheckSum = checkSumService.calculateCheckSum(responsePayload.getBytes());
+					Long payloadCheckSum = calculatePayloadCheckSum(responsePayload);
 					if (!payloadCheckSum.equals(storedCheckSum)) {
 						logger.error("File integrity has been broken, check sums are different");
 						return new ResponseEntity<String>("File integrity has been broken, check sums are different",
@@ -746,7 +745,7 @@ public class ProxyServiceImpl implements ProxyService {
 						logger.info("Artifact doesn't have checksum, skipping verification");
 
 					} else {
-						Long payloadCheckSum = checkSumService.calculateCheckSum(responsePayload.getBytes());
+						Long payloadCheckSum = calculatePayloadCheckSum(responsePayload);
 
 						if (!payloadCheckSum.equals(artifactCheckSum)) {
 							logger.error("File integrity has been broken, check sums are different");
@@ -792,6 +791,10 @@ public class ProxyServiceImpl implements ProxyService {
 		}
 
 		return resp;
+	}
+
+	private Long calculatePayloadCheckSum(String responsePayload) {
+		return checkSumService.map(service -> service.calculateCheckSum(responsePayload.getBytes())).orElse(null);
 	}
 
 	private ResponseEntity<String> handleWssResponse(MultipartMessage mm) {
