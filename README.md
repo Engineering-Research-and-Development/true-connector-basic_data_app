@@ -640,10 +640,10 @@ User can also modify code in DataApp, to externalize decision for accepting or d
 
 ## CheckSum verification <a name="checksumverification"></a>
 
-DataApp supports checkSum verification of requested elements.
-If the consumer connector in self-description has a checkSum value, DataApp will verify that value with the current checkSum value in Artifact Response Message.
+ DataApp will calculate checksum, using CRC32 algorithm, and compare calculated checksum with the one from ArtifactResponseMessage.
+If received self-description from provider has a checkSum value, DataApp will verify that value with the current checkSum value in Artifact Response Message.
 
-If the values are identical, Artifact Response Message will be received, if not, the rejection message will be thrown informing the user that file integrity has been broken.
+If the values are identical, payload will be consumed, if not, the rejection message will be thrown informing the user that file integrity has been broken.
 
 If that requested element doesn't have a checksum in the self-description, DataApp will skip the verification even if turned on.
 
@@ -652,10 +652,8 @@ CheckSum verification can be configured in the following properties
 ```
 application.verifyCheckSum=true
 
-application.checkSumStorage=local
 ```
 
-**Note:** Currently only local storage is available.
 
 
 ## Description Request/Response Message <a name="descriptionrequestresponsemessage"></a>
