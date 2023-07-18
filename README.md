@@ -39,6 +39,7 @@
 * [Payload configuration](#payloadconfig)
   * [Base64 encoded payload](#base64encodedpayload)
   * [Extract payload from response](#extractpayloadfromresponse)
+* [Code Coverage](#codecoverage)
 
 ---
 
@@ -706,3 +707,25 @@ If you want the sender side Data App to extract only the payload from the receiv
 ```
 application.extractPayloadFromResponse=true
 ```
+
+
+## Code coverage<a name="codecoverage"></a>
+
+ 
+
+Code coverage is checked by using Jacoco plugin.
+
+ 
+![DataApp Code Coverage](doc/jacoco.jpg?raw=true "ENG DataApp Code coverage")
+
+
+For more up to date information about code coverage, you can check report after you build a project. Report can be found in
+
+ 
+
+```
+target\site\jacoco\index.html
+```
+
+
+
