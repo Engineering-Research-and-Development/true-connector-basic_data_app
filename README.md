@@ -34,10 +34,12 @@
   * [Unregister/passivate connector to Broker](#unregisterpassivateconnectortobroker)
   * [Query broker](#querybroker)
 * [Contract Negotiation - simple flow](#contractnegotiationsimpleflow)
+* [CheckSum verification](#checksumverification)
 * [Description Request/Response Message](#descriptionrequestresponsemessage)
 * [Payload configuration](#payloadconfig)
   * [Base64 encoded payload](#base64encodedpayload)
   * [Extract payload from response](#extractpayloadfromresponse)
+* [Code Coverage](#codecoverage)
 
 ---
 
@@ -636,6 +638,25 @@ application.contract.negotiation.demo=true
 Can be left as is, but in production case, it should be set to false (which will send ProcessNotificationMessage upon receiving ContractRequestMessage, which will disable automatic acceptance of contract agreement.
 User can also modify code in DataApp, to externalize decision for accepting or declining contract offers.
 
+
+## CheckSum verification <a name="checksumverification"></a>
+
+ DataApp will calculate checksum, using CRC32 algorithm, and compare calculated checksum with the one from ArtifactResponseMessage.
+If received self-description from provider has a checkSum value, DataApp will verify that value with the current checkSum value in Artifact Response Message.
+
+If the values are identical, payload will be consumed, if not, the rejection message will be thrown informing the user that file integrity has been broken.
+
+If that requested element doesn't have a checksum in the self-description, DataApp will skip the verification even if turned on.
+
+CheckSum verification can be configured in the following properties
+
+```
+application.verifyCheckSum=true
+
+```
+
+
+
 ## Description Request/Response Message <a name="descriptionrequestresponsemessage"></a>
 
 When receiving a Description Request Message we are preparing a response by creating a Description Response Message for the header part and putting the whole Self Description(ids:BaseConnector) or requested element from Self Description (ids:Resource) in the payload.
@@ -686,3 +707,25 @@ If you want the sender side Data App to extract only the payload from the receiv
 ```
 application.extractPayloadFromResponse=true
 ```
+
+
+## Code coverage<a name="codecoverage"></a>
+
+ 
+
+Code coverage is checked by using Jacoco plugin.
+
+ 
+![DataApp Code Coverage](doc/jacoco.jpg?raw=true "ENG DataApp Code coverage")
+
+
+For more up to date information about code coverage, you can check report after you build a project. Report can be found in
+
+ 
+
+```
+target\site\jacoco\index.html
+```
+
+
+

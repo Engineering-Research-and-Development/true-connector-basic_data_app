@@ -27,7 +27,7 @@ import org.springframework.core.io.ClassPathResource;
 @EnableCaching
 @SpringBootApplication
 public class ApplicationDataApp {
-	
+
 	@Value("${server.ssl.key-store}")
 	private String keystore;
 	@Value("${server.ssl.key-password}")
@@ -38,7 +38,7 @@ public class ApplicationDataApp {
 	private int proxyPort;
 	@Value("${server.ssl.enabled:true}")
 	private Boolean sslEnabled;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(ApplicationDataApp.class);
 
 	public static void main(String[] args) {
@@ -56,31 +56,30 @@ public class ApplicationDataApp {
 
 		return tomcat;
 	}
-	
+
 	private Connector createSslConnector(int port) {
-	    Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
-	    Http11NioProtocol protocol = (Http11NioProtocol) connector.getProtocolHandler();
-	    logger.info("Creating additional connector for port {}", port);
-	    try {
-	    	if(sslEnabled) {
-	    		File ks = new ClassPathResource(Paths.get(keystore).getFileName().toString()).getFile();
-	    		logger.info("TLS enabled, adding to new connector");
+		Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
+		Http11NioProtocol protocol = (Http11NioProtocol) connector.getProtocolHandler();
+		logger.info("Creating additional connector for port {}", port);
+		try {
+			if (sslEnabled) {
+				File ks = new ClassPathResource(Paths.get(keystore).getFileName().toString()).getFile();
+				logger.info("TLS enabled, adding to new connector");
 //	        File truststore = new ClassPathResource("truststore.jks").getFile();
-	    		connector.setScheme("https");
-	    		connector.setSecure(true);
-	    		protocol.setSSLEnabled(true);
-	    		protocol.setKeystoreFile(ks.getAbsolutePath());
-	    		protocol.setKeystorePass(password);
-	    		protocol.setKeyAlias(alias);
+				connector.setScheme("https");
+				connector.setSecure(true);
+				protocol.setSSLEnabled(true);
+				protocol.setKeystoreFile(ks.getAbsolutePath());
+				protocol.setKeystorePass(password);
+				protocol.setKeyAlias(alias);
 //	        protocol.setTruststoreFile(truststore.getAbsolutePath());
 //	        protocol.setTruststorePass(password);
-	    	} 
-	        connector.setPort(port);
-	        return connector;
-	    }
-	    catch (IOException ex) {
-	        throw new IllegalStateException("can't access keystore: [" + "keystore"
-	                + "] or truststore: [" + "keystore" + "]", ex);
-	    }
+			}
+			connector.setPort(port);
+			return connector;
+		} catch (IOException ex) {
+			throw new IllegalStateException(
+					"can't access keystore: [" + "keystore" + "] or truststore: [" + "keystore" + "]", ex);
+		}
 	}
 }

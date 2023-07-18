@@ -7,7 +7,9 @@ import java.net.URISyntaxException;
 import java.nio.file.FileSystems;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
@@ -32,9 +34,11 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import de.fraunhofer.iais.eis.ArtifactImpl;
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactRequestMessageBuilder;
 import de.fraunhofer.iais.eis.ArtifactResponseMessage;
+import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.ConnectorUnavailableMessage;
 import de.fraunhofer.iais.eis.ConnectorUpdateMessage;
 import de.fraunhofer.iais.eis.ContractAgreementMessage;
@@ -43,15 +47,20 @@ import de.fraunhofer.iais.eis.ContractRequestMessage;
 import de.fraunhofer.iais.eis.ContractRequestMessageBuilder;
 import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessageBuilder;
+import de.fraunhofer.iais.eis.DescriptionResponseMessage;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.MessageProcessedNotificationMessage;
 import de.fraunhofer.iais.eis.QueryMessage;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import de.fraunhofer.iais.eis.RejectionReason;
+import de.fraunhofer.iais.eis.Resource;
+import de.fraunhofer.iais.eis.ResourceCatalog;
 import de.fraunhofer.iais.eis.TokenFormat;
+import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import de.fraunhofer.iais.eis.util.Util;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
+import it.eng.idsa.dataapp.service.CheckSumService;
 import it.eng.idsa.dataapp.service.ProxyService;
 import it.eng.idsa.dataapp.service.RecreateFileService;
 import it.eng.idsa.dataapp.util.MessageUtil;
@@ -77,6 +86,9 @@ public class ProxyServiceImpl implements ProxyService {
 	private static final String REQUESTED_ELEMENT = "requestedElement";
 	private static final String TRANSFER_CONTRACT = "transferContract";
 
+	@Value("${application.verifyCheckSum}")
+	private boolean verifyCheckSum;
+
 	private RestTemplate restTemplate;
 	private ECCProperties eccProperties;
 	private RecreateFileService recreateFileService;
@@ -84,6 +96,7 @@ public class ProxyServiceImpl implements ProxyService {
 	private String issueConnector;
 	private Boolean encodePayload;
 	private Boolean extractPayloadFromResponse;
+	private Optional<CheckSumService> checkSumService;
 
 	/**
 	 * 
@@ -100,7 +113,7 @@ public class ProxyServiceImpl implements ProxyService {
 	 * @param extractPayloadFromResponse extract payload from multipart
 	 */
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder, ECCProperties eccProperties,
-			RecreateFileService recreateFileService,
+			RecreateFileService recreateFileService, Optional<CheckSumService> checkSumService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory,
 			@Value("${application.ecc.issuer.connector}") String issuerConnector,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
@@ -108,6 +121,7 @@ public class ProxyServiceImpl implements ProxyService {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.recreateFileService = recreateFileService;
+		this.checkSumService = checkSumService;
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.issueConnector = issuerConnector;
 		this.encodePayload = encodePayload;
@@ -197,7 +211,7 @@ public class ProxyServiceImpl implements ProxyService {
 
 		HttpEntity<String> requestEntity = new HttpEntity<String>(proxyPayload, httpHeaders);
 
-		return sendMultipartRequest(thirdPartyApi, requestEntity);
+		return sendMultipartRequest(thirdPartyApi, requestEntity, proxyRequest);
 	}
 
 	@Override
@@ -248,7 +262,133 @@ public class ProxyServiceImpl implements ProxyService {
 
 		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
 		requestEntity = new HttpEntity<>(map, httpHeaders);
-		return sendMultipartRequest(thirdPartyApi, requestEntity);
+
+		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
+		return sendMultipartRequest(thirdPartyApi, requestEntity, proxyRequest);
+
+	}
+
+	public Long fetchChecksum(String forwardTo, String artifactId) throws URISyntaxException, IOException {
+
+		MultipartMessage mm = fetchSelfDescription(forwardTo, null);
+		Connector baseConnector = null;
+		// USe atomic because of an access in lambdas
+		AtomicLong checkSum = new AtomicLong(0L);
+
+		baseConnector = new Serializer().deserialize(mm.getPayloadContent(), Connector.class);
+
+		baseConnector.getResourceCatalog().forEach(c -> {
+			if (!c.getOfferedResource().isEmpty()) {
+				c.getOfferedResource().forEach(r -> {
+					r.getRepresentation().forEach(rp -> {
+						rp.getInstance().forEach(instance -> {
+							if (StringUtils.equals(instance.getId().toString(), artifactId)) {
+								ArtifactImpl artifact = null;
+								try {
+									artifact = new Serializer().deserialize(instance.toString(), ArtifactImpl.class);
+								} catch (IOException e) {
+									logger.error("Following error occured: {}", e);
+									throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+											"Error while processing request, check logs for more details", e);
+
+								}
+								if (artifact.getCheckSum() != null) {
+									checkSum.set(Long.parseLong(artifact.getCheckSum()));
+									logger.info("CheckSum fetched");
+
+								} else {
+									logger.info("Artifact doesn't have checkSum");
+								}
+							}
+						});
+					});
+				});
+			} else {
+				MultipartMessage mm2 = null;
+
+				try {
+					mm2 = fetchSelfDescription(forwardTo, c.getId().toString());
+				} catch (URISyntaxException exception) {
+					logger.error("Error while processing request {}", exception);
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+							"Error while processing request, check logs for more details", exception);
+				}
+
+				try {
+					ResourceCatalog catalog = new Serializer().deserialize(mm2.getPayloadContent(),
+							ResourceCatalog.class);
+					catalog.getOfferedResource().forEach(resource -> {
+						resource.getRepresentation().forEach(representation -> {
+							representation.getInstance().forEach(instance -> {
+								if (StringUtils.equals(instance.getId().toString(), artifactId)) {
+									ArtifactImpl artifact = null;
+									try {
+										artifact = new Serializer().deserialize(instance.toString(),
+												ArtifactImpl.class);
+									} catch (IOException e) {
+										logger.error("Following error occured: {}", e);
+										throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+												"Error while processing request, check logs for more details", e);
+
+									}
+									if (artifact.getCheckSum() != null) {
+										checkSum.set(Long.parseLong(artifact.getCheckSum()));
+										logger.info("CheckSum stored");
+
+									} else {
+										logger.info("Artifact doesn't have checkSum");
+									}
+								}
+							});
+						});
+					});
+				} catch (IOException e) {
+					logger.error("Error while processing request {}", e);
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+							"Error while processing request, check logs for more details", e);
+				}
+
+			}
+		});
+		return checkSum.get();
+	}
+
+	private MultipartMessage fetchSelfDescription(String forwardTo, String requestedElement) throws URISyntaxException {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		DescriptionRequestMessage descriptionRequestMessage;
+		if (requestedElement == null) {
+			descriptionRequestMessage = new DescriptionRequestMessageBuilder()._issued_(UtilMessageService.ISSUED)
+					._issuerConnector_(URI.create(issueConnector))._modelVersion_(UtilMessageService.MODEL_VERSION)
+					._requestedElement_(null)._senderAgent_(UtilMessageService.SENDER_AGENT)
+					._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
+		} else {
+			descriptionRequestMessage = new DescriptionRequestMessageBuilder()._issued_(UtilMessageService.ISSUED)
+					._issuerConnector_(URI.create(issueConnector))._modelVersion_(UtilMessageService.MODEL_VERSION)
+					._requestedElement_(URI.create(requestedElement))._senderAgent_(UtilMessageService.SENDER_AGENT)
+					._securityToken_(UtilMessageService.getDynamicAttributeToken()).build();
+
+		}
+		URI thirdPartyApi = new URI(eccProperties.getProtocol(), null, eccProperties.getHost(), eccProperties.getPort(),
+				eccProperties.getFormContext(), null, null);
+
+		LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+		map.add("header", UtilMessageService.getMessageAsString(descriptionRequestMessage));
+		map.add("payload", null);
+
+		httpHeaders.add(FORWARD_TO, forwardTo);
+		httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+		HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = new HttpEntity<>(map, httpHeaders);
+		try {
+			ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity,
+					String.class);
+			MultipartMessage mm = MultipartMessageProcessor.parseMultipartMessage(resp.getBody());
+			return mm;
+		} catch (RestClientException e) {
+			logger.error("Following error occurred: {}", e);
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+					"Error while processing request, check logs for more details", e);
+		}
+
 	}
 
 	@Override
@@ -336,7 +476,8 @@ public class ProxyServiceImpl implements ProxyService {
 						proxyRequest.getTransferContract());
 			} else {
 				logger.info("Creating ArtifactRequest message with default transfer contract");
-				String artifactURI = proxyRequest.getRequestedArtifact() != null ? proxyRequest.getRequestedArtifact()
+				String artifactURI = StringUtils.isNoneBlank(proxyRequest.getRequestedArtifact())
+						? proxyRequest.getRequestedArtifact()
 						: UtilMessageService.REQUESTED_ARTIFACT.toString();
 				return getArtifactRequestMessageWithTransferContract(artifactURI,
 						UtilMessageService.TRANSFER_CONTRACT.toString());
@@ -464,7 +605,7 @@ public class ProxyServiceImpl implements ProxyService {
 	}
 
 	@Override
-	public ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest) {
+	public ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest) throws IOException {
 		String forwardToInternal = proxyRequest.getForwardToInternal();
 		String forwardTo = proxyRequest.getForwardTo();
 		Message requestMessage = null;
@@ -501,24 +642,67 @@ public class ProxyServiceImpl implements ProxyService {
 			}
 
 		} else {
-			return handleResponse(null, mm);
+			return handleResponse(null, mm, proxyRequest);
 		}
 	}
 
-	private ResponseEntity<String> sendMultipartRequest(URI thirdPartyApi, HttpEntity<?> requestEntity) {
+	private ResponseEntity<String> sendMultipartRequest(URI thirdPartyApi, HttpEntity<?> requestEntity,
+			ProxyRequest proxyRequest) {
+
 		try {
 			ResponseEntity<String> resp = restTemplate.exchange(thirdPartyApi, HttpMethod.POST, requestEntity,
 					String.class);
 			MultipartMessage mm = MultipartMessageProcessor.parseMultipartMessage(resp.getBody());
 			logMultipartResponse(resp, mm);
-			return handleResponse(resp, mm);
-		} catch (RestClientException e) {
+
+			if (mm.getHeaderContent() instanceof ArtifactResponseMessage && verifyCheckSum) {
+				return handleResponse(resp, mm, proxyRequest);
+			} else if (mm.getHeaderContent() instanceof DescriptionResponseMessage && verifyCheckSum) {
+				String payloadContent = mm.getPayloadContent();
+				if (proxyRequest.getRequestedElement() != null) {
+					Resource resource = new Serializer().deserialize(payloadContent, Resource.class);
+
+					storeCheckSum(resource, proxyRequest.getRequestedElement());
+				} else {
+					return handleResponse(resp, mm, proxyRequest);
+				}
+			}
+			return handleResponse(resp, mm, proxyRequest);
+		} catch (RestClientException | IOException e) {
 			logger.error("Following error occured: {}", e);
 			return new ResponseEntity<String>("Message could not be processed", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
-	private ResponseEntity<String> handleResponse(ResponseEntity<String> resp, MultipartMessage mm) {
+	private void storeCheckSum(Resource resource, String requestedArtifact) {
+		resource.getRepresentation().forEach(representation -> {
+			representation.getInstance().forEach(instance -> {
+
+				ArtifactImpl artifact = null;
+				try {
+					artifact = new Serializer().deserialize(instance.toString(), ArtifactImpl.class);
+				} catch (IOException e) {
+					logger.error("Following error occured: {}", e);
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+							"Error while processing request, check logs for more details", e);
+				}
+				String artifactId = artifact.getId().toString();
+
+				if (artifact.getCheckSum() != null) {
+					Long checkSum = Long.parseLong(artifact.getCheckSum());
+					checkSumService.ifPresent(service -> service.addCheckSum(artifactId, checkSum));
+					logger.info("CheckSum stored");
+				} else {
+					checkSumService.ifPresent(service -> service.addCheckSum(artifactId, 0L));
+					logger.info("Artifact doesn't have checkSum");
+				}
+
+			});
+		});
+	}
+
+	private ResponseEntity<String> handleResponse(ResponseEntity<String> resp, MultipartMessage mm,
+			ProxyRequest proxyRequest) throws IOException {
 		if (mm.getHeaderContent() instanceof RejectionMessage) {
 			if (((RejectionMessage) mm.getHeaderContent()).getRejectionReason() == null) {
 				return new ResponseEntity<String>("Error while processing message", HttpStatus.BAD_REQUEST);
@@ -526,22 +710,74 @@ public class ProxyServiceImpl implements ProxyService {
 			return RejectionUtil.HANDLE_REJECTION(((RejectionMessage) mm.getHeaderContent()).getRejectionReason());
 		}
 
+		String responsePayload = null;
+
+		if (mm.getHeaderContent() instanceof ArtifactResponseMessage && verifyCheckSum) {
+
+			if (encodePayload) {
+				responsePayload = new String(Base64.getDecoder().decode(mm.getPayloadContent()));
+			} else {
+				responsePayload = mm.getPayloadContent();
+			}
+			Long storedCheckSum = checkSumService
+					.map(service -> service.getCheckSumByArtifactId(proxyRequest.getRequestedArtifact())).orElse(null);
+
+			if (storedCheckSum != null) {
+				if (storedCheckSum.equals(0L)) {
+					logger.info("Artifact doesn't have checksum, skipping verification");
+				} else {
+					logger.info("Verifying checkSum...");
+					Long payloadCheckSum = calculatePayloadCheckSum(responsePayload);
+					if (!payloadCheckSum.equals(storedCheckSum)) {
+						logger.error("File integrity has been broken, check sums are different");
+						return new ResponseEntity<String>("File integrity has been broken, check sums are different",
+								HttpStatus.BAD_REQUEST);
+					}
+					logger.info("CheckSum verified");
+				}
+			} else {
+				try {
+
+					Long artifactCheckSum = fetchChecksum(proxyRequest.getForwardTo(),
+							proxyRequest.getRequestedArtifact());
+
+					if (artifactCheckSum.equals(0L)) {
+						logger.info("Artifact doesn't have checksum, skipping verification");
+
+					} else {
+						Long payloadCheckSum = calculatePayloadCheckSum(responsePayload);
+
+						if (!payloadCheckSum.equals(artifactCheckSum)) {
+							logger.error("File integrity has been broken, check sums are different");
+							return new ResponseEntity<String>(
+									"File integrity has been broken, check sums are different", HttpStatus.BAD_REQUEST);
+						}
+						logger.info("CheckSum verified");
+					}
+				} catch (URISyntaxException e) {
+					logger.error("Error while processing request {}", e);
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+							"Error while deseriliazing object, check logs for more details", e);
+				}
+			}
+		}
 		HttpHeaders httpHeaders = new HttpHeaders();
-		if(resp != null) {
+		if (resp != null) {
 			httpHeaders.putAll(resp.getHeaders());
 		}
 
-		String responsePayload = null;
 		httpHeaders.remove(HTTP.TRANSFER_ENCODING);
 		if (extractPayloadFromResponse) {
 			String payloadContentType = ContentType.TEXT_PLAIN.getMimeType();
-			if(StringUtils.isNotBlank(mm.getPayloadContent())) {
+			if (StringUtils.isNotBlank(mm.getPayloadContent())) {
 				logger.info("Extracting payload");
 				responsePayload = mm.getPayloadContent();
+
 				if (encodePayload && mm.getHeaderContent() instanceof ArtifactResponseMessage) {
 					responsePayload = new String(Base64.getDecoder().decode(mm.getPayloadContent()));
-				} 
-				if(mm.getPayloadHeader().get(HTTP.CONTENT_TYPE) != null) {
+				}
+				if (mm.getPayloadHeader().get(HTTP.CONTENT_TYPE) != null) {
+
 					payloadContentType = mm.getPayloadHeader().get(HTTP.CONTENT_TYPE);
 				}
 			} else {
@@ -553,8 +789,12 @@ public class ProxyServiceImpl implements ProxyService {
 			httpHeaders.put(HTTP.CONTENT_LEN, List.of(String.valueOf(responsePayload.length())));
 			return ResponseEntity.status(HttpStatus.OK).headers(httpHeaders).body(responsePayload);
 		}
-			
+
 		return resp;
+	}
+
+	private Long calculatePayloadCheckSum(String responsePayload) {
+		return checkSumService.map(service -> service.calculateCheckSum(responsePayload.getBytes())).orElse(null);
 	}
 
 	private ResponseEntity<String> handleWssResponse(MultipartMessage mm) {
