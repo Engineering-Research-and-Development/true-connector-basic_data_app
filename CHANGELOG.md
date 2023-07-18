@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2023-07-17
+
+### Changed
+
+ - Add Certification check
+ - Add checkSum verification
+ - Property application.verifyCheckSum required for checkSum verification
+ 
+  
 ## [0.2.8] - 2023-06-20
 
 ### Changed
