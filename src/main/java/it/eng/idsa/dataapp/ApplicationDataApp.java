@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.Http11NioProtocol;
@@ -56,12 +55,6 @@ public class ApplicationDataApp {
 		});
 
 		return tomcat;
-	}
-
-	@Bean
-	public ConcurrentHashMap<String, Object> inMemoryStorage() {
-
-		return new ConcurrentHashMap<String, Object>();
 	}
 
 	private Connector createSslConnector(int port) {
