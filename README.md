@@ -123,7 +123,7 @@ Since /proxy endpoint is exposed to the outside world, on separate port (default
 For configuring credentials, please take a look at following properties:
 
 ```
-application.security.username=proxy
+application.security.username=idsUser
 # encoded 'password'
 application.security.password=$2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUubrqdGTFCH3m
 ```
@@ -459,7 +459,7 @@ wss://localhost:8086
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --data-raw '{
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
@@ -478,7 +478,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -498,7 +498,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
  
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -518,7 +518,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{

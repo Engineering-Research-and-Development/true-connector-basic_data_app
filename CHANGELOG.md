@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
  - Add Certification check
  - Add checkSum verification
  - Property application.verifyCheckSum required for checkSum verification
- 
+ - Property application.security.username changed from proxy to idsUser
   
 ## [0.2.8] - 2023-06-20
 
