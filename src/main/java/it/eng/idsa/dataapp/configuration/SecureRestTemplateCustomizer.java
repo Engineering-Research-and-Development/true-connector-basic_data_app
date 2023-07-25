@@ -21,12 +21,11 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-
 /**
  * Used for Customized TLS security, to avoid PKIX error.
  * When using RestTemplate call restTemplateBuilder.build().
  * 
- * @see it.eng.idsa.dataapp.service.impl.ProxyServiceImpl#ProxyServiceImpl(org.springframework.boot.web.client.RestTemplateBuilder, ECCProperties, it.eng.idsa.dataapp.service.RecreateFileService, String, String, Boolean, Boolean)
+ * @see it.eng.idsa.dataapp.service.impl.ProxyServiceImpl#ProxyServiceImpl(org.springframework.boot.web.client.RestTemplateBuilder, it.eng.idsa.dataapp.configuration.ECCProperties, it.eng.idsa.dataapp.service.RecreateFileService, java.util.Optional, java.lang.String, java.lang.String, java.lang.Boolean, java.lang.Boolean)
  */
 @Component
 @ConditionalOnProperty(name = "application.ecc.protocol", havingValue = "https")
@@ -45,7 +44,7 @@ public class SecureRestTemplateCustomizer implements RestTemplateCustomizer {
 		HttpClient httpClient;
 		try {
 			sslcontextBuilder.loadTrustMaterial(null, (cert, auth) -> true);
-			
+
 			SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(
 					sslcontextBuilder.build(), (HostnameVerifier) NoopHostnameVerifier.INSTANCE);
 			httpClient = HttpClients.custom()
