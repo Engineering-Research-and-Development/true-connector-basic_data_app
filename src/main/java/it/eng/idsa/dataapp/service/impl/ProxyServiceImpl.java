@@ -107,6 +107,7 @@ public class ProxyServiceImpl implements ProxyService {
 	 * @param restTemplateBuilder        REST Template builder
 	 * @param eccProperties              properties for ECC configuration
 	 * @param recreateFileService        RecreateFileService for wss communication
+	 * @param checkSumService            CheckSumService for verifying checksum
 	 * @param dataLakeDirectory          Data lake directory for file persistence
 	 * @param issuerConnector            issuer connector Id
 	 * @param encodePayload              encode payload

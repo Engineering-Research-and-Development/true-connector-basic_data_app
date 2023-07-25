@@ -119,11 +119,12 @@ Basic DataApp is build using Java11, and use following libraries:
 
 ## Security <a name="security"></a>
 
+Whole communication is done through TLS mode only, so all endpoint in DataApp are secure.
 Since /proxy endpoint is exposed to the outside world, on separate port (default 8183) there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
-For configuring credentials, please take a look at following properties:
+Currently username value is fixed, and it is: **idsUser**.
+For configuring password, please take a look at following property:
 
 ```
-application.security.username=proxy
 # encoded 'password'
 application.security.password=$2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUubrqdGTFCH3m
 ```
@@ -459,7 +460,7 @@ wss://localhost:8086
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --data-raw '{
     "multipart": "wss",
     "Forward-To": "wss://localhost:8086",
@@ -478,7 +479,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -498,7 +499,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
  
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -518,7 +519,7 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -537,7 +538,6 @@ For <b>REST flow</b>, multipart field should be set to one of the following valu
 Based on multipart type, and messageType, dataApp will create dedicated message in [Message handlers](#handlers), and send request to connector. 
 
 ```
-application.ecc.protocol=https
 application.ecc.host=localhost
 application.ecc.port=8887
 application.ecc.mix-context=/incoming-data-app/multipartMessageBodyBinary
@@ -665,7 +665,6 @@ In both cases a GET request is sent to the ECC in order to fetch the Self Descri
 Following properties are used to create URL for Self Description request from Data App to ECC:
 
 ```
-application.ecc.protocol=https
 application.ecc.host=localhost
 application.ecc.selfdescription-port=8444
 ```

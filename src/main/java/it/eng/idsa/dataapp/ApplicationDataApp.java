@@ -42,6 +42,9 @@ public class ApplicationDataApp {
 	private static final Logger logger = LoggerFactory.getLogger(ApplicationDataApp.class);
 
 	public static void main(String[] args) {
+	    System.setProperty("server.ssl.enabled", "true");
+	    System.setProperty("application.ecc.protocol", "https");
+
 		SpringApplication.run(ApplicationDataApp.class, args);
 	}
 
