@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2023-07-25
+
+### Changed
+
+ - Property application.security.username deleted, instead the fixed value idsUser is used
+ 
+ 
 ## [0.3.0] - 2023-07-17
 
 ### Changed
@@ -8,7 +15,7 @@ All notable changes to this project will be documented in this file.
  - Add Certification check
  - Add checkSum verification
  - Property application.verifyCheckSum required for checkSum verification
- - Property application.security.username and application.security.password deleted, instead the fixed credentials are used
+
   
 ## [0.2.8] - 2023-06-20
 
