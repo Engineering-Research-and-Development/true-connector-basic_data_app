@@ -119,6 +119,7 @@ Basic DataApp is build using Java11, and use following libraries:
 
 ## Security <a name="security"></a>
 
+Whole communication is done through TLS mode only, so all endpoint in DataApp are secure.
 Since /proxy endpoint is exposed to the outside world, on separate port (default 8183) there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
 Currently username value is fixed, and it is: **idsUser**.
 For configuring password, please take a look at following property:

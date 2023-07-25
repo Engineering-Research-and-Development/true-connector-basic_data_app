@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+ - Hardcoded to use TLS communication only
  - Property application.security.username deleted, instead the fixed value idsUser is used
  
  
