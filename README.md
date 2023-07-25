@@ -120,12 +120,12 @@ Basic DataApp is build using Java11, and use following libraries:
 ## Security <a name="security"></a>
 
 Since /proxy endpoint is exposed to the outside world, on separate port (default 8183) there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
-For configuring credentials, please take a look at following properties:
+Currently user credentials are fixed, and they are:
 
 ```
-application.security.username=idsUser
+Username: idsUser
 # encoded 'password'
-application.security.password=$2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUubrqdGTFCH3m
+Password: $2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUubrqdGTFCH3m
 ```
 
 If you want to change password, please use endpoint provided in Execution Core Container project.
