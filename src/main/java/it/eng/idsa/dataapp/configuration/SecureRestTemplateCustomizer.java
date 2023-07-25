@@ -14,7 +14,6 @@ import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -28,7 +27,6 @@ import org.springframework.web.client.RestTemplate;
  * @see it.eng.idsa.dataapp.service.impl.ProxyServiceImpl#ProxyServiceImpl(org.springframework.boot.web.client.RestTemplateBuilder, it.eng.idsa.dataapp.configuration.ECCProperties, it.eng.idsa.dataapp.service.RecreateFileService, java.util.Optional, java.lang.String, java.lang.String, java.lang.Boolean, java.lang.Boolean)
  */
 @Component
-@ConditionalOnProperty(name = "application.ecc.protocol", havingValue = "https")
 public class SecureRestTemplateCustomizer implements RestTemplateCustomizer {
 
 	private static final Logger logger = LoggerFactory.getLogger(SecureRestTemplateCustomizer.class);
