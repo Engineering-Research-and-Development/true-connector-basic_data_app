@@ -538,7 +538,6 @@ For <b>REST flow</b>, multipart field should be set to one of the following valu
 Based on multipart type, and messageType, dataApp will create dedicated message in [Message handlers](#handlers), and send request to connector. 
 
 ```
-application.ecc.protocol=https
 application.ecc.host=localhost
 application.ecc.port=8887
 application.ecc.mix-context=/incoming-data-app/multipartMessageBodyBinary
@@ -666,7 +665,6 @@ In both cases a GET request is sent to the ECC in order to fetch the Self Descri
 Following properties are used to create URL for Self Description request from Data App to ECC:
 
 ```
-application.ecc.protocol=https
 application.ecc.host=localhost
 application.ecc.selfdescription-port=8444
 ```
