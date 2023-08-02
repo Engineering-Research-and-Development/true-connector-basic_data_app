@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
  - Hardcoded to use TLS communication only
  - Property application.security.username deleted, instead the fixed value idsUser is used
- 
+ - Dockerfile improvements
  
 ## [0.3.0] - 2023-07-17
 
