@@ -103,6 +103,10 @@ public class MessageUtil {
 		return true;
 	}
 
+	public static String getIDSMessageType(Message message) {
+		return message.getClass().getSimpleName().substring(0, message.getClass().getSimpleName().lastIndexOf("Impl"));
+	}
+	
 	public static MultiValueMap<String, String> REMOVE_IDS_MESSAGE_HEADERS(HttpHeaders headers) {
 		MultiValueMap<String, String> newHeaders = new LinkedMultiValueMap<>();
 		newHeaders.putAll(headers);

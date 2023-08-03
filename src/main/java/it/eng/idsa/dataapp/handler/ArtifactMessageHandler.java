@@ -72,7 +72,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 				payload = handleRestFlow(message);
 			}
 		} else {
-			logger.error("Artifact requestedElement not provided", message);
+			logger.error("Artifact requestedElement not provided");
 
 			throw new BadParametersException("Artifact requestedElement not provided", message);
 		}
@@ -96,7 +96,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 					selfDescriptionService.getSelfDescription(message))) {
 				return readFile(requestedArtifact, message);
 			} else {
-				logger.error("Artifact requestedElement not exist in self description", message);
+				logger.error("Artifact requestedElement not exist in self description");
 
 				throw new NotFoundException("Artifact requestedElement not found in self description", message);
 			}
@@ -109,7 +109,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 		try {
 			fileContent = Files.readAllBytes(dataLakeDirectory.resolve(requestedArtifact));
 		} catch (IOException e) {
-			logger.error("Could't read the file {} from datalake", requestedArtifact, message);
+			logger.error("Could't read the file {} from datalake", requestedArtifact);
 
 			throw new NotFoundException("Could't read the file from datalake", message);
 
@@ -134,7 +134,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 				return payload;
 			}
 		} else {
-			logger.error("Artifact requestedElement not exist in self description", message);
+			logger.error("Artifact requestedElement not exist in self description");
 
 			throw new NotFoundException("Artifact requestedElement not found in self description", message);
 		}

@@ -47,7 +47,7 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 
 		threadService.setThreadLocalValue("wss", true);
 		String requestMessageMultipart = (String) evt.getNewValue();
-		logger.debug("Received following message over WSS: {}", requestMessageMultipart);
+		logger.debug("Received message over WSS");
 		MultipartMessage receivedMessage = MultipartMessageProcessor.parseMultipartMessage(requestMessageMultipart);
 		Message requestMessage = receivedMessage.getHeaderContent();
 		String payload = receivedMessage.getPayloadContent();
