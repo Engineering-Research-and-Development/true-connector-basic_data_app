@@ -58,15 +58,6 @@ public class DataControllerBodyForm {
 
 		logger.info("Multipart/form request");
 
-		// Received "header" and "payload"
-		logger.info("header" + header);
-		logger.info("headers=" + httpHeaders);
-		if (payload != null) {
-			logger.info("payload lenght = " + payload.toString().length());
-		} else {
-			logger.info("Payload is empty");
-		}
-
 		if (payload instanceof MultipartFile) {
 			MultipartFile file = (MultipartFile) payload;
 			try (FileOutputStream fos = new FileOutputStream(file.getOriginalFilename())) {

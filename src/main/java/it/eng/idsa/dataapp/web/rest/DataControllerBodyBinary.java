@@ -45,16 +45,6 @@ public class DataControllerBodyBinary {
 
 		logger.info("Multipart/mixed request");
 
-		// Convert de.fraunhofer.iais.eis.Message to the String
-//		String headerSerialized = new Serializer().serializePlainJson(headerMessage);
-		logger.info("header=" + headerMessage);
-		logger.info("headers=" + httpHeaders);
-		if (payload != null) {
-			logger.info("payload length = " + payload.length());
-		} else {
-			logger.info("Payload is empty");
-		}
-
 		Message message = MultipartMessageProcessor.getMessage(headerMessage);
 
 		// Create handler based on type of message and get map with header and payload

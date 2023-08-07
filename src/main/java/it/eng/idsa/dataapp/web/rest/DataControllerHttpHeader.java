@@ -1,6 +1,7 @@
 package it.eng.idsa.dataapp.web.rest;
 
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+
 import de.fraunhofer.iais.eis.Message;
 import it.eng.idsa.dataapp.handler.DataAppMessageHandler;
 import it.eng.idsa.dataapp.handler.MessageHandlerFactory;
@@ -37,13 +39,6 @@ public class DataControllerHttpHeader {
 			@RequestBody(required = false) String payload) throws ClassNotFoundException {
 
 		logger.info("Http Header request");
-		logger.info("headers=" + httpHeaders);
-		if (payload != null) {
-			logger.info("payload lenght = " + payload.length());
-			logger.debug("payload=" + payload);
-		} else {
-			logger.info("Payload is empty");
-		}
 
 		HttpHeaders responseHeaders = new HttpHeaders();
 
