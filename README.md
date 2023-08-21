@@ -250,7 +250,7 @@ During development process, you can use following curl command (or import it in 
 
 ```
 curl --location --request POST 'https://localhost:8183/data' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --form 'header={
   "@context" : {
     "ids" : "https://w3id.org/idsa/core/",
@@ -606,7 +606,7 @@ Curl command:
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --header 'fizz: buzz' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -673,7 +673,7 @@ Example for Description RequestMessage:
 
 ```
 curl --location --request POST 'https://localhost:8183/proxy' \
---header 'Authorization: Basic cHJveHk6cGFzc3dvcmQ=' \
+--header 'Authorization: Basic aWRzVXNlcjpwYXNzd29yZA==' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
     "multipart": "form",
