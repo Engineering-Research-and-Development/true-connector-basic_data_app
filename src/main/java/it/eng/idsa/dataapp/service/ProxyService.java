@@ -17,6 +17,7 @@ public interface ProxyService {
 	 * @param httpHeaders  - original headers from request; will be forwarded as-is
 	 * @return Response entity
 	 * @throws URISyntaxException exception
+	 * @throws IOException        exception
 	 */
 	ResponseEntity<String> proxyMultipartMix(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException, IOException;
@@ -29,6 +30,8 @@ public interface ProxyService {
 	 * @param httpHeaders  - original headers from request; will be forwarded as-is
 	 * @return Response entity
 	 * @throws URISyntaxException exception
+	 * @throws IOException        exception
+	 * 
 	 */
 	ResponseEntity<String> proxyMultipartForm(ProxyRequest proxyRequest, HttpHeaders httpHeaders)
 			throws URISyntaxException, IOException;

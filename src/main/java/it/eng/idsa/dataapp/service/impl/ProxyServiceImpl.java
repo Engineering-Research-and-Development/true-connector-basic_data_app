@@ -107,6 +107,7 @@ public class ProxyServiceImpl implements ProxyService {
 	 * @param restTemplateBuilder        REST Template builder
 	 * @param eccProperties              properties for ECC configuration
 	 * @param recreateFileService        RecreateFileService for wss communication
+	 * @param checkSumService            CheckSumService for verifying checksum
 	 * @param dataLakeDirectory          Data lake directory for file persistence
 	 * @param issuerConnector            issuer connector Id
 	 * @param encodePayload              encode payload
@@ -561,24 +562,12 @@ public class ProxyServiceImpl implements ProxyService {
 
 	private void logHttpHeadersResponse(ResponseEntity<String> resp) {
 		logger.info("Response received with status code {}", resp.getStatusCode());
-		logger.info("Response headers\n{}", resp.getHeaders());
-		if (encodePayload && resp.getHeaders().get("IDS-Messagetype").get(0).equals("ArtifactResponseMessage")) {
-			logger.info("Response payload decoded \n{}", new String(Base64.getDecoder().decode(resp.getBody())));
-		} else {
-			logger.info("Response payload\n{}", resp.getBody());
-		}
+		logger.info("Response message is of type {}", resp.getHeaders().get("IDS-Messagetype").get(0));
 	}
 
 	private void logMultipartResponse(ResponseEntity<String> resp, MultipartMessage mm) {
 		logger.info("Response received with status code {}", resp.getStatusCode());
-		logger.info("Response headers\n{}", resp.getHeaders());
-		logger.info("Response header part\n{}", mm.getHeaderContentString());
-		if (encodePayload && mm.getHeaderContent() instanceof ArtifactResponseMessage) {
-			logger.info("Response payload decoded \n{}",
-					new String(Base64.getDecoder().decode(mm.getPayloadContent())));
-		} else {
-			logger.info("Response payload\n{}", mm.getPayloadContent());
-		}
+		logger.info("Response message is of type {}", MessageUtil.getIDSMessageType(mm.getHeaderContent()));
 	}
 
 	// TODO should we move this method to separate class?

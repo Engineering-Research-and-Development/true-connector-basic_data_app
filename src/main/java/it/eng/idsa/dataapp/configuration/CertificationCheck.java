@@ -12,11 +12,11 @@ import org.springframework.context.annotation.Configuration;
 import it.eng.idsa.dataapp.ApplicationDataApp;
 
 @Configuration
-public class CertificatinCheck {
+public class CertificationCheck {
 
-	private static final Logger logger = LoggerFactory.getLogger(CertificatinCheck.class);
+	private static final Logger logger = LoggerFactory.getLogger(CertificationCheck.class);
 
-	private static final String[] CERTIFIED_VERSION = { "0.3.0" };
+	private static final String[] CERTIFIED_VERSION = { "0.3.1" };
 
 	@PostConstruct
 	public void checkIfVerionsIsCertified() {

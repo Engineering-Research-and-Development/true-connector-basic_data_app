@@ -26,10 +26,8 @@ public class HttpHeadersUtil {
 
 	@SuppressWarnings("unchecked")
 	public static HttpHeaders messageToHttpHeaders(Message message) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Converting following message to http-headers: \r\n {}",
-					UtilMessageService.getMessageAsString(message));
-		}
+		logger.debug("Converting message to http-header");
+		
 		HttpHeaders headers = new HttpHeaders();
 		ObjectMapper mapper = new ObjectMapper();
 		// exclude null values from map
@@ -80,7 +78,7 @@ public class HttpHeadersUtil {
 						entry.getKey().substring(4, 5).toUpperCase()), entry.getValue().toString());
 			}
 		});
-		logger.debug("Message converted, following headers are the result: \r\n {}", headers.toString());
+		logger.debug("Message successfully converted into headers");
 
 		return headers;
 	}
@@ -145,10 +143,7 @@ public class HttpHeadersUtil {
 
 		Message message = mapper.convertValue(messageAsHeader, Message.class);
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("Headers converted, following message is the result: \\r\\n {}",
-					UtilMessageService.getMessageAsString(message));
-		}
+		logger.debug("Headers successfully converted to IDS message");
 
 		return message;
 	}
