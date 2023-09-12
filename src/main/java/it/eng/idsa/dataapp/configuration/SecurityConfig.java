@@ -41,7 +41,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		.antMatchers("/incoming-data-app/routerBodyBinary").permitAll()
         .and()
         .csrf().disable()
-        .formLogin().disable();
+        .formLogin().disable()
+        .headers().xssProtection().and().contentTypeOptions().and().frameOptions().sameOrigin();
 	}
 	
 	@Bean
