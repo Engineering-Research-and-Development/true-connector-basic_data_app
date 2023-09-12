@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.2] - 2023-09-12
+
+### Added
+
+ - HttpFirewall
+ - firewall.properties file for managing Firewall
+ - Property application.firewall.isEnabled for turning on HttpFirewal
+ - Authentication Listeners for logging successful or failed login attempts
+ - XSS protection in Spring Security
+ 
 ## [0.3.1] - 2023-07-25
 
 ### Changed

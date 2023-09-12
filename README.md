@@ -16,6 +16,7 @@
   * [Creating docker image](#creatingdockerimage)
   * [Component overview](#componentoverview)
 * [Security](#security)  
+* [Firewall](#firewall)  
 * [Dedicated endpoint in dataApp](#endpoint)
   * [Proxy Endpoint](#proxyendpoint)
   * [Data Endpoint](#dataendpoint)
@@ -130,6 +131,35 @@ application.security.password=$2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUub
 ```
 
 If you want to change password, please use endpoint provided in Execution Core Container project.
+
+## Firewall <a name="firewall"></a>
+
+DataApp allows setting up HttpFirewall through Spring Security. To turn it on/off, please take a look at following property: 
+
+```
+#Firewall
+application.firewall.isEnabled=true
+```
+
+If Firewall is enabled, it will read properties defined in `firewall.properties` file which easily can be modified by needs of setup.
+
+```
+#Set which HTTP methods should be allowed
+allowedMethods=GET,POST
+#Set if a backslash "\" or a URL encoded backslash "%5C" should be allowed in the path or not
+allowBackSlash=true
+#Set if a slash "/" that is URL encoded "%2F" should be allowed in the path or not
+allowUrlEncodedSlash=true
+#Set if double slash "//" that is URL encoded "%2F%2F" should be allowed in the path or not
+allowUrlEncodedDoubleSlash=true
+#Set if semicolon is allowed in the URL (i.e. matrix variables)
+allowSemicolon=true
+#Set if a percent "%" that is URL encoded "%25" should be allowed in the path or not
+allowUrlEncodedPercent=true
+#if a period "." that is URL encoded "%2E" should be allowed in the path or not
+allowUrlEncodedPeriod=true
+```
+
 
 ## Dedicated endpoint in DataApp <a name="endpoint"></a>
 
