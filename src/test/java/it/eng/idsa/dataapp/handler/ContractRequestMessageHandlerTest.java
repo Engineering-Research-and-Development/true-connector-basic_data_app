@@ -54,7 +54,7 @@ class ContractRequestMessageHandlerTest {
 	@BeforeEach
 	public void init() throws IOException, URISyntaxException {
 
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		ReflectionTestUtils.setField(contractRequestMessageHandler, "issuerConnector", issuerConnector);
 		ReflectionTestUtils.setField(contractRequestMessageHandler, "contractNegotiationDemo", contractNegotiationDemo);
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();

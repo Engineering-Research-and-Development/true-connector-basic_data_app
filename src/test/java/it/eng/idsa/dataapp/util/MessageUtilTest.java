@@ -34,7 +34,7 @@ public class MessageUtilTest {
 
 	@BeforeEach
 	public void init() throws RestClientException, IOException {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		messageUtil = new MessageUtil(issuerConnector);
 
 	}

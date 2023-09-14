@@ -50,7 +50,7 @@ public class ProxyServiceTest {
 	private ProxyServiceImpl service;
 	@Mock
 	private RecreateFileService recreateFileService;
-	@Mock
+
 	private HttpHeaders httpHeaders;
 	@Mock
 	private RestTemplate restTemplate;
@@ -73,12 +73,12 @@ public class ProxyServiceTest {
 
 	@Mock
 	private CheckSumRepository checkSumRepository;
-	
+
 	private Optional<CheckSumService> checkSumService = Optional.of(new CheckSumServiceImpl(checkSumRepository));
 
 	@BeforeEach
 	public void init() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		when(restTemplateBuilder.build()).thenReturn(restTemplate);
 		encodePayload = false;
 		extractPayloadFromResponse = false;
@@ -88,6 +88,8 @@ public class ProxyServiceTest {
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");
 		when(eccProperties.getPort()).thenReturn(123);
+		httpHeaders = new HttpHeaders();
+		httpHeaders.add("key", "value");
 	}
 
 	@Test

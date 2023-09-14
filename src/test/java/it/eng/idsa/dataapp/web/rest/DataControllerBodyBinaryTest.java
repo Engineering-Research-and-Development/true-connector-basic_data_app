@@ -51,7 +51,7 @@ public class DataControllerBodyBinaryTest {
 
 	@BeforeEach
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		message = UtilMessageService.getDescriptionRequestMessage(null);
 		headerMessage = UtilMessageService.getMessageAsString(message);
 		payload = "payload";
