@@ -103,7 +103,7 @@ Basic DataApp is build using Java11, and use following libraries:
 | [Multipart Message Library](https://github.com/Engineering-Research-and-Development/true-connector-multipart_message_library) | 1.0.17 |
 | [Websocket Message Streamer](https://github.com/Engineering-Research-and-Development/true-connector-websocket_message_streamer) | 1.0.17 |
 | [Information model](https://github.com/International-Data-Spaces-Association/InformationModel) | 4.2.7 | 
-| SpringBoot | 2.2.5.RELEASE |
+| SpringBoot | 2.5.14 |
 | Tomcat | 9.0.27 |
 | Maven | 3.6.3 |
 | com.squareup.okhttp3 | 3.4.17 |
@@ -144,7 +144,11 @@ application.firewall.isEnabled=true
 If Firewall is enabled, it will read properties defined in `firewall.properties` file which easily can be modified by needs of setup.
 
 ```
-#Set which HTTP methods should be allowed
+#Set which HTTP header names should be allowed (if want to allow all header names, keep it empty)
+allowedHeaderNames=
+#Set which values in header names should have the exact value and allowed (if want to allow any values keep it empty)
+allowedHeaderValues=
+#Set which HTTP methods should be allowed (if want to allow all header names, keep it empty)
 allowedMethods=GET,POST
 #Set if a backslash "\" or a URL encoded backslash "%5C" should be allowed in the path or not
 allowBackSlash=true
@@ -159,7 +163,7 @@ allowUrlEncodedPercent=true
 #if a period "." that is URL encoded "%2E" should be allowed in the path or not
 allowUrlEncodedPeriod=true
 ```
-
+***IMPORTANT:*** If you're not an expert, the strong advice is to keep values at their default values. If you decide to change values, pay special attention to `allowHeaderNames` and `allowHeaderValues`, since those set values are exclusive and considered as only values that should be present in the header.
 
 ## Dedicated endpoint in DataApp <a name="endpoint"></a>
 

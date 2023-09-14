@@ -11,6 +11,11 @@ All notable changes to this project will be documented in this file.
  - Authentication Listeners for logging successful or failed login attempts
  - XSS protection in Spring Security
  
+### Changed
+
+ - Spring Boot version upgraded from 2.2.5.RELEASE to 2.5.14
+ 
+ 
 ## [0.3.1] - 2023-07-25
 
 ### Changed
