@@ -21,19 +21,17 @@ public class ProxyControllerTest {
 
 	@InjectMocks
 	private ProxyController proxyController;
-
 	@Mock
 	private ProxyService proxyService;
-
 	@Mock
 	private HttpHeaders httpHeaders;
-	private ProxyRequest proxyRequest;;
+	private ProxyRequest proxyRequest;
 	private HttpMethod method = HttpMethod.POST;
 	String body = "{\"test\":\"test\"}";
 
 	@BeforeEach
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		proxyRequest = new ProxyRequest();
 		proxyRequest.setMessageType("ArtifactReqeustMessage");
 	}

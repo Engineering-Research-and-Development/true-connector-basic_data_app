@@ -46,7 +46,7 @@ class IncomingDataAppResourceOverWsTest {
 
 	@BeforeEach
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		requestMessageMultipart = createMultipartMessageAsString();
 		multipartMessage = createMultipartMessage();
 		when(threadService.getThreadLocalValue("wss")).thenReturn(true);

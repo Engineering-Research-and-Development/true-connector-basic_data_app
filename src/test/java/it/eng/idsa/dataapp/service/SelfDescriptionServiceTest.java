@@ -58,7 +58,7 @@ class SelfDescriptionServiceTest {
 
 	@BeforeEach
 	public void init() throws IOException {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		when(eccProperties.getHost()).thenReturn("fakeHost");
 		when(eccProperties.getProtocol()).thenReturn("http");
 		when(eccProperties.getPort()).thenReturn(1234);

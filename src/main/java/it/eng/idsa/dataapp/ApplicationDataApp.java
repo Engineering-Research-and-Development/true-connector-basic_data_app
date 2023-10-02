@@ -44,7 +44,7 @@ public class ApplicationDataApp {
 	public static void main(String[] args) {
 	    System.setProperty("server.ssl.enabled", "true");
 	    System.setProperty("application.ecc.protocol", "https");
-
+	    System.setProperty("server.error.include-stacktrace", "never");
 		SpringApplication.run(ApplicationDataApp.class, args);
 	}
 

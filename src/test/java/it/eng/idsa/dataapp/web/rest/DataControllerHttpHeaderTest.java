@@ -43,7 +43,7 @@ class DataControllerHttpHeaderTest {
 
 	@BeforeEach
 	public void setUp() throws ClassNotFoundException {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		message = UtilMessageService.getDescriptionRequestMessage(null);
 		httpHeaders = HttpHeadersUtil.messageToHttpHeaders(message);
 		when(handler.handleMessage(any(), any())).thenReturn(responseMap);
