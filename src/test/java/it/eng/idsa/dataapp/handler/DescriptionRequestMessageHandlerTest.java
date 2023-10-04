@@ -44,7 +44,7 @@ class DescriptionRequestMessageHandlerTest {
 	@BeforeEach
 	public void init() throws IOException, URISyntaxException {
 
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		ReflectionTestUtils.setField(descriptionRequestMessageHandler, "issuerConnector", issuerConnector);
 		message = UtilMessageService.getDescriptionRequestMessage(null);
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();

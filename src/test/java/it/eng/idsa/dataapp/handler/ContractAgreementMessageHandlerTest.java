@@ -28,7 +28,7 @@ class ContractAgreementMessageHandlerTest {
 	@BeforeEach
 	public void init() {
 
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		ReflectionTestUtils.setField(agreementMessageHandler, "issuerConnector", issuerConnector);
 		message = UtilMessageService.getContractAgreementMessage();
 	}

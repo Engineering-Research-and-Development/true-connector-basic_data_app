@@ -49,7 +49,7 @@ class ArtifactMessageHandlerTest {
 	@BeforeEach
 	public void init() {
 
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		artifactMessageHandler = new ArtifactMessageHandler(selfDescriptionService, threadService, dataLakeDirectory,
 				contractNegotiationDemo, encodePayload);
 		ReflectionTestUtils.setField(artifactMessageHandler, "issuerConnector", issuerConnector);
@@ -133,10 +133,10 @@ class ArtifactMessageHandlerTest {
 		assertTrue(StringUtils.containsIgnoreCase(responseMap.get(DataAppMessageHandler.HEADER).toString(),
 				message.getId().toString()));
 	}
-	
+
 	@Test
 	void handleMessageContractNegotiationDemoRestTest() throws URISyntaxException {
-		
+
 		ReflectionTestUtils.setField(artifactMessageHandler, "contractNegotiationDemo", true);
 		ReflectionTestUtils.setField(artifactMessageHandler, "encodePayload", true);
 
