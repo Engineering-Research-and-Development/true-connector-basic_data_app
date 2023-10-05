@@ -25,8 +25,7 @@ public class UtilResource {
 	@GetMapping("/version")
     @ResponseBody
     public String getVersion() {
-//		return buildProperties.getVersion();
-		return "1.0";
+		return buildProperties.getVersion();
     }
 	
 }
