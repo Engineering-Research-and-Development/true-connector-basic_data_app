@@ -204,6 +204,7 @@
 					<exclude>test/**</exclude>
 					<exclude>examples-multipart-messages/**</exclude>
 					<exclude>*.jks</exclude>
+					<exclude>*.p12</exclude>
 					<exclude>*.properties</exclude>
 				</excludes>
 			</resource>
@@ -223,6 +224,7 @@
 				<configuration>
 					<nonFilteredFileExtensions>
 						<nonFilteredFileExtension>jks</nonFilteredFileExtension>
+						<nonFilteredFileExtension>p12</nonFilteredFileExtension>
 					</nonFilteredFileExtensions>
 				</configuration>
 			</plugin>
