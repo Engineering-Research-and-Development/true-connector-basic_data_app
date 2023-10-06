@@ -97,6 +97,7 @@ public class ProxyServiceImpl implements ProxyService {
 	private Boolean encodePayload;
 	private Boolean extractPayloadFromResponse;
 	private Optional<CheckSumService> checkSumService;
+	private SelfDescriptionValidator descriptionResponseMessageHandler;
 
 	/**
 	 * 
@@ -112,13 +113,15 @@ public class ProxyServiceImpl implements ProxyService {
 	 * @param issuerConnector            issuer connector Id
 	 * @param encodePayload              encode payload
 	 * @param extractPayloadFromResponse extract payload from multipart
+	 * @param descriptionResponseMessageHandler payloadHandler
 	 */
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder, ECCProperties eccProperties,
 			RecreateFileService recreateFileService, Optional<CheckSumService> checkSumService,
 			@Value("${application.dataLakeDirectory}") String dataLakeDirectory,
 			@Value("${application.ecc.issuer.connector}") String issuerConnector,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
-			@Value("#{new Boolean('${application.extractPayloadFromResponse:false}')}") Boolean extractPayloadFromResponse) {
+			@Value("#{new Boolean('${application.extractPayloadFromResponse:false}')}") Boolean extractPayloadFromResponse,
+			SelfDescriptionValidator descriptionResponseMessageHandler) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.recreateFileService = recreateFileService;
@@ -127,6 +130,7 @@ public class ProxyServiceImpl implements ProxyService {
 		this.issueConnector = issuerConnector;
 		this.encodePayload = encodePayload;
 		this.extractPayloadFromResponse = extractPayloadFromResponse;
+		this.descriptionResponseMessageHandler = descriptionResponseMessageHandler;
 	}
 
 	@Override
@@ -453,6 +457,14 @@ public class ProxyServiceImpl implements ProxyService {
 					.get(0).substring(resp.getHeaders().get("IDS-RejectionReason").get(0).lastIndexOf("/") + 1)));
 		}
 
+		if(resp.getHeaders().size() != 0 && StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0))
+				&& "ids:DescriptionMessageResponse".equals(resp.getHeaders().get("IDS-Messagetype").get(0))) {
+			boolean selfDescriptionValid = descriptionResponseMessageHandler.validateSelfDescription(resp.getBody());
+			if(!selfDescriptionValid) {
+				return new ResponseEntity<String>("Invalid self description received - check logs for more details",
+						HttpStatus.BAD_REQUEST);
+			}
+		}
 		if (extractPayloadFromResponse) {
 			if (resp.getHeaders().size() != 0 && StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0))
 					&& "ids:MessageProcessedNotificationMessage"
@@ -748,6 +760,14 @@ public class ProxyServiceImpl implements ProxyService {
 					throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
 							"Error while deseriliazing object, check logs for more details", e);
 				}
+			}
+		}
+		
+		if(mm.getHeaderContent() instanceof DescriptionResponseMessage) {
+			boolean selfDescriptionValid = descriptionResponseMessageHandler.validateSelfDescription(mm.getPayloadContent());
+			if(!selfDescriptionValid) {
+				return new ResponseEntity<String>("Invalid self description received - check logs for more details",
+						HttpStatus.BAD_REQUEST);
 			}
 		}
 		HttpHeaders httpHeaders = new HttpHeaders();
