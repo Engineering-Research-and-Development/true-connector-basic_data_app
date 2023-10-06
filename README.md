@@ -200,10 +200,9 @@ Logic used to filter requests can be found in
 [**it.eng.idsa.dataapp.configuration.CustomWebMvcConfigurer**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/configuration/CustomWebMvcConfigurer.java)
 
 ```
-@RequestMapping("/proxy")
-public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
-			@RequestBody String body, HttpMethod method, HttpServletRequest request,
-			HttpServletResponse response)
+@PostMapping("/proxy")
+	public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders, @RequestBody String body,
+			HttpMethod method)
 ```
 This methods is used in both REST and WSS flows.
 
@@ -307,7 +306,7 @@ curl --location --request POST 'https://localhost:8183/data' \
     "ids" : "https://w3id.org/idsa/core/",
     "idsc" : "https://w3id.org/idsa/code/"
   },
-  "@type" : "ids:ArtifactRequestMessage\",
+  "@type" : "ids:ArtifactRequestMessage",
   "@id" : "https://w3id.org/idsa/autogen/artifactRequestMessage/a55ed1d5-576d-4a90-b7b2-2606d5a7905c",
   "ids:requestedArtifact" : {
     "@id" : "http://w3id.org/engrd/connector/artifact/1"
