@@ -1,7 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.3.3] - 2023-10-05
+## [0.3.3] - 2023-10-09
+
+### Added
+ - logic to validate SelfDescription in response flow
 
 ### Changed
 

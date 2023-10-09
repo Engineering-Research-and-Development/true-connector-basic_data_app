@@ -3,8 +3,8 @@ name: Feature or hotfix build
 on:
   push:
     branches: [ "feature/*", "hotfix/*"]
-  pull_request:
-    branches: [ "develop" ]
+#  pull_request:
+#    branches: [ "develop" ]
 
 jobs:
   build:
