@@ -52,7 +52,7 @@ public class ProxyServiceTest {
 	@Mock
 	private RecreateFileService recreateFileService;
 	@Mock
-	private SelfDescriptionValidator descriptionResponseMessageHandler;
+	private SelfDescriptionValidator selfDescriptionValidator;
 
 	private HttpHeaders httpHeaders;
 	@Mock
@@ -86,12 +86,12 @@ public class ProxyServiceTest {
 		encodePayload = false;
 		extractPayloadFromResponse = false;
 		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, checkSumService,
-				dataLakeDirectory, issuerConnector, encodePayload, extractPayloadFromResponse, descriptionResponseMessageHandler);
+				dataLakeDirectory, issuerConnector, encodePayload, extractPayloadFromResponse, selfDescriptionValidator);
 		messageType = ArtifactRequestMessage.class.getSimpleName();
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");
 		when(eccProperties.getPort()).thenReturn(123);
-		when(descriptionResponseMessageHandler.validateSelfDescription(any(String.class))).thenReturn(true);
+		when(selfDescriptionValidator.validateSelfDescription(any(String.class))).thenReturn(true);
 		httpHeaders = new HttpHeaders();
 		httpHeaders.add("key", "value");
 	}
