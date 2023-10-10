@@ -30,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -763,7 +764,7 @@ public class ProxyServiceImpl implements ProxyService {
 			}
 		}
 		
-		if(mm.getHeaderContent() instanceof DescriptionResponseMessage) {
+		if(mm.getHeaderContent() instanceof DescriptionResponseMessage && ObjectUtils.isEmpty(proxyRequest.getRequestedElement())) {
 			boolean selfDescriptionValid = selfDescriptionValidator.validateSelfDescription(mm.getPayloadContent());
 			if(!selfDescriptionValid) {
 				return new ResponseEntity<String>("Invalid self description received - check logs for more details",
