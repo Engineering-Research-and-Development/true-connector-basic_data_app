@@ -266,12 +266,10 @@ public class ProxyServiceImpl implements ProxyService {
 					eccProperties.getBrokerQuerryContext(), null, null);
 		}
 
-		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
 		requestEntity = new HttpEntity<>(map, httpHeaders);
 
 		logger.info("Forwarding form POST request to {}", thirdPartyApi.toString());
 		return sendMultipartRequest(thirdPartyApi, requestEntity, proxyRequest);
-
 	}
 
 	public Long fetchChecksum(String forwardTo, String artifactId) throws URISyntaxException, IOException {
