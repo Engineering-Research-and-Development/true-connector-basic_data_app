@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.4] - 2023-10-13
+
+### Changed
+
+ - Made optional logic for validating self description document
+
 ## [0.3.3] - 2023-10-11
 
 ### Added

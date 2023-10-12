@@ -9,9 +9,6 @@ on:
       developmentVersion:
         decription: 'Next development version, with SNAPSHOT'
         required: true
-      tagVersion:
-        description: 'Tag version'
-        required: true
       
 jobs:
   master_release:
@@ -41,7 +38,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GH_PACKAGE_REPO_PASSWORD: ${{ secrets.GH_PACKAGE_REPO_PASSWORD }}
       run: |
-        mvn -B -Dtag=${{ github.event.inputs.tagVersion }} release:prepare \
+        mvn -B -Dtag=${{ github.event.inputs.releaseVersion }} release:prepare \
         -DreleaseVersion=${{ github.event.inputs.releaseVersion }} \
         -DdevelopmentVersion=${{ github.event.inputs.developmentVersion }} --file pom.xml \
         && mvn release:perform -B --file pom.xml
