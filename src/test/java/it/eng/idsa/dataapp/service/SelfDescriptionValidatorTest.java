@@ -56,7 +56,7 @@ import it.eng.idsa.multipart.util.UtilMessageService;
 
 public class SelfDescriptionValidatorTest {
 
-	private SelfDescriptionValidator responseHander = new SelfDescriptionValidator();
+	private SelfDescriptionValidator responseHander = new SelfDescriptionValidator(true);
 	
 	@Test
 	public void validSelfDescription() throws IOException {
