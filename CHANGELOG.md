@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.3] - 2023-10-11
+
+### Added
+ - logic to validate SelfDescription in response flow
+
+### Changed
+
+ - Fix mapping in ProxyController
+ 
+### Removed
+
+ - Swagger UI
+ 
 ## [0.3.2] - 2023-10-03
 
 ### Added

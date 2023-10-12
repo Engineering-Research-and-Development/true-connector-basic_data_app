@@ -36,6 +36,7 @@ import it.eng.idsa.dataapp.domain.ProxyRequest;
 import it.eng.idsa.dataapp.repository.CheckSumRepository;
 import it.eng.idsa.dataapp.service.impl.CheckSumServiceImpl;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
+import it.eng.idsa.dataapp.service.impl.SelfDescriptionValidator;
 import it.eng.idsa.dataapp.util.RejectionUtil;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
@@ -50,6 +51,8 @@ public class ProxyServiceTest {
 	private ProxyServiceImpl service;
 	@Mock
 	private RecreateFileService recreateFileService;
+	@Mock
+	private SelfDescriptionValidator selfDescriptionValidator;
 
 	private HttpHeaders httpHeaders;
 	@Mock
@@ -83,11 +86,12 @@ public class ProxyServiceTest {
 		encodePayload = false;
 		extractPayloadFromResponse = false;
 		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, checkSumService,
-				dataLakeDirectory, issuerConnector, encodePayload, extractPayloadFromResponse);
+				dataLakeDirectory, issuerConnector, encodePayload, extractPayloadFromResponse, selfDescriptionValidator);
 		messageType = ArtifactRequestMessage.class.getSimpleName();
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");
 		when(eccProperties.getPort()).thenReturn(123);
+		when(selfDescriptionValidator.validateSelfDescription(any(String.class))).thenReturn(true);
 		httpHeaders = new HttpHeaders();
 		httpHeaders.add("key", "value");
 	}

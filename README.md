@@ -120,6 +120,23 @@ Basic DataApp is build using Java11, and use following libraries:
 
 ## Security <a name="security"></a>
 
+Security in Basic DataApp is implemented via Spring Security mechanism. This framework is responsible for login user and also for response headers.
+
+SpringSecurity:
+
+```
+.headers().xssProtection().and().contentTypeOptions().and().frameOptions().sameOrigin()
+```
+
+Example for the response headers are:
+
+```
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+X-Frame-Options: SAMEORIGIN
+```
+
 Whole communication is done through TLS mode only, so all endpoint in DataApp are secure.
 Since /proxy endpoint is exposed to the outside world, on separate port (default 8183) there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
 Currently username value is fixed, and it is: **idsUser**.
@@ -183,10 +200,9 @@ Logic used to filter requests can be found in
 [**it.eng.idsa.dataapp.configuration.CustomWebMvcConfigurer**](https://github.com/Engineering-Research-and-Development/true-connector-basic_data_app/blob/master/src/main/java/it/eng/idsa/dataapp/configuration/CustomWebMvcConfigurer.java)
 
 ```
-@RequestMapping("/proxy")
-public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders,
-			@RequestBody String body, HttpMethod method, HttpServletRequest request,
-			HttpServletResponse response)
+@PostMapping("/proxy")
+	public ResponseEntity<?> proxyRequest(@RequestHeader HttpHeaders httpHeaders, @RequestBody String body,
+			HttpMethod method)
 ```
 This methods is used in both REST and WSS flows.
 
@@ -290,7 +306,7 @@ curl --location --request POST 'https://localhost:8183/data' \
     "ids" : "https://w3id.org/idsa/core/",
     "idsc" : "https://w3id.org/idsa/code/"
   },
-  "@type" : "ids:ArtifactRequestMessage\",
+  "@type" : "ids:ArtifactRequestMessage",
   "@id" : "https://w3id.org/idsa/autogen/artifactRequestMessage/a55ed1d5-576d-4a90-b7b2-2606d5a7905c",
   "ids:requestedArtifact" : {
     "@id" : "http://w3id.org/engrd/connector/artifact/1"
