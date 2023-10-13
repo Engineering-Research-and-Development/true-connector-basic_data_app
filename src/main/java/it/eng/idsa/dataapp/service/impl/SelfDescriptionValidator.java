@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import de.fraunhofer.iais.eis.BaseConnector;
@@ -14,6 +15,12 @@ import it.eng.idsa.dataapp.handler.DescriptionRequestMessageHandler;
 public class SelfDescriptionValidator {
 
 	private static final Logger logger = LoggerFactory.getLogger(DescriptionRequestMessageHandler.class);
+	
+	private boolean validateSelfDescription;
+	
+	public SelfDescriptionValidator(@Value("${application.validateSelfDescription:false}") boolean validateSelfDescription) {
+		this.validateSelfDescription = validateSelfDescription;
+	}
 
 	/**
 	 Validate if following fields are present in Self Description document:<br>
@@ -27,6 +34,10 @@ public class SelfDescriptionValidator {
 	 * @return result of the validation
 	 */
 	public boolean validateSelfDescription(String payload) {
+		if(!validateSelfDescription) {
+			logger.info("Validate self description disabled - skipping!");
+			return true;
+		}
 		boolean selfDescriptionValid = false;
 		logger.info("Checking DescriptionResponseMessage - validating received Self Description document");
 		Serializer serializer = new Serializer();

@@ -733,6 +733,13 @@ curl --location --request POST 'https://localhost:8183/proxy' \
 }'
 
 ```
+You can enable validating received Self Description document. This feature is disabled by default but it can be changed by setting following property to true:
+
+```
+application.validateSelfDescription=true
+```
+
+If it is enabled, be sure to configure DAPS interaction, since validation will be done on PublicKey element of Self Description and that field is set from DAPS keystore file.
 
 Remark: requestedElement field can be omitted. In that case, description response will contain whole self description document; otherwise it will contain just the part for requested element.
 
