@@ -26,14 +26,6 @@ jobs:
         cache: maven
         ref: ${{ env.TAG_VERSION }}  
 
-    - name: Cache Maven dependencies
-      uses: actions/cache@v2
-      with:
-        path: $HOME/.m2/repository
-        key: ${{ runner.os }}-maven.-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven.-
-
     - name: Install maven dependencies
       run: ./ci/mavenDependency.sh  
 
