@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.3.5] - 2023-10-30
+
+### Changed
+
+ - CertificationCheck now uses Cosign to verify if running version is signed
+
+
 ## [0.3.4] - 2023-10-13
 
 ### Changed

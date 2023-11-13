@@ -7,7 +7,7 @@ LABEL maintainer="gabriele.deluca@eng.it"
 
 # Create non-privileged user directory, and make it as workable directory
 RUN mkdir -p /home/nobody/app && mkdir -p /home/nobody/data/log/dataapp && mkdir -p /home/nobody/data/datalake
-RUN apk add --no-cache openssl curl
+RUN apk add --no-cache openssl curl cosign
 
 WORKDIR /home/nobody
 

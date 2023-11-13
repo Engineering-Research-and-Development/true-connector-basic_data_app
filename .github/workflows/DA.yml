@@ -1,0 +1,36 @@
+name: Build DA and run GH Action
+
+on:
+  push:
+    branches: [ "feature/*", "hotfix/*", "develop", "master"]
+
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, '[maven-release-plugin]')"
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_PACKAGE_REPO_PASSWORD: ${{ secrets.GH_PACKAGE_REPO_PASSWORD }}
+      DOCKER_USER: ${{secrets.DOCKER_USER}}
+      DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven'
+
+
+      - name: Install maven dependencies
+        run: ./ci/mavenDependency.sh   
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Run Creating Docker Image from DataApp repo
+        run: ./ci/deploy.sh
