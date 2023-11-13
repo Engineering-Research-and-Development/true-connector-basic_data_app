@@ -23,7 +23,6 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
-        cache: maven
         ref: ${{ env.TAG_VERSION }}  
 
     - name: Install maven dependencies
