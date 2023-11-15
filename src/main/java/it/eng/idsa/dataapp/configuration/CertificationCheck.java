@@ -37,7 +37,7 @@ public class CertificationCheck {
 			String rootImageName = "rdlabengpa/ids_be_data_app:v";
 			List<String> startCmdList = getStartCmdList();
 			List<String> cmdList = new ArrayList<String>(startCmdList);
-			cmdList.add("echo | cosign verify --key " + targetDirectory.resolve("trueconn.pub") + " " + rootImageName
+			cmdList.add("echo | cosign verify --insecure-ignore-tlog --key " + targetDirectory.resolve("trueconn.pub") + " " + rootImageName
 					+ buildProperties.getVersion());
 
 			String getCosignVerification = processExecutor.executeProcess(cmdList);
