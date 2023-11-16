@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 
  - cosign version upgrade with alpine image; must include --insecure-ignore-tlog flag
 
+## [0.3.6] - 2023-11-13
+
+### Changed
+
+ - Added cosign permission for folder (Dockerfile)
+
 ## [0.3.5] - 2023-10-30
 
 ### Changed
