@@ -12,6 +12,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,10 +26,12 @@ import com.google.gson.GsonBuilder;
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.ArtifactResponseMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
+import it.eng.idsa.dataapp.service.CheckSumService;
 import it.eng.idsa.dataapp.service.SelfDescriptionService;
 import it.eng.idsa.dataapp.service.ThreadService;
 import it.eng.idsa.dataapp.util.BigPayload;
 import it.eng.idsa.dataapp.web.rest.exceptions.BadParametersException;
+import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
 import it.eng.idsa.dataapp.web.rest.exceptions.NotFoundException;
 import it.eng.idsa.multipart.util.DateUtil;
 import it.eng.idsa.multipart.util.UtilMessageService;
@@ -37,22 +42,26 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 	private Boolean encodePayload;
 	private SelfDescriptionService selfDescriptionService;
 	private ThreadService threadService;
+	private CheckSumService checkSumService;
 	private Path dataLakeDirectory;
 	private Boolean contractNegotiationDemo;
+	private JSONParser parser = new JSONParser();
 
 	private static final Logger logger = LoggerFactory.getLogger(ArtifactMessageHandler.class);
 
 	public ArtifactMessageHandler(SelfDescriptionService selfDescriptionService, ThreadService threadService,
-			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
+			CheckSumService checkSumService, @Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
 			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
 		this.selfDescriptionService = selfDescriptionService;
 		this.threadService = threadService;
+		this.checkSumService = checkSumService;
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.contractNegotiationDemo = contractNegotiationDemo;
 		this.encodePayload = encodePayload;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, Object> handleMessage(Message message, Object payload) {
 		logger.info("Handling header through ArtifactMessageHandler");
@@ -66,22 +75,52 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 			logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact());
 			if (Boolean.TRUE.equals(((Boolean) threadService.getThreadLocalValue("wss")))) {
 				logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact() + " in WSS flow");
-				payload = handleWssFlow(message);
+				if (isSftp(payload)) {
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("checkSum", handleWssFlowWithSftp(message));
+					jsonObject.put("sftp", "true");
+					payload = jsonObject;
+//					payload = handleWssFlowWithSftp(message);
+				} else {
+					payload = handleWssFlow(message);
+				}
 			} else {
 				logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact() + " in REST flow");
 				payload = handleRestFlow(message);
 			}
-		} else {
+		} else
+
+		{
 			logger.error("Artifact requestedElement not provided");
 
 			throw new BadParametersException("Artifact requestedElement not provided", message);
 		}
 
-		artifactResponseMessage = createArtifactResponseMessage(arm);
+		artifactResponseMessage =
+
+				createArtifactResponseMessage(arm);
 		response.put(DataAppMessageHandler.HEADER, artifactResponseMessage);
 		response.put(DataAppMessageHandler.PAYLOAD, payload);
 
 		return response;
+	}
+
+	private String handleWssFlowWithSftp(Message message) {
+		String reqArtifact = ((ArtifactRequestMessage) message).getRequestedArtifact().getPath();
+		String requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
+		if (contractNegotiationDemo) {
+			logger.info("WSS Demo, reading directly from data lake");
+			return checkSumService.calculateCheckSumToString(requestedArtifact, message);
+		} else {
+			if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
+					selfDescriptionService.getSelfDescription(message))) {
+				return checkSumService.calculateCheckSumToString(requestedArtifact, message);
+			} else {
+				logger.error("Artifact requestedElement not exist in self description");
+
+				throw new NotFoundException("Artifact requestedElement not found in self description", message);
+			}
+		}
 	}
 
 	private String handleWssFlow(Message message) {
@@ -170,6 +209,34 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 		Gson gson = new GsonBuilder().create();
 
 		return gson.toJson(jsonObject);
+	}
+
+	private boolean isSftp(Object payload) {
+		logger.info("Checking the type of WSS flow...");
+
+		if (payload == null || payload.toString().trim().isEmpty()) {
+			logger.info("Payload is empty, continue with regular WSS Flow...");
+			return false;
+		} else {
+			String payloadString = payload.toString();
+			try {
+
+				JSONObject jsonObject = (JSONObject) parser.parse(payloadString);
+
+				if (jsonObject.containsKey("sftp") && (Boolean) jsonObject.get("sftp")) {
+					logger.info("Proceeding with WSS with SFTP flow...");
+					return true;
+				} else {
+					logger.error(
+							"Either 'sftp' is not present, or its value is not true, continue with WSS Flow without SFTP");
+					return false;
+				}
+			} catch (ParseException e) {
+				logger.error("Could not serialize payload.", e);
+
+				throw new InternalRecipientException("Could not serialize payload");
+			}
+		}
 	}
 
 	private Message createArtifactResponseMessage(ArtifactRequestMessage header) {

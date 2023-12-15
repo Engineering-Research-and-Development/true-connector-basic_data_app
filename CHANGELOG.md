@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## [0.3.7] - 2023-11-16
 
+### Added
+
+ - Support for transferring files larger than 50Mb using SFTP in WSS flow
+ 
+
+## [0.3.7] - 2023-11-16
+
 ### Changed
 
  - cosign version upgrade with alpine image; must include --insecure-ignore-tlog flag

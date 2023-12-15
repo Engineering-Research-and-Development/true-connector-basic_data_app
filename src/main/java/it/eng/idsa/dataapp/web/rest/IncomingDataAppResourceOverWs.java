@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener;
 import java.nio.file.Path;
 import java.util.Map;
 
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,9 +78,16 @@ public class IncomingDataAppResourceOverWs implements PropertyChangeListener {
 	}
 
 	private String createWsResponse(Map<String, Object> responseMap) {
+		Object payload = responseMap.get(DataAppMessageHandler.PAYLOAD);
+		String payloadString;
+		if (payload instanceof JSONObject) {
+			payloadString = ((JSONObject) payload).toJSONString();
+		} else {
+			payloadString = (String) payload;
+		}
 		MultipartMessage responseMessageMultipart = new MultipartMessageBuilder()
 				.withHeaderContent((Message) responseMap.get(DataAppMessageHandler.HEADER))
-				.withPayloadContent((String) responseMap.get(DataAppMessageHandler.PAYLOAD)).build();
+				.withPayloadContent(payloadString).build();
 
 		return MultipartMessageProcessor.multipartMessagetoString(responseMessageMultipart, false, Boolean.TRUE);
 	}
