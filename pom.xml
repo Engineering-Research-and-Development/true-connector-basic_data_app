@@ -21,7 +21,7 @@
 		<jacoco.version>0.8.8</jacoco.version>
 	</properties>
 	<repositories>
-<!--		<repository>
+		<!--		<repository>
 			<id>snapshots</id>
 			<name>maven-snapshots</name>
 			<url>https://maven.iais.fraunhofer.de/artifactory/eis-ids-public</url>
@@ -183,7 +183,7 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-				<!-- FTP -->
+		<!-- FTP -->
 		<dependency>
 			<groupId>org.apache.sshd</groupId>
 			<artifactId>sshd-core</artifactId>
@@ -196,14 +196,9 @@
 		</dependency>
 		<dependency>
 			<!-- ScpCommandFactory -->
-		    <groupId>org.apache.sshd</groupId>
-		    <artifactId>sshd-scp</artifactId>
-		    <version>2.11.0</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.apache.sshd</groupId>
-		    <artifactId>sshd-cli</artifactId>
-		    <version>2.11.0</version>
+			<groupId>org.apache.sshd</groupId>
+			<artifactId>sshd-scp</artifactId>
+			<version>2.11.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.mina</groupId>

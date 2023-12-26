@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,13 +49,16 @@ class ArtifactMessageHandlerTest {
 	static final String PAYLOAD = "asdsad";
 	private Boolean contractNegotiationDemo = false;
 	private Path dataLakeDirectory = Path.of("src/test/resources/dataFiles");
+	private Boolean verifyCheckSum = false;
 
 	@BeforeEach
 	public void init() {
 
 		MockitoAnnotations.openMocks(this);
-		artifactMessageHandler = new ArtifactMessageHandler(selfDescriptionService, threadService, checkSumService,
-				dataLakeDirectory, contractNegotiationDemo, encodePayload);
+		Optional<CheckSumService> optionalCheckSumService = Optional.of(checkSumService);
+
+		artifactMessageHandler = new ArtifactMessageHandler(selfDescriptionService, threadService,
+				optionalCheckSumService, dataLakeDirectory, verifyCheckSum, contractNegotiationDemo, encodePayload);
 		ReflectionTestUtils.setField(artifactMessageHandler, "issuerConnector", issuerConnector);
 		message = UtilMessageService.getArtifactRequestMessage();
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();

@@ -38,7 +38,7 @@ public class FTPClient {
 	@Value("${application.dataLakeDirectory}")
 	String dataLakeDirectory;
 
-	@Value("${application.sftp.username}")
+	@Value("${application.sftp.connectorId}")
 	private String username;
 
 	@Value("${application.sftp.host}")

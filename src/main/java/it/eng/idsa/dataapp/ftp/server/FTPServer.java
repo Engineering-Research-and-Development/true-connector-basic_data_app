@@ -59,7 +59,7 @@ public class FTPServer {
 			@Override
 			public boolean authenticate(String username, PublicKey key, ServerSession session)
 					throws AsyncAuthException {
-				logger.info("---------------------------------------------- {}, key {}", username, key);
+				logger.info("Authenticating client {}", username);
 				boolean comapred = KeyUtils.compareKeys(key, keyStoreConfiguration.getPublicKey());
 
 				return comapred;

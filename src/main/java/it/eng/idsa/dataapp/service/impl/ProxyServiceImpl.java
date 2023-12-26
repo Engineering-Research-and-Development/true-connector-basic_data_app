@@ -619,22 +619,26 @@ public class ProxyServiceImpl implements ProxyService {
 
 			try {
 				if (ftpClient.downloadArtifact(requestedArtifact)) {
-					String downloadedChecksum = checkSumService.get().calculateCheckSumToString(requestedArtifact,
-							requestMessage);
-					if (StringUtils.equals(payloadCheckSum, downloadedChecksum)) {
-						logger.info("File downloaded and saved");
-					} else {
-						logger.error("Downloaded file corrupted, deleteing it...");
-						String requestedArttifactName = dataLakeDirectory + FileSystems.getDefault().getSeparator()
-								+ requestedArtifact;
-						File corruptedFile = new File(requestedArttifactName);
-						if (corruptedFile.delete()) {
-							logger.info("File deleted successfully.");
-							requestedArtifact = null;
+					if (verifyCheckSum) {
+						String downloadedChecksum = checkSumService.get().calculateCheckSumToString(requestedArtifact,
+								requestMessage);
+						if (StringUtils.equals(payloadCheckSum, downloadedChecksum)) {
+							logger.info("File downloaded and saved");
 						} else {
-							logger.error("Failed to delete the file.");
-							requestedArtifact = null;
+							logger.error("Downloaded file corrupted, deleteing it...");
+							String requestedArttifactName = dataLakeDirectory + FileSystems.getDefault().getSeparator()
+									+ requestedArtifact;
+							File corruptedFile = new File(requestedArttifactName);
+							if (corruptedFile.delete()) {
+								logger.info("File deleted successfully.");
+								requestedArtifact = null;
+							} else {
+								logger.error("Failed to delete the file.");
+								requestedArtifact = null;
+							}
 						}
+					} else {
+						logger.info("File downloaded and saved");
 					}
 				}
 			} catch (Exception e) {
@@ -646,8 +650,8 @@ public class ProxyServiceImpl implements ProxyService {
 			logger.info("Did not have ArtifactRequestMessage and ResponseMessage - nothing to save");
 			requestedArtifact = null;
 		}
-		return requestedArtifact;
 
+		return requestedArtifact;
 	}
 
 	@Override
@@ -860,7 +864,7 @@ public class ProxyServiceImpl implements ProxyService {
 	private boolean isSftp(Object payload) {
 		logger.info("Checking the type of WSS flow...");
 
-		if (payload == null || payload.toString().trim().isEmpty()) {
+		if (payload == null || ObjectUtils.isEmpty(payload)) {
 			logger.info("Payload is empty, saving file directly from payload...");
 			return false;
 		} else {
@@ -902,6 +906,5 @@ public class ProxyServiceImpl implements ProxyService {
 
 			throw new InternalRecipientException("Could not serialize payload");
 		}
-
 	}
 }

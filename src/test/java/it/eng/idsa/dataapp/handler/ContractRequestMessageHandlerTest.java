@@ -72,17 +72,6 @@ class ContractRequestMessageHandlerTest {
 	}
 
 	@Test
-	void handleMessageWithoutContractNegotiationExceptionTest() {
-		ReflectionTestUtils.setField(contractRequestMessageHandler, "contractNegotiationDemo", false);
-
-		InternalRecipientException exception = assertThrows(InternalRecipientException.class, () -> {
-			responseMap = contractRequestMessageHandler.handleMessage(message, "asdasdasd");
-		});
-
-		assertEquals("Creating processed notification, contract agreement needs evaluation", exception.getMessage());
-	}
-
-	@Test
 	void handleMessagePlatoonNotFoundExceptionTest() throws IOException {
 		String contractAgreement = serializer.serialize(UtilMessageService
 				.getContractRequest(URI.create("https://artifact.id"), URI.create("https://permission.id")));

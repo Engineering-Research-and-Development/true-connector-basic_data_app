@@ -11,6 +11,8 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -42,15 +44,18 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 	private Boolean encodePayload;
 	private SelfDescriptionService selfDescriptionService;
 	private ThreadService threadService;
-	private CheckSumService checkSumService;
+	private Optional<CheckSumService> checkSumService;
 	private Path dataLakeDirectory;
+	private Boolean verifyCheckSum;
 	private Boolean contractNegotiationDemo;
 	private JSONParser parser = new JSONParser();
 
 	private static final Logger logger = LoggerFactory.getLogger(ArtifactMessageHandler.class);
 
 	public ArtifactMessageHandler(SelfDescriptionService selfDescriptionService, ThreadService threadService,
-			CheckSumService checkSumService, @Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
+			Optional<CheckSumService> checkSumService,
+			@Value("${application.dataLakeDirectory}") Path dataLakeDirectory,
+			@Value("${application.verifyCheckSum}") Boolean verifyCheckSum,
 			@Value("${application.contract.negotiation.demo}") Boolean contractNegotiationDemo,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload) {
 		this.selfDescriptionService = selfDescriptionService;
@@ -59,6 +64,7 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 		this.dataLakeDirectory = dataLakeDirectory;
 		this.contractNegotiationDemo = contractNegotiationDemo;
 		this.encodePayload = encodePayload;
+		this.verifyCheckSum = verifyCheckSum;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -77,10 +83,14 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 				logger.debug("Handling message with requestedElement:" + arm.getRequestedArtifact() + " in WSS flow");
 				if (isSftp(payload)) {
 					JSONObject jsonObject = new JSONObject();
-					jsonObject.put("checkSum", handleWssFlowWithSftp(message));
-					jsonObject.put("sftp", "true");
-					payload = jsonObject;
-//					payload = handleWssFlowWithSftp(message);
+					if (verifyCheckSum) {
+						jsonObject.put("checkSum", handleWssFlowWithSftp(message));
+						jsonObject.put("sftp", "true");
+						payload = jsonObject;
+					} else {
+						jsonObject.put("sftp", "true");
+						payload = jsonObject;
+					}
 				} else {
 					payload = handleWssFlow(message);
 				}
@@ -108,13 +118,26 @@ public class ArtifactMessageHandler extends DataAppMessageHandler {
 	private String handleWssFlowWithSftp(Message message) {
 		String reqArtifact = ((ArtifactRequestMessage) message).getRequestedArtifact().getPath();
 		String requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
+		AtomicReference<String> checkSum = new AtomicReference<>();
+
 		if (contractNegotiationDemo) {
-			logger.info("WSS Demo, reading directly from data lake");
-			return checkSumService.calculateCheckSumToString(requestedArtifact, message);
+			logger.info("WSS Demo with SFTP, reading directly from data lake");
+
+			checkSumService.ifPresent(service -> {
+				checkSum.set(service.calculateCheckSumToString(requestedArtifact, message));
+			});
+
+			return checkSum.get();
 		} else {
 			if (selfDescriptionService.artifactRequestedElementExist((ArtifactRequestMessage) message,
 					selfDescriptionService.getSelfDescription(message))) {
-				return checkSumService.calculateCheckSumToString(requestedArtifact, message);
+
+				checkSumService.ifPresent(service -> {
+					checkSum.set(service.calculateCheckSumToString(requestedArtifact, message));
+				});
+
+				return checkSum.get();
+
 			} else {
 				logger.error("Artifact requestedElement not exist in self description");
 
