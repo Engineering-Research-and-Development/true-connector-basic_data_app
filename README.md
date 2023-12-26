@@ -118,7 +118,6 @@ Basic DataApp is build using Java11, and use following libraries:
 | sshd-core | 2.11.0 |
 | sshd-sftp | 2.11.0 |
 | sshd-scp | 2.11.0 |
-| sshd-cli | 2.11.0 |
 | mina-core | 2.2.3 |
 
 
