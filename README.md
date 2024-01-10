@@ -476,7 +476,7 @@ If the size of files for transfer are larger than 30Mb, please also modify the n
 #SFTP settings
 application.sftp.host=localhost
 application.sftp.port=2222
-application.sftp.username=test
+application.sftp.connectorId=test
 application.sftp.defaultTimeoutSeconds=100
 ```
 
