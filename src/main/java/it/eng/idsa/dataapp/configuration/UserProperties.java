@@ -3,6 +3,9 @@ package it.eng.idsa.dataapp.configuration;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Component;
 @Component
 @PropertySource("classpath:users.properties")
 public class UserProperties {
+
+	private static final Logger logger = LoggerFactory.getLogger(UserProperties.class);
 
 	private final Map<String, String> userCredentials = new HashMap<String, String>();
 
@@ -19,8 +24,15 @@ public class UserProperties {
 			for (String user : usersList.split(",")) {
 				String username = user.trim();
 				String password = env.getProperty(username + ".password");
-				userCredentials.put(username, password);
+				if (StringUtils.isEmpty(password)) {
+					logger.error("Password for user: " + user + " is blank, user didn't loaded!");
+				} else {
+					userCredentials.put(username, password);
+				}
 			}
+		} else {
+			logger.error("User.properties file empty, please create users!");
+			throw new RuntimeException("User.properties file empty, please create users!");
 		}
 	}
 
