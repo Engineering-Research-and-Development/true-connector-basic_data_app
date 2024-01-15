@@ -1,10 +1,9 @@
 package it.eng.idsa.dataapp.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,24 +14,28 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
-@PropertySource("classpath:users.properties")
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-	@Autowired
-	private Environment env;
+	private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
+	private final UserProperties userProperties;
+
+	public SecurityConfig(UserProperties userProperties) {
+		this.userProperties = userProperties;
+	}
 
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		String usersList = env.getProperty("users.list");
-		if (usersList != null && !usersList.isEmpty()) {
-			String[] users = usersList.split(",");
-			for (String user : users) {
-				String password = env.getProperty(user.trim() + ".password");
-				if (password != null) {
-					auth.inMemoryAuthentication().withUser(user.trim()).password(password).roles("PROXY");
+		userProperties.getUserCredentials().keySet().forEach(user -> {
+			String password = userProperties.getPasswordForUser(user);
+			if (password != null) {
+				try {
+					auth.inMemoryAuthentication().withUser(user).password(password).roles("PROXY");
+				} catch (Exception e) {
+					logger.error("Error configuring authentication for user " + user, e.getMessage());
 				}
 			}
-		}
+		});
 	}
 
 	@Override
