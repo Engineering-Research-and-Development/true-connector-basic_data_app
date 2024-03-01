@@ -1,5 +1,7 @@
 package it.eng.idsa.dataapp.service;
 
+import de.fraunhofer.iais.eis.Message;
+
 public interface CheckSumService {
 
 	void addCheckSum(String targetArtifact, Long value);
@@ -10,4 +12,5 @@ public interface CheckSumService {
 
 	Long calculateCheckSum(byte[] bytes);
 
+	String calculateCheckSumToString(String requestedArtifact, Message message);
 }

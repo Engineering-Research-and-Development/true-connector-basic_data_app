@@ -102,11 +102,9 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 			} catch (IOException e) {
 				logger.error("Error while creating message", e);
 
-				throw new InternalRecipientException("Error while creating message", message);
+				throw new InternalRecipientException(
+						"Creating processed notification, contract agreement needs evaluation", message);
 			}
-
-			throw new InternalRecipientException("Creating processed notification, contract agreement needs evaluation",
-					message);
 		}
 		contractRequestResponseMessage = createContractAgreementMessage(crm);
 
@@ -180,8 +178,9 @@ public class ContractRequestMessageHandler extends DataAppMessageHandler {
 	private Message createContractAgreementMessage(ContractRequestMessage header) {
 		return new ContractAgreementMessageBuilder()._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._transferContract_(header.getTransferContract())
-				._correlationMessage_(header != null ? header.getId() : whoIAm())._issued_(DateUtil.normalizedDateTime())
-				._issuerConnector_(whoIAmEngRDProvider())._senderAgent_(whoIAmEngRDProvider())
+				._correlationMessage_(header != null ? header.getId() : whoIAm())
+				._issued_(DateUtil.normalizedDateTime())._issuerConnector_(whoIAmEngRDProvider())
+				._senderAgent_(whoIAmEngRDProvider())
 				._recipientConnector_(Util.asList(header != null ? header.getIssuerConnector() : whoIAm()))
 				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
 				.build();

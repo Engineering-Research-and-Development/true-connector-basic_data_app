@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,6 +35,7 @@ import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.RejectionReason;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
+import it.eng.idsa.dataapp.ftp.client.FTPClient;
 import it.eng.idsa.dataapp.repository.CheckSumRepository;
 import it.eng.idsa.dataapp.service.impl.CheckSumServiceImpl;
 import it.eng.idsa.dataapp.service.impl.ProxyServiceImpl;
@@ -77,7 +80,13 @@ public class ProxyServiceTest {
 	@Mock
 	private CheckSumRepository checkSumRepository;
 
-	private Optional<CheckSumService> checkSumService = Optional.of(new CheckSumServiceImpl(checkSumRepository));
+	@Mock
+	private FTPClient ftpClient;
+
+	private Path dataLakeDirectoryPath = Paths.get("src/test/resources");
+
+	private Optional<CheckSumService> checkSumService = Optional
+			.of(new CheckSumServiceImpl(checkSumRepository, dataLakeDirectoryPath));
 
 	@BeforeEach
 	public void init() {
@@ -86,7 +95,8 @@ public class ProxyServiceTest {
 		encodePayload = false;
 		extractPayloadFromResponse = false;
 		service = new ProxyServiceImpl(restTemplateBuilder, eccProperties, recreateFileService, checkSumService,
-				dataLakeDirectory, issuerConnector, encodePayload, extractPayloadFromResponse, selfDescriptionValidator);
+				dataLakeDirectory, issuerConnector, encodePayload, extractPayloadFromResponse, selfDescriptionValidator,
+				ftpClient);
 		messageType = ArtifactRequestMessage.class.getSimpleName();
 		when(eccProperties.getProtocol()).thenReturn("https");
 		when(eccProperties.getHost()).thenReturn("test.host");

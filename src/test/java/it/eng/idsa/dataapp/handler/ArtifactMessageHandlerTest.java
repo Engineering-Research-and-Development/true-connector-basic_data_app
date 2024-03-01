@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import de.fraunhofer.iais.eis.ArtifactRequestMessage;
 import de.fraunhofer.iais.eis.Connector;
 import de.fraunhofer.iais.eis.Message;
+import it.eng.idsa.dataapp.service.CheckSumService;
 import it.eng.idsa.dataapp.service.SelfDescriptionService;
 import it.eng.idsa.dataapp.service.ThreadService;
 import it.eng.idsa.dataapp.web.rest.exceptions.BadParametersException;
@@ -37,6 +39,8 @@ class ArtifactMessageHandlerTest {
 	private SelfDescriptionService selfDescriptionService;
 	@Mock
 	private ThreadService threadService;
+	@Mock
+	private CheckSumService checkSumService;
 	private Message message;
 	Map<String, Object> responseMap = new HashMap<>();
 	private String issuerConnector = "http://w3id.org/engrd/connector/";
@@ -45,13 +49,16 @@ class ArtifactMessageHandlerTest {
 	static final String PAYLOAD = "asdsad";
 	private Boolean contractNegotiationDemo = false;
 	private Path dataLakeDirectory = Path.of("src/test/resources/dataFiles");
+	private Boolean verifyCheckSum = false;
 
 	@BeforeEach
 	public void init() {
 
 		MockitoAnnotations.openMocks(this);
-		artifactMessageHandler = new ArtifactMessageHandler(selfDescriptionService, threadService, dataLakeDirectory,
-				contractNegotiationDemo, encodePayload);
+		Optional<CheckSumService> optionalCheckSumService = Optional.of(checkSumService);
+
+		artifactMessageHandler = new ArtifactMessageHandler(selfDescriptionService, threadService,
+				optionalCheckSumService, dataLakeDirectory, verifyCheckSum, contractNegotiationDemo, encodePayload);
 		ReflectionTestUtils.setField(artifactMessageHandler, "issuerConnector", issuerConnector);
 		message = UtilMessageService.getArtifactRequestMessage();
 		baseConnector = SelfDescriptionUtil.createDefaultSelfDescription();
@@ -75,7 +82,7 @@ class ArtifactMessageHandlerTest {
 
 		when(threadService.getThreadLocalValue("wss")).thenReturn(true);
 		
-		responseMap = artifactMessageHandler.handleMessage(message, PAYLOAD);
+		responseMap = artifactMessageHandler.handleMessage(message, "");
 
 		assertNotNull(responseMap.get("header"));
 		assertNotNull(responseMap.get("payload"));
@@ -89,7 +96,7 @@ class ArtifactMessageHandlerTest {
 
 		when(threadService.getThreadLocalValue("wss")).thenReturn(true);
 
-		responseMap = artifactMessageHandler.handleMessage(message, PAYLOAD);
+		responseMap = artifactMessageHandler.handleMessage(message, "");
 
 		assertNotNull(responseMap.get("header"));
 		assertNotNull(responseMap.get("payload"));
@@ -183,7 +190,7 @@ class ArtifactMessageHandlerTest {
 				selfDescriptionService.getSelfDescription(message))).thenReturn(false);
 
 		NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-			responseMap = artifactMessageHandler.handleMessage(message, PAYLOAD);
+			responseMap = artifactMessageHandler.handleMessage(message, "");
 		});
 		assertEquals("Artifact requestedElement not found in self description", exception.getMessage());
 	}
@@ -196,7 +203,7 @@ class ArtifactMessageHandlerTest {
 		when(threadService.getThreadLocalValue("wss")).thenReturn(true);
 
 		NotFoundException exception = assertThrows(NotFoundException.class, () -> {
-			responseMap = artifactMessageHandler.handleMessage(arm, PAYLOAD);
+			responseMap = artifactMessageHandler.handleMessage(arm, "");
 		});
 		assertEquals("Could't read the file from datalake", exception.getMessage());
 	}

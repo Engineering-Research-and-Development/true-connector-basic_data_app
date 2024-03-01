@@ -29,7 +29,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -50,7 +49,6 @@ import de.fraunhofer.iais.eis.DescriptionRequestMessage;
 import de.fraunhofer.iais.eis.DescriptionRequestMessageBuilder;
 import de.fraunhofer.iais.eis.DescriptionResponseMessage;
 import de.fraunhofer.iais.eis.Message;
-import de.fraunhofer.iais.eis.MessageProcessedNotificationMessage;
 import de.fraunhofer.iais.eis.QueryMessage;
 import de.fraunhofer.iais.eis.RejectionMessage;
 import de.fraunhofer.iais.eis.RejectionReason;
@@ -61,11 +59,13 @@ import de.fraunhofer.iais.eis.ids.jsonld.Serializer;
 import de.fraunhofer.iais.eis.util.Util;
 import it.eng.idsa.dataapp.configuration.ECCProperties;
 import it.eng.idsa.dataapp.domain.ProxyRequest;
+import it.eng.idsa.dataapp.ftp.client.FTPClient;
 import it.eng.idsa.dataapp.service.CheckSumService;
 import it.eng.idsa.dataapp.service.ProxyService;
 import it.eng.idsa.dataapp.service.RecreateFileService;
 import it.eng.idsa.dataapp.util.MessageUtil;
 import it.eng.idsa.dataapp.util.RejectionUtil;
+import it.eng.idsa.dataapp.web.rest.exceptions.InternalRecipientException;
 import it.eng.idsa.multipart.builder.MultipartMessageBuilder;
 import it.eng.idsa.multipart.domain.MultipartMessage;
 import it.eng.idsa.multipart.processor.MultipartMessageProcessor;
@@ -99,6 +99,8 @@ public class ProxyServiceImpl implements ProxyService {
 	private Boolean extractPayloadFromResponse;
 	private Optional<CheckSumService> checkSumService;
 	private SelfDescriptionValidator selfDescriptionValidator;
+	private FTPClient ftpClient;
+	private JSONParser parser = new JSONParser();
 
 	/**
 	 * 
@@ -114,7 +116,7 @@ public class ProxyServiceImpl implements ProxyService {
 	 * @param issuerConnector            issuer connector Id
 	 * @param encodePayload              encode payload
 	 * @param extractPayloadFromResponse extract payload from multipart
-	 * @param selfDescriptionValidator payloadHandler
+	 * @param selfDescriptionValidator   payloadHandler
 	 */
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder, ECCProperties eccProperties,
 			RecreateFileService recreateFileService, Optional<CheckSumService> checkSumService,
@@ -122,7 +124,7 @@ public class ProxyServiceImpl implements ProxyService {
 			@Value("${application.ecc.issuer.connector}") String issuerConnector,
 			@Value("#{new Boolean('${application.encodePayload:false}')}") Boolean encodePayload,
 			@Value("#{new Boolean('${application.extractPayloadFromResponse:false}')}") Boolean extractPayloadFromResponse,
-			SelfDescriptionValidator selfDescriptionValidator) {
+			SelfDescriptionValidator selfDescriptionValidator, FTPClient ftpClient) {
 		this.restTemplate = restTemplateBuilder.build();
 		this.eccProperties = eccProperties;
 		this.recreateFileService = recreateFileService;
@@ -132,11 +134,11 @@ public class ProxyServiceImpl implements ProxyService {
 		this.encodePayload = encodePayload;
 		this.extractPayloadFromResponse = extractPayloadFromResponse;
 		this.selfDescriptionValidator = selfDescriptionValidator;
+		this.ftpClient = ftpClient;
 	}
 
 	@Override
 	public ProxyRequest parseIncommingProxyRequest(String body) {
-		JSONParser parser = new JSONParser();
 		JSONObject jsonObject;
 		try {
 			jsonObject = (JSONObject) parser.parse(body);
@@ -456,10 +458,10 @@ public class ProxyServiceImpl implements ProxyService {
 					.get(0).substring(resp.getHeaders().get("IDS-RejectionReason").get(0).lastIndexOf("/") + 1)));
 		}
 
-		if(resp.getHeaders().size() != 0 && StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0))
+		if (resp.getHeaders().size() != 0 && StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0))
 				&& "ids:DescriptionMessageResponse".equals(resp.getHeaders().get("IDS-Messagetype").get(0))) {
 			boolean selfDescriptionValid = selfDescriptionValidator.validateSelfDescription(resp.getBody());
-			if(!selfDescriptionValid) {
+			if (!selfDescriptionValid) {
 				return new ResponseEntity<String>("Invalid self description received - check logs for more details",
 						HttpStatus.BAD_REQUEST);
 			}
@@ -604,6 +606,53 @@ public class ProxyServiceImpl implements ProxyService {
 		return requestedArtifact;
 	}
 
+	private String downloadAndSaveFile(String responseMessage, Message requestMessage) throws IOException {
+		MultipartMessage response = MultipartMessageProcessor.parseMultipartMessage(responseMessage);
+		Message responseMsg = response.getHeaderContent();
+		String requestedArtifact = null;
+		if (requestMessage instanceof ArtifactRequestMessage && responseMsg instanceof ArtifactResponseMessage) {
+			String payload = response.getPayloadContent();
+			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
+			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
+
+			try {
+				if (ftpClient.downloadArtifact(requestedArtifact)) {
+					if (verifyCheckSum) {
+						String payloadCheckSum = getChecksum(payload);
+						String downloadedChecksum = checkSumService.get().calculateCheckSumToString(requestedArtifact,
+								requestMessage);
+						if (StringUtils.equals(payloadCheckSum, downloadedChecksum)) {
+							logger.info("File downloaded and saved");
+						} else {
+							logger.error("Downloaded file corrupted, deleteing it...");
+							String requestedArttifactName = dataLakeDirectory + FileSystems.getDefault().getSeparator()
+									+ requestedArtifact;
+							File corruptedFile = new File(requestedArttifactName);
+							if (corruptedFile.delete()) {
+								logger.info("File deleted successfully.");
+								requestedArtifact = null;
+							} else {
+								logger.error("Failed to delete the file.");
+								requestedArtifact = null;
+							}
+						}
+					} else {
+						logger.info("File downloaded and saved");
+					}
+				}
+			} catch (Exception e) {
+				logger.error("Error while processing request {}", e);
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+						"Error while processing request, check logs for more details", e);
+			}
+		} else {
+			logger.info("Did not have ArtifactRequestMessage and ResponseMessage - nothing to save");
+			requestedArtifact = null;
+		}
+
+		return requestedArtifact;
+	}
+
 	@Override
 	public ResponseEntity<String> proxyWSSRequest(ProxyRequest proxyRequest) throws IOException {
 		String forwardToInternal = proxyRequest.getForwardToInternal();
@@ -630,7 +679,12 @@ public class ProxyServiceImpl implements ProxyService {
 
 		if (mm.getHeaderContent() instanceof ArtifactResponseMessage) {
 			try {
-				String fileNameSaved = saveFileToDisk(responseMessage, requestMessage);
+				String fileNameSaved;
+				if (isSftp(proxyRequest.getPayload())) {
+					fileNameSaved = downloadAndSaveFile(responseMessage, requestMessage);
+				} else {
+					fileNameSaved = saveFileToDisk(responseMessage, requestMessage);
+				}
 				if (fileNameSaved != null) {
 					return ResponseEntity.ok("{​​\"message\":\"File '" + fileNameSaved + "' created successfully\"}");
 				}
@@ -761,10 +815,11 @@ public class ProxyServiceImpl implements ProxyService {
 				}
 			}
 		}
-		
-		if(mm.getHeaderContent() instanceof DescriptionResponseMessage && ObjectUtils.isEmpty(proxyRequest.getRequestedElement())) {
+
+		if (mm.getHeaderContent() instanceof DescriptionResponseMessage
+				&& ObjectUtils.isEmpty(proxyRequest.getRequestedElement())) {
 			boolean selfDescriptionValid = selfDescriptionValidator.validateSelfDescription(mm.getPayloadContent());
-			if(!selfDescriptionValid) {
+			if (!selfDescriptionValid) {
 				return new ResponseEntity<String>("Invalid self description received - check logs for more details",
 						HttpStatus.BAD_REQUEST);
 			}
@@ -805,32 +860,50 @@ public class ProxyServiceImpl implements ProxyService {
 		return checkSumService.map(service -> service.calculateCheckSum(responsePayload.getBytes())).orElse(null);
 	}
 
-	private ResponseEntity<String> handleWssResponse(MultipartMessage mm) {
+	private boolean isSftp(Object payload) {
+		logger.info("Checking the type of WSS flow...");
 
-		ResponseEntity<String> resp = new ResponseEntity<>(HttpStatus.OK);
-		if (mm.getHeaderContent() instanceof RejectionMessage) {
-			if (((RejectionMessage) mm.getHeaderContent()).getRejectionReason() == null) {
-				return new ResponseEntity<String>("Error while processing message", HttpStatus.BAD_REQUEST);
+		if (payload == null || ObjectUtils.isEmpty(payload)) {
+			logger.info("Payload is empty, saving file directly from payload...");
+			return false;
+		} else {
+			String payloadString = payload.toString();
+			try {
+				JSONObject jsonObject = (JSONObject) parser.parse(payloadString);
+
+				if (jsonObject.containsKey("sftp") && (Boolean) jsonObject.get("sftp")) {
+					logger.info("Proceeding with downloading through SFTP...");
+					return true;
+				} else {
+					logger.error(
+							"Either 'sftp' is not present, or its value is not true, trying to save file directly from payload...");
+					return false;
+				}
+			} catch (ParseException e) {
+				logger.error("Could not serialize payload.", e);
+
+				throw new InternalRecipientException("Could not serialize payload");
 			}
-			return RejectionUtil.HANDLE_REJECTION(((RejectionMessage) mm.getHeaderContent()).getRejectionReason());
 		}
+	}
 
-		if (extractPayloadFromResponse) {
-			MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+	private String getChecksum(Object payload) {
+		String payloadString = payload.toString();
+		JSONObject jsonObject;
+		try {
+			jsonObject = (JSONObject) parser.parse(payloadString);
+			if (jsonObject.containsKey("checkSum")) {
+				logger.info("Extracting checkSum from payload...");
 
-			headers.putAll(resp.getHeaders());
-			// replacing Content Type and Length headers from original message with the ones
-			// from payload part
-			headers.set(HTTP.CONTENT_TYPE, mm.getPayloadHeader().get(HTTP.CONTENT_TYPE));
-			headers.set(HTTP.CONTENT_LEN, mm.getPayloadHeader().get(HTTP.CONTENT_LEN));
-			headers.remove(HTTP.TRANSFER_ENCODING);
-
-			if (mm.getHeaderContent() instanceof MessageProcessedNotificationMessage) {
-				return new ResponseEntity<String>("MessageProcessedNotificationMessage", headers, HttpStatus.OK);
+				return jsonObject.get("checkSum").toString();
+			} else {
+				logger.error("Payload doesn't contain checkSum");
+				return null;
 			}
+		} catch (ParseException e) {
+			logger.error("Could not serialize payload.", e);
 
-			return new ResponseEntity<String>(mm.getPayloadContent(), headers, HttpStatus.OK);
+			throw new InternalRecipientException("Could not serialize payload");
 		}
-		return resp;
 	}
 }
