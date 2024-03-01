@@ -612,14 +612,13 @@ public class ProxyServiceImpl implements ProxyService {
 		String requestedArtifact = null;
 		if (requestMessage instanceof ArtifactRequestMessage && responseMsg instanceof ArtifactResponseMessage) {
 			String payload = response.getPayloadContent();
-			String payloadCheckSum = getChecksum(payload);
-
 			String reqArtifact = ((ArtifactRequestMessage) requestMessage).getRequestedArtifact().getPath();
 			requestedArtifact = reqArtifact.substring(reqArtifact.lastIndexOf('/') + 1);
 
 			try {
 				if (ftpClient.downloadArtifact(requestedArtifact)) {
 					if (verifyCheckSum) {
+						String payloadCheckSum = getChecksum(payload);
 						String downloadedChecksum = checkSumService.get().calculateCheckSumToString(requestedArtifact,
 								requestMessage);
 						if (StringUtils.equals(payloadCheckSum, downloadedChecksum)) {
