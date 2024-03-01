@@ -4,9 +4,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.cert.Certificate;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -27,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import it.eng.idsa.dataapp.configuration.KeyStoreConfiguration;
+import it.eng.idsa.dataapp.configuration.TLSProvider;
 
 @Service
 public class FTPServer {
@@ -37,7 +41,7 @@ public class FTPServer {
 	private int port;
 
 	@Autowired
-	private KeyStoreConfiguration keyStoreConfiguration;
+	private TLSProvider keyStoreConfiguration;
 
 	@Value("${application.dataLakeDirectory}")
 	String dataLakeDirectory;
@@ -59,12 +63,29 @@ public class FTPServer {
 			@Override
 			public boolean authenticate(String username, PublicKey key, ServerSession session)
 					throws AsyncAuthException {
-				logger.info("Authenticating client {}", username);
-				boolean comapred = KeyUtils.compareKeys(key, keyStoreConfiguration.getPublicKey());
+				boolean isAuthenticated = false;
+				try {
+					List<String> aliasesList = Collections.list(keyStoreConfiguration.getTruststoreAliases());
+					Iterator<String> aliases = aliasesList.iterator();
 
-				return comapred;
+					while (aliases.hasNext() && !isAuthenticated) {
+						String alias = aliases.next();
+						Certificate cert = keyStoreConfiguration.getTrustManagerKeyStore().getCertificate(alias);
+						if (cert != null) {
+							PublicKey publicKeyFromStore = cert.getPublicKey();
+							isAuthenticated = KeyUtils.compareKeys(key, publicKeyFromStore);
+						} else {
+							logger.warn("No certificate found for alias: " + alias);
+						}
+					}
+				} catch (KeyStoreException e) {
+					logger.error("Problem with Truststore: ", e);
+				}
+
+				return isAuthenticated;
 			}
 		});
+
 		sshd.setKeyboardInteractiveAuthenticator(KeyboardInteractiveAuthenticator.NONE);
 		SftpSubsystemFactory factory = new SftpSubsystemFactory.Builder().build();
 		sshd.setSubsystemFactories(Collections.singletonList(factory));
@@ -73,7 +94,7 @@ public class FTPServer {
 		sshd.setFileSystemFactory(new VirtualFileSystemFactory(Paths.get(dataLakeDirectory)));
 
 		sshd.start();
-		logger.info("SFTP server started");
+		logger.info("SFTP server started on port: " + port);
 	}
 
 	private KeyPair loadKeyPair() {
