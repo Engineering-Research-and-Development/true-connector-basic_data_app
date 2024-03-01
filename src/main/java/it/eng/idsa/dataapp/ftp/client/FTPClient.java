@@ -10,9 +10,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.keyverifier.RequiredServerKeyVerifier;
 import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.common.SshException;
 import org.apache.sshd.common.keyprovider.KeyIdentityProvider;
 import org.apache.sshd.scp.client.DefaultScpClientCreator;
 import org.apache.sshd.scp.client.ScpClient;
+import org.apache.sshd.scp.common.ScpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import it.eng.idsa.dataapp.configuration.KeyStoreConfiguration;
+import it.eng.idsa.dataapp.configuration.TLSProvider;
+import it.eng.idsa.dataapp.web.rest.exceptions.CertificateMissingException;
 
 @Service
 public class FTPClient {
@@ -47,7 +50,7 @@ public class FTPClient {
 	private long defaultTimeoutSeconds;
 
 	@Autowired
-	private KeyStoreConfiguration keyStoreConfiguration;
+	private TLSProvider keyStoreConfiguration;
 
 	private KeyPair loadKeyPair() {
 		logger.info("Creating keypair on FTP Client side");
@@ -75,8 +78,15 @@ public class FTPClient {
 					ByteArrayOutputStream errorResponseStream = new ByteArrayOutputStream()) {
 
 				ScpClient scpClient = DefaultScpClientCreator.INSTANCE.createScpClient(session);
-				scpClient.download(artifact, "/home/mare/wss_test", ScpClient.Option.PreserveAttributes,
-						ScpClient.Option.TargetIsDirectory);
+				try {
+					scpClient.download(artifact, dataLakeDirectory, ScpClient.Option.PreserveAttributes,
+							ScpClient.Option.TargetIsDirectory);
+					logger.info("Connecting to SFTP server: " + host + port + "...");
+				} catch (ScpException e) {
+					logger.error("SCP download failed: ", e);
+					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+							"Error while downloading the file, check logs for more details" + e);
+				}
 
 				String errorString = new String(errorResponseStream.toByteArray(), StandardCharsets.UTF_8);
 				if (!errorString.isEmpty()) {
@@ -84,11 +94,20 @@ public class FTPClient {
 					throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 							"Error while processing request, check logs for more details" + errorString);
 				}
+				logger.info("Artifact: " + artifact + " fetched from SFTP server: " + host + port);
 				return true;
+			}
+		} catch (SshException e) {
+			if (e.getMessage().contains("No more authentication methods available")) {
+				logger.error("Client certificate not present in TrustStore.", e);
+				throw new CertificateMissingException("Client certificate not present in TrustStore.");
+			} else {
+				logger.error("SSH error occurred: ", e);
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error in downloadArtifact.");
 			}
 		} catch (Exception e) {
 			logger.error("Error in downloadArtifact: ", e);
-			throw e;
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error in downloadArtifact.");
 		} finally {
 			if (client != null) {
 				client.stop();

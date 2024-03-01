@@ -35,7 +35,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.test.context.TestPropertySource;
 
-import it.eng.idsa.dataapp.configuration.KeyStoreConfiguration;
+import it.eng.idsa.dataapp.configuration.TLSProvider;
 
 @TestPropertySource(locations = "classpath:application.properties") // or the path to your specific properties file
 
@@ -48,7 +48,7 @@ public class FTPClientTest {
 	long defaultTimeoutSeconds = 100l;
 
 	@Mock
-	private KeyStoreConfiguration keyStoreConfigurationMock;
+	private TLSProvider keyStoreConfigurationMock;
 
 	@InjectMocks
 	private FTPClient ftpClient;
