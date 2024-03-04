@@ -145,15 +145,22 @@ X-Frame-Options: SAMEORIGIN
 
 Whole communication is done through TLS mode only, so all endpoint in DataApp are secure.
 Since /proxy endpoint is exposed to the outside world, on separate port (default 8183) there is security requirement, so that only users with credentials can initiate request. Simple in memory user storage solution is implemented to address this requirement.
-Currently username value is fixed, and it is: **idsUser**.
-For configuring password, please take a look at following property:
+
+In the users.properties all user credentials are stored.
 
 ```
-# encoded 'password'
-application.security.password=$2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUubrqdGTFCH3m
+# List of users
+users.list=idsUser,user2,user3
+
+# Credentials for each user
+idsUser.password=$2a$10$MQ5grDaIqDpBjMlG78PFduv.AMRe9cs0CNm/V4cgUubrqdGTFCH3m
+user2.password=$ENCODED_PASSWORD2
+user3.password=$ENCODED_PASSWORD3
 ```
 
-If you want to change password, please use endpoint provided in Execution Core Container project.
+
+In the example, the property user.list is a list with each item separated by a comma (,) without space. You need to enter all the users you want and then give each one a specific password, which must be BCrypt encoded, you can use the next [link](https://bcrypt-generator.com/) to get encoded value.
+
 
 ## Firewall <a name="firewall"></a>
 

@@ -1,12 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.3.8] - 2023-12-26
+## [0.3.8] - 2024-01-15
 
 ### Added
 
- - Support for transferring files larger than 50Mb using SFTP in WSS flow
- 
+ - Simple user management
 
 ## [0.3.7] - 2023-11-16
 
