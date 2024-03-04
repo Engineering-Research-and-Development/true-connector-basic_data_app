@@ -115,6 +115,12 @@ Basic DataApp is build using Java11, and use following libraries:
 | com.googlecode.json-simple | 1.1.1 |
 | com.googlecode.gson | 2.8.6 |
 | org.jacoco | 0.8.8 |
+| sshd-core | 2.11.0 |
+| sshd-sftp | 2.11.0 |
+| sshd-scp | 2.11.0 |
+| mina-core | 2.2.3 |
+
+
 
 ---
 
@@ -465,7 +471,23 @@ To use WSS flow on the egde and between ECC, do the following:
 
 **Changes in DataApp**
 
-In config.properties file
+In `application.properties` file:
+
+```
+application.verifyCheckSum=true
+```
+If the size of files for transfer are larger than 30Mb, please also modify the next properties in `application.properties` file:
+
+
+```
+#SFTP settings
+application.sftp.host=localhost
+application.sftp.port=2222
+application.sftp.connectorId=test
+application.sftp.defaultTimeoutSeconds=100
+```
+
+In `config.properties` file
 
 ```
 server.ssl.key-store=/home/user/etc/ssl-server.jks
@@ -523,10 +545,18 @@ curl --location --request POST 'https://localhost:8183/proxy' \
     "Forward-To": "wss://localhost:8086",
     "Forward-To-Internal": "wss://localhost:8887",
     "messageType": "ArtifactRequestMessage",
-    "requestedArtifact" : "http://w3id.org/engrd/connector/artifact/test1.csv"
+    "requestedArtifact" : "http://w3id.org/engrd/connector/artifact/test1.csv",
+    "payload": ""
 }'
 ```
 
+If the files that you want to transfer are larger than 30Mb, please put next content as payload:
+
+```
+"payload": {
+        "sftp": true
+    }
+```
 ---
 
 
@@ -711,6 +741,9 @@ CheckSum verification can be configured in the following properties
 application.verifyCheckSum=true
 
 ```
+
+***IMPORTANT: *** CheckSum verification must be turned on in WSS flow.
+
 
 
 

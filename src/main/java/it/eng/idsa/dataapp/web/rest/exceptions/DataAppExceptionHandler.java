@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -48,6 +49,11 @@ public class DataAppExceptionHandler extends ResponseEntityExceptionHandler {
 		this.issuerConnector = issuerConnector;
 		this.httpConfig = httpConfig;
 		this.messageUtil = messageUtil;
+	}
+
+	@ExceptionHandler(CertificateMissingException.class)
+	protected ResponseEntity<String> handleCertificateMissingException(CertificateMissingException ex) {
+		return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
 	}
 
 	@ExceptionHandler(BadParametersException.class)
@@ -210,8 +216,8 @@ public class DataAppExceptionHandler extends ResponseEntityExceptionHandler {
 
 	private Message createErrorMessage(Message header, RejectionReason rejectionReason) {
 
-		return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())._issued_(DateUtil.normalizedDateTime())
-				._modelVersion_(UtilMessageService.MODEL_VERSION)
+		return new RejectionMessageBuilder()._issuerConnector_(whoIAmEngRDProvider())
+				._issued_(DateUtil.normalizedDateTime())._modelVersion_(UtilMessageService.MODEL_VERSION)
 				._recipientConnector_(header != null ? asList(header.getIssuerConnector()) : asList(whoIAm()))
 				._correlationMessage_(header != null ? header.getId() : whoIAm())._rejectionReason_(rejectionReason)
 				._securityToken_(UtilMessageService.getDynamicAttributeToken())._senderAgent_(whoIAmEngRDProvider())
