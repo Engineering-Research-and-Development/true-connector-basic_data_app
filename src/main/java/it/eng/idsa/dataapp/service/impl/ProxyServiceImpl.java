@@ -114,7 +114,7 @@ public class ProxyServiceImpl implements ProxyService {
 	 * @param issuerConnector            issuer connector Id
 	 * @param encodePayload              encode payload
 	 * @param extractPayloadFromResponse extract payload from multipart
-	 * @param selfDescriptionValidator payloadHandler
+	 * @param selfDescriptionValidator   payloadHandler
 	 */
 	public ProxyServiceImpl(RestTemplateBuilder restTemplateBuilder, ECCProperties eccProperties,
 			RecreateFileService recreateFileService, Optional<CheckSumService> checkSumService,
@@ -456,10 +456,10 @@ public class ProxyServiceImpl implements ProxyService {
 					.get(0).substring(resp.getHeaders().get("IDS-RejectionReason").get(0).lastIndexOf("/") + 1)));
 		}
 
-		if(resp.getHeaders().size() != 0 && StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0))
+		if (resp.getHeaders().size() != 0 && StringUtils.isNotBlank(resp.getHeaders().get("IDS-Messagetype").get(0))
 				&& "ids:DescriptionMessageResponse".equals(resp.getHeaders().get("IDS-Messagetype").get(0))) {
 			boolean selfDescriptionValid = selfDescriptionValidator.validateSelfDescription(resp.getBody());
-			if(!selfDescriptionValid) {
+			if (!selfDescriptionValid) {
 				return new ResponseEntity<String>("Invalid self description received - check logs for more details",
 						HttpStatus.BAD_REQUEST);
 			}
@@ -761,10 +761,11 @@ public class ProxyServiceImpl implements ProxyService {
 				}
 			}
 		}
-		
-		if(mm.getHeaderContent() instanceof DescriptionResponseMessage && ObjectUtils.isEmpty(proxyRequest.getRequestedElement())) {
+
+		if (mm.getHeaderContent() instanceof DescriptionResponseMessage
+				&& ObjectUtils.isEmpty(proxyRequest.getRequestedElement())) {
 			boolean selfDescriptionValid = selfDescriptionValidator.validateSelfDescription(mm.getPayloadContent());
-			if(!selfDescriptionValid) {
+			if (!selfDescriptionValid) {
 				return new ResponseEntity<String>("Invalid self description received - check logs for more details",
 						HttpStatus.BAD_REQUEST);
 			}
@@ -795,10 +796,21 @@ public class ProxyServiceImpl implements ProxyService {
 			}
 			httpHeaders.put(HTTP.CONTENT_TYPE, List.of(payloadContentType));
 			httpHeaders.put(HTTP.CONTENT_LEN, List.of(String.valueOf(responsePayload.length())));
-			return ResponseEntity.status(HttpStatus.OK).headers(httpHeaders).body(responsePayload);
+
+			return ResponseEntity.status(HttpStatus.OK).headers(filterCorsHeaders(httpHeaders)).body(responsePayload);
 		}
 
 		return resp;
+	}
+
+	private HttpHeaders filterCorsHeaders(HttpHeaders headers) {
+		if (headers.containsKey("Access-Control-Allow-Origin")) {
+			headers.remove("Access-Control-Allow-Origin");
+		}
+		if (headers.containsKey("Access-Control-Allow-Credentials")) {
+			headers.remove("Access-Control-Allow-Credentials");
+		}
+		return headers;
 	}
 
 	private Long calculatePayloadCheckSum(String responsePayload) {

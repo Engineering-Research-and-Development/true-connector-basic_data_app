@@ -11,6 +11,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -40,17 +43,31 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http
-				// HTTP Basic authentication
-				.httpBasic().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-				.authorizeRequests().antMatchers("/proxy").hasRole("PROXY").antMatchers("/about/**").permitAll()
-				.antMatchers("/error").permitAll().antMatchers("/data").permitAll()
-				.antMatchers("/incoming-data-app/routerBodyBinary").permitAll().and().csrf().disable().formLogin()
-				.disable().headers().xssProtection().and().contentTypeOptions().and().frameOptions().sameOrigin();
+		http.cors().and()
+		.csrf().disable().httpBasic().and()
+		.sessionManagement()
+		.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+		.authorizeRequests().antMatchers("/proxy")
+		.hasRole("PROXY").antMatchers("/about/**").permitAll().antMatchers("/error").permitAll()
+		.antMatchers("/data").permitAll().antMatchers("/incoming-data-app/routerBodyBinary").permitAll().and()
+		.formLogin().disable().headers().xssProtection().and().contentTypeOptions().and().frameOptions()
+		.sameOrigin();
 	}
 
 	@Bean
 	public PasswordEncoder encoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		final CorsConfiguration configuration = new CorsConfiguration();
+		configuration.addAllowedOrigin("*");
+		configuration.addAllowedMethod("*");
+		configuration.addAllowedHeader("*");
+
+		final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
 	}
 }
