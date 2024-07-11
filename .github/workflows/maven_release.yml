@@ -7,7 +7,7 @@ on:
         description: 'Release version  (ie 5.5.0)'
         required: true
       developmentVersion:
-        decription: 'Next development version, with SNAPSHOT'
+        description: 'Next development version, with SNAPSHOT'
         required: true
       
 jobs:
@@ -15,10 +15,10 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[maven-release-plugin]')"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up JDK 11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '11'
         distribution: 'temurin'
@@ -33,9 +33,6 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_KEY }}
     
-    - name: Install maven dependencies
-      run: ./ci/mavenDependency.sh  
-
     - name: Release with Maven
       env:
         GITHUB_USERNAME: ${{ github.actor }}

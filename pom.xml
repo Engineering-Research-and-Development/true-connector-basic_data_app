@@ -16,17 +16,16 @@
 		<java.version>11</java.version>
 		<tomcat.version>9.0.27</tomcat.version>
 		<start-class>it.eng.idsa.dataapp.ApplicationDataApp</start-class>
-		<multipart.message.processor.version>1.0.17</multipart.message.processor.version>
-		<websocket.message.streamer.version>1.0.17</websocket.message.streamer.version>
+		<multipart.message.processor.version>1.0.18</multipart.message.processor.version>
+		<websocket.message.streamer.version>1.0.18</websocket.message.streamer.version>
 		<jacoco.version>0.8.8</jacoco.version>
 	</properties>
 	<repositories>
-<!--		<repository>
-			<id>snapshots</id>
-			<name>maven-snapshots</name>
-			<url>https://maven.iais.fraunhofer.de/artifactory/eis-ids-public</url>
-		</repository>
-		-->
+		<repository>
+            <id>snapshots</id>
+            <name>maven-snapshots</name>
+            <url>https://jfrog.iais.fraunhofer.de/artifactory/public</url>
+        </repository>
 		<repository>
 			<id>github</id>
 			<url>https://${GH_PACKAGE_REPO_PASSWORD}:x-oauth-basic@maven.pkg.github.com/Engineering-Research-and-Development/*</url>
