@@ -1,7 +1,11 @@
 package it.eng.idsa.dataapp.configuration;
 
+import java.util.Arrays;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -20,6 +24,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
+	@Value("${application.cors.allowed.origins:}")
+	private String allowedOrigins;
+
+	@Value("${application.cors.allowed.methods:}")
+	private String allowedMethods;
+
+	@Value("${application.cors.allowed.headers:}")
+	private String allowedHeaders;
 
 	private final UserProperties userProperties;
 
@@ -61,12 +74,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
-		final CorsConfiguration configuration = new CorsConfiguration();
-		configuration.addAllowedOrigin("*");
-		configuration.addAllowedMethod("*");
-		configuration.addAllowedHeader("*");
+		CorsConfiguration configuration = new CorsConfiguration();
 
-		final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		if (StringUtils.isBlank(allowedOrigins)) {
+			configuration.addAllowedOrigin("*");
+		} else {
+			configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+		}
+
+		if (StringUtils.isBlank(allowedMethods)) {
+			configuration.addAllowedMethod("*");
+		} else {
+			configuration.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
+		}
+
+		if (StringUtils.isBlank(allowedHeaders)) {
+			configuration.addAllowedHeader("*");
+		} else {
+			configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
+		}
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
 	}
