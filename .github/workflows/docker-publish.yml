@@ -25,9 +25,6 @@ jobs:
         distribution: 'temurin'
         ref: ${{ env.TAG_VERSION }}  
 
-    - name: Install maven dependencies
-      run: ./ci/mavenDependency.sh  
-
     - name: Build with Maven
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
